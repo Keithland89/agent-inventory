@@ -1,0 +1,164 @@
+/// One row per SharePoint .agent file observed in the configured Purview audit-retention window. The latest file operation determines whether the row is current or deleted.
+table SharePointAgent
+	lineageTag: 863882d4-bdd3-4c8c-a064-081c1ca483a9
+
+	column AgentKey
+		dataType: string
+		lineageTag: 08249dfb-c4db-4bea-a053-0e8274c7acfa
+		summarizeBy: none
+		sourceColumn: AgentKey
+
+	/// Friendly file name without the .agent suffix.
+	column AgentName
+		dataType: string
+		lineageTag: c21fa22b-4708-4051-a55f-adb31c662e6d
+		summarizeBy: none
+		sourceColumn: AgentName
+
+	column FileName
+		dataType: string
+		lineageTag: 2d4b7288-36a9-4f49-8b87-bb4255e3e7fb
+		summarizeBy: none
+		sourceColumn: FileName
+
+	column SiteUrl
+		dataType: string
+		lineageTag: 4950ffaf-591f-4f16-82d3-394f7d7af766
+		summarizeBy: none
+		sourceColumn: SiteUrl
+
+	column ObjectUrl
+		dataType: string
+		lineageTag: 52423fb4-e397-49db-ae8f-bbd25c98767b
+		summarizeBy: none
+		sourceColumn: ObjectUrl
+
+	column LibraryPath
+		dataType: string
+		lineageTag: 7f50d507-3d62-45e8-ac67-1b408082c892
+		summarizeBy: none
+		sourceColumn: LibraryPath
+
+	column SiteId
+		dataType: string
+		isHidden
+		lineageTag: aea48994-47e5-481d-b570-8f09e1749876
+		summarizeBy: none
+		sourceColumn: SiteId
+
+	column WebId
+		dataType: string
+		isHidden
+		lineageTag: 02fa5bdb-e4c9-49d8-bbd7-0d748ee733e1
+		summarizeBy: none
+		sourceColumn: WebId
+
+	column ListId
+		dataType: string
+		isHidden
+		lineageTag: b450b4d0-8640-4b69-8aca-736740943c4d
+		summarizeBy: none
+		sourceColumn: ListId
+
+	column ItemId
+		dataType: string
+		lineageTag: 43e2758e-a06d-47d0-b427-d11562e72c88
+		summarizeBy: none
+		sourceColumn: ItemId
+
+	column FirstSeenAt
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn:ss
+		lineageTag: 90bde8a1-cb87-4d1f-b429-9aa1180168d8
+		summarizeBy: none
+		sourceColumn: FirstSeenAt
+
+	column LastSeenAt
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn:ss
+		lineageTag: 6755478c-a17b-48ee-a082-713df2877916
+		summarizeBy: none
+		sourceColumn: LastSeenAt
+
+	column CollectedAt
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn:ss
+		lineageTag: c9d29fa4-c195-459b-bac4-83a38939e985
+		summarizeBy: none
+		sourceColumn: CollectedAt
+
+	column LastOperation
+		dataType: string
+		lineageTag: a768306a-b66e-43cb-a396-6b8d77c29491
+		summarizeBy: none
+		sourceColumn: LastOperation
+
+	column LastActor
+		dataType: string
+		lineageTag: 83aca2b0-784f-41f5-8cf3-5db147c6bb4a
+		summarizeBy: none
+		sourceColumn: LastActor
+
+	column ApplicationId
+		dataType: string
+		isHidden
+		lineageTag: 1e605344-2141-4b1f-9b7a-18308a6675eb
+		summarizeBy: none
+		sourceColumn: ApplicationId
+
+	column ApplicationName
+		dataType: string
+		lineageTag: 2b4924f4-3349-4094-b569-4e103821644e
+		summarizeBy: none
+		sourceColumn: ApplicationName
+
+	column IsDeleted
+		dataType: boolean
+		lineageTag: 092ea8c2-a96e-43a1-abaa-72fc1b16d5ce
+		summarizeBy: none
+		sourceColumn: IsDeleted
+
+	column EventCount
+		dataType: int64
+		formatString: #,0
+		lineageTag: c1173f15-5222-422d-940a-07eefbf67b72
+		summarizeBy: sum
+		sourceColumn: EventCount
+
+	column AuditRecordId
+		dataType: string
+		isHidden
+		lineageTag: 77ec3667-af07-41cb-91d8-bf07d290db3d
+		summarizeBy: none
+		sourceColumn: AuditRecordId
+
+	column FlowRunId
+		dataType: string
+		isHidden
+		lineageTag: c3720475-2d25-4089-b6e0-c64304c0a663
+		summarizeBy: none
+		sourceColumn: FlowRunId
+
+	partition SharePointAgent = m
+		mode: import
+		source =
+				let
+				    Bin = try File.Contents(DataFolder & "\DimSharePointAgent.csv") otherwise null,
+				    Source = if Bin = null then #table(type table [AgentKey = text, AgentName = text, FileName = text, SiteUrl = text, ObjectUrl = text, LibraryPath = text, SiteId = text, WebId = text, ListId = text, ItemId = text, FirstSeenAt = text, LastSeenAt = text, CollectedAt = text, LastOperation = text, LastActor = text, ApplicationId = text, ApplicationName = text, IsDeleted = logical, EventCount = Int64.Type, AuditRecordId = text, FlowRunId = text], {}) else Csv.Document(Bin, [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Headers = if Bin = null then Source else Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Kept = Table.SelectColumns(Headers, {"AgentKey", "AgentName", "FileName", "SiteUrl", "ObjectUrl", "LibraryPath", "SiteId", "WebId", "ListId", "ItemId", "FirstSeenAt", "LastSeenAt", "CollectedAt", "LastOperation", "LastActor", "ApplicationId", "ApplicationName", "IsDeleted", "EventCount", "AuditRecordId", "FlowRunId"}, MissingField.UseNull),
+				    Keyed = Table.SelectRows(Kept, each [AgentKey] <> null and [AgentKey] <> ""),
+				    Converted = Table.TransformColumns(Keyed, {
+				        {"AgentKey", each Text.Lower(Text.Trim(_)), type text},
+				        {"IsDeleted", FnToBool, type logical},
+				        {"EventCount", FnToInt, Int64.Type},
+				        {"FirstSeenAt", FnToDateTime, type datetime},
+				        {"LastSeenAt", FnToDateTime, type datetime},
+				        {"CollectedAt", FnToDateTime, type datetime}}),
+				    Typed = Table.TransformColumnTypes(Converted, {
+				        {"AgentName", type text}, {"FileName", type text}, {"SiteUrl", type text}, {"ObjectUrl", type text},
+				        {"LibraryPath", type text}, {"SiteId", type text}, {"WebId", type text}, {"ListId", type text},
+				        {"ItemId", type text}, {"LastOperation", type text}, {"LastActor", type text},
+				        {"ApplicationId", type text}, {"ApplicationName", type text}, {"AuditRecordId", type text}, {"FlowRunId", type text}})
+				in
+				    Typed

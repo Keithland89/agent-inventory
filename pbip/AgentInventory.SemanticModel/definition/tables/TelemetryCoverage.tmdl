@@ -1,0 +1,62 @@
+/// Which monitoring signals are actually obtainable for each agent platform without an Agent 365 licence. This is what makes the usage gaps on the Usage page explainable rather than mysterious.
+table TelemetryCoverage
+	lineageTag: 7e8e5d3d-3267-41f2-8719-abcea8be05bc
+
+	column SortOrder
+		dataType: int64
+		isHidden
+		lineageTag: 0e7e3372-589f-41d6-add2-0157c71e912f
+		sourceColumn: SortOrder
+
+	column Platform
+		dataType: string
+		lineageTag: 9b015540-033b-400d-abff-57e24cc8eddf
+		sourceColumn: Platform
+		sortByColumn: SortOrder
+
+	column Inventory
+		dataType: string
+		lineageTag: d57bf7f0-ed52-4a57-9798-38b3d7048d21
+		sourceColumn: Inventory
+
+	column Configuration
+		dataType: string
+		lineageTag: ff5dfadc-cc3e-4c89-95e6-08f347de0dfd
+		sourceColumn: Configuration
+
+	column Sharing
+		dataType: string
+		lineageTag: 57ba688c-2439-4bb1-be8a-115ebee699ff
+		sourceColumn: Sharing
+
+	column UsageSignal
+		dataType: string
+		lineageTag: 023f904e-16b1-41d4-b910-d425d29232bd
+		sourceColumn: UsageSignal
+
+	column MessageVolume
+		dataType: string
+		lineageTag: 9b9e12a8-2d34-4daa-8960-0eda84b09a73
+		sourceColumn: MessageVolume
+
+	column WhyNot
+		dataType: string
+		lineageTag: 7a514245-7263-4b0c-8361-53241a317544
+		sourceColumn: WhyNot
+
+	partition TelemetryCoverage = m
+		mode: import
+		source =
+				let
+				    Source = #table(
+				        type table [SortOrder = Int64.Type, Platform = text, Inventory = text, Configuration = text, Sharing = text, UsageSignal = text, MessageVolume = text, WhyNot = text],
+				        {
+				            { 1, "Copilot Studio", "Full", "Full", "Full", "Yes - lastUsed + audit log", "Yes - per turn", "Copilot Studio agents are Dataverse-backed Power Platform resources, so they emit microsoft.powerplatformusage/usagerecords. 2,487 of 20,417 have ever produced one. Per-turn volume now also comes from Purview CopilotInteraction records, joined on the agent's schema name." },
+				            { 2, "M365 Copilot Agent Builder", "Full", "Full", "Full", "Yes - Purview audit log", "Yes - per turn", "Declarative agents run inside the Microsoft 365 Copilot host, not the Power Platform runtime, so they emit no Power Platform usage records at all - 0 of 166 matched. Solved instead by reading CopilotInteraction records from the Purview unified audit log and joining AppIdentity (Copilot.Studio.Declarative.T_*) back to the agent's TitleId. This gives per-turn, per-user usage - better than the lastUsed timestamp Copilot Studio exposes." },
+				            { 3, "Azure AI Foundry", "Projects only", "Partial", "N/A", "None", "No", "Resource Graph sees Foundry projects but not the agents inside them. Per-agent inventory and usage need the Foundry data-plane /assistants API per project endpoint, plus Application Insights for invocation telemetry." },
+				            { 4, "Agent flows", "Full", "Full", "N/A", "Yes - lastUsed timestamp", "No", "Agent flows are Power Automate resources and do emit usage records, but only 12 of 564 have ever produced one." }
+				        }
+				    )
+				in
+				    Source
+

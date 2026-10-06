@@ -1,0 +1,42 @@
+/// One row per agent-to-connector binding, including MCP server tools.
+table AgentConnector
+	lineageTag: 437f5d45-d281-4ca3-b29e-2d9e6f3084d6
+
+	column AgentKey
+		dataType: string
+		isHidden
+		lineageTag: 208eb503-4a7b-4aff-8098-ae60644258e1
+		summarizeBy: none
+		sourceColumn: AgentKey
+
+	column ConnectorId
+		dataType: string
+		lineageTag: 08c8c4f4-775d-4a73-b39c-49f991379071
+		summarizeBy: none
+		sourceColumn: ConnectorId
+
+	column OperationCount
+		dataType: int64
+		formatString: #,0
+		lineageTag: 99087bed-e37f-43cf-8df0-4d1484364419
+		summarizeBy: sum
+		sourceColumn: OperationCount
+
+	/// TRUE when the connector operation list advertises an MCP server tool.
+	column IsMcpServer
+		dataType: boolean
+		lineageTag: c5af5e5b-8d73-43d1-b23f-13fe884e8f9c
+		summarizeBy: none
+		sourceColumn: IsMcpServer
+
+	partition AgentConnector = m
+		mode: import
+		source =
+				let
+				    Raw = FnArg("PowerPlatformResources | where type =~ 'microsoft.copilotstudio/agents' | extend p = properties | mv-expand conn = p.powerPlatformConnectors | where isnotnull(conn) | project AgentKey = strcat(tostring(p.environmentId), '|', tostring(name)), ConnectorId = tostring(conn.connectorId), OperationCount = coalesce(array_length(conn.operations), 0), IsMcpServer = tostring(conn.operations) matches regex '""type"":""MCP""' | order by AgentKey asc, ConnectorId asc, OperationCount asc, IsMcpServer asc"),
+				    Kept = FnRecordsToTable(Raw, {"AgentKey", "ConnectorId", "OperationCount", "IsMcpServer"}),
+				    Converted = Table.TransformColumns(Kept, {{"OperationCount", FnToInt, Int64.Type}, {"IsMcpServer", FnToBool, type logical}}),
+				    Final = Table.TransformColumnTypes(Converted, {{"AgentKey", type text}, {"ConnectorId", type text}})
+				in
+				    Final
+

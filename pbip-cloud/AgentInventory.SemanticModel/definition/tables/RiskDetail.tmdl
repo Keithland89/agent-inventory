@@ -1,0 +1,98 @@
+/// Every individual governance risk factor that fired for an agent, with the points it contributed. Use this to explain a risk score.
+table RiskDetail
+	lineageTag: 841c5679-1f90-42e0-b73f-0afd371b3007
+
+	column AgentKey
+		dataType: string
+		isHidden
+		lineageTag: ebd3fbc9-3aa0-467e-9a90-b183754bb576
+		summarizeBy: none
+		sourceColumn: AgentKey
+
+	column AgentName
+		dataType: string
+		lineageTag: 9b25eec2-f30d-4300-ae38-7755606d9ecd
+		summarizeBy: none
+		sourceColumn: AgentName
+
+	column EnvironmentName
+		dataType: string
+		lineageTag: db2f0389-f324-4153-90fc-ef8e6d373bd3
+		summarizeBy: none
+		sourceColumn: EnvironmentName
+
+	column Platform
+		dataType: string
+		lineageTag: f6716ca5-83a6-4ea3-b676-e53b6cb4b4ec
+		summarizeBy: none
+		sourceColumn: Platform
+
+	/// The individual governance condition that fired.
+	column RiskFactor
+		dataType: string
+		lineageTag: 1fc2a0c2-1a4e-4430-9b97-ac4e1532817c
+		summarizeBy: none
+		sourceColumn: RiskFactor
+
+	/// Points this factor contributed to the agent's total risk score.
+	column Points
+		dataType: int64
+		formatString: #,0
+		lineageTag: 77a3729c-d2ec-4bb1-b2bd-87e08db49ff0
+		summarizeBy: sum
+		sourceColumn: Points
+
+	column RiskScore
+		dataType: int64
+		formatString: #,0
+		lineageTag: b6e1b683-56ac-4e44-87ae-6efb904eb5aa
+		summarizeBy: sum
+		sourceColumn: RiskScore
+
+	column RiskBand
+		dataType: string
+		lineageTag: 6817c29a-c15b-4a7c-92be-fcc167f45430
+		summarizeBy: none
+		sourceColumn: RiskBand
+
+	partition RiskDetail = m
+		mode: import
+		source =
+				let
+				    Src = Table.SelectColumns(Agent, {"AgentKey", "AgentName", "EnvironmentName", "Platform", "Authentication",
+				                                      "IsQuarantined", "SharedTenantWide", "WebSearchEnabled", "ConnectorCount",
+				                                      "ConnectedAgentCount", "LastUsed"}, MissingField.UseNull),
+				    // Risk banding is duplicated in the local build's RiskDetail table. Keep the two in step.
+				    Factors = Table.AddColumn(Src, "f", each
+				        let
+				            // Matches PowerShell's -in semantics exactly: Azure Resource Graph omits
+				            // null-valued fields, and neither -in nor List.Contains matches a null,
+				            // so an absent authentication property deliberately does not fire.
+				            noAuth  = List.Contains({"None", "No authentication", ""}, [Authentication]),
+				            quar    = FnToLogical([IsQuarantined]) = true,
+				            tenant  = FnToLogical([SharedTenantWide]) = true,
+				            unused  = [LastUsed] = null,
+				            web     = FnToLogical([WebSearchEnabled]) = true,
+				            conn    = [ConnectorCount] <> null and [ConnectorCount] > 0,
+				            linked  = [ConnectedAgentCount] <> null and [ConnectedAgentCount] > 0
+				        in
+				            List.Combine({
+				                if noAuth then {[RiskFactor = "No authentication configured", Points = 3]} else {},
+				                if quar   then {[RiskFactor = "Agent is quarantined", Points = 3]} else {},
+				                if tenant then {[RiskFactor = "Shared with the entire tenant", Points = 2]} else {},
+				                if tenant and unused then {[RiskFactor = "Shared tenant-wide and never used", Points = 1]} else {},
+				                if web    then {[RiskFactor = "Web search enabled on knowledge", Points = 1]} else {},
+				                if conn   then {[RiskFactor = "Uses one or more connectors", Points = 1]} else {},
+				                if linked then {[RiskFactor = "Connected to other agents", Points = 1]} else {}})),
+				    Scored = Table.AddColumn(Factors, "RiskScore", each
+				        let s = List.Sum(List.Transform([f], each _[Points])) in if s = null then 0 else s, Int64.Type),
+				    Banded = Table.AddColumn(Scored, "RiskBand", each if [RiskScore] >= 5 then "High" else if [RiskScore] >= 3 then "Medium" else "Low", type text),
+				    Fired  = Table.SelectRows(Banded, each List.Count([f]) > 0),
+				    Expand = Table.ExpandListColumn(Fired, "f"),
+				    Flat   = Table.ExpandRecordColumn(Expand, "f", {"RiskFactor", "Points"}, {"RiskFactor", "Points"}),
+				    Kept   = Table.SelectColumns(Flat, {"AgentKey", "AgentName", "EnvironmentName", "Platform", "RiskFactor", "Points", "RiskScore", "RiskBand"}, MissingField.UseNull),
+				    Typed  = Table.TransformColumnTypes(Kept, {{"AgentKey", type text}, {"AgentName", type text}, {"EnvironmentName", type text},
+				                                              {"Platform", type text}, {"RiskFactor", type text}, {"Points", Int64.Type}})
+				in
+				    Typed
+

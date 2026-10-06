@@ -1,0 +1,69 @@
+/// Shadow AI seen on Defender-managed endpoints, one row per tool per detection layer.
+/// Three layers, deliberately kept separate because they answer different questions and have different
+/// blind spots: Installed says a packaged app is present, Executed says it actually ran, Network says
+/// the device reached an AI service at all. A tool absent from Installed but present in Network is the
+/// normal shape for browser-based use.
+/// Empty when Defender is unlicensed, has no onboarded devices, or refuses the refresh account - see FnHunt.
+table ShadowAiSignal
+	lineageTag: 6d50f6ef-c22c-427a-a8b2-4e06a72487be
+
+	/// Installed, Executed or Network. See the table description for what each proves.
+	column Layer
+		dataType: string
+		lineageTag: 0c0d3614-97f0-4fec-8550-f921e5f3bb9a
+		sourceColumn: Layer
+
+	column Category
+		dataType: string
+		lineageTag: 8bc9e6b8-0297-4afb-89a2-c5335b617351
+		sourceColumn: Category
+
+	column Vendor
+		dataType: string
+		lineageTag: 9df09a2d-0a7d-4c8b-9a81-f62b4fa1dbc2
+		sourceColumn: Vendor
+
+	column AppName
+		dataType: string
+		lineageTag: e9c2a2a8-242d-4b6b-ba73-9268b24a5f42
+		sourceColumn: AppName
+
+	/// Sanctioned or Unsanctioned, taken from ShadowAiWatchlist. This is local policy, not an API verdict.
+	column Posture
+		dataType: string
+		lineageTag: 6b2b405e-35a2-4481-8f02-3c6793d1848b
+		sourceColumn: Posture
+
+	/// The raw string Defender returned - software name, process file name or URL - before it was mapped to a watchlist app.
+	column Detected
+		dataType: string
+		lineageTag: fe772f45-59eb-4f11-ace6-a2409cd9f9dd
+		sourceColumn: Detected
+
+	column DeviceCount
+		dataType: int64
+		formatString: #,0
+		lineageTag: 02b68884-0838-4e64-a55f-37bf17426512
+		sourceColumn: DeviceCount
+
+	column UserCount
+		dataType: int64
+		formatString: #,0
+		lineageTag: f3c73d0c-11c1-47ff-82fd-c6f48c8c51b8
+		sourceColumn: UserCount
+
+	column LastSeen
+		dataType: dateTime
+		formatString: dd/mm/yyyy hh:nn:ss
+		lineageTag: 1fc67095-8e4a-4ba9-aa51-a131c9fa634c
+		sourceColumn: LastSeen
+
+	partition ShadowAiSignal = m
+		mode: import
+		source =
+				let
+				    Source = Table.Combine({SrcShadowInstalled, SrcShadowExecuted, SrcShadowNetwork}),
+				    Typed = Table.TransformColumnTypes(Source, {{"DeviceCount", Int64.Type}, {"UserCount", Int64.Type}, {"LastSeen", type datetime}})
+				in
+				    Typed
+

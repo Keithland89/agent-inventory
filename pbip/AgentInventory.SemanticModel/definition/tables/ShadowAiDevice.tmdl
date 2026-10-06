@@ -1,0 +1,63 @@
+/// Device-grain detail behind ShadowAiSignal - which machines carry or ran each AI tool.
+/// Installed rows carry a version in Detail and no user, because software inventory is a machine-level
+/// snapshot. Executed rows carry the signed-in user and a run count over the last 30 days.
+/// In this CSV build the rows come from FactShadowAiDevice.csv.
+/// Set SourceMode to Live to query Defender directly instead. A missing CSV yields an empty table.
+table ShadowAiDevice
+	lineageTag: b0230d6e-7724-46bb-8657-7a9272d71327
+
+	column Layer
+		dataType: string
+		lineageTag: dbf8b926-5652-4fa2-8ac1-51e1498335bb
+		sourceColumn: Layer
+
+	column DeviceName
+		dataType: string
+		lineageTag: 7bc95a8d-d8bb-4384-be91-0cf2df2ff022
+		sourceColumn: DeviceName
+
+	column AppName
+		dataType: string
+		lineageTag: 5dfa20a4-367c-4177-ad44-6cfb450f0d21
+		sourceColumn: AppName
+
+	column Posture
+		dataType: string
+		lineageTag: 5b175c75-e93c-4820-9be9-c05fa2cfe81e
+		sourceColumn: Posture
+
+	column Detected
+		dataType: string
+		lineageTag: 6887f8a5-e5f7-46ec-b0ee-e8b15bcd9ff0
+		sourceColumn: Detected
+
+	/// Software version for installed rows, run count for executed rows.
+	column Detail
+		dataType: string
+		lineageTag: 2aacf998-4d50-4ebb-9805-2ec9fe607043
+		sourceColumn: Detail
+
+	column UserUpn
+		dataType: string
+		lineageTag: a34848dd-c43d-4035-ab3d-505b801097a3
+		sourceColumn: UserUpn
+
+	column LastSeen
+		dataType: dateTime
+		formatString: dd/mm/yyyy hh:nn:ss
+		lineageTag: 5c539bb9-61d0-4a0b-83d7-17fa602fe0ff
+		sourceColumn: LastSeen
+
+	partition ShadowAiDevice = m
+		mode: import
+		source =
+				let
+				    Source =
+				        if SourceMode = "Live" then SrcShadowDevice
+				        else FnCsv("FactShadowAiDevice.csv", {"Layer", "DeviceName", "AppName", "Posture", "Detected", "Detail", "UserUpn", "LastSeen"}),
+				    Converted = Table.TransformColumns(Source, {{"LastSeen", FnToDateTime, type datetime}}),
+				    Typed = Table.TransformColumnTypes(Converted, {{"Layer", type text}, {"DeviceName", type text}, {"AppName", type text}, {"Posture", type text}, {"Detected", type text}, {"Detail", type text}, {"UserUpn", type text}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table

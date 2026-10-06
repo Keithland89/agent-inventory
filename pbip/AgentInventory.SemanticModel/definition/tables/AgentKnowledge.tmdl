@@ -1,0 +1,43 @@
+/// One row per agent per knowledge source type - what each agent is actually grounded in. This is the only integration surface Agent Builder agents have: they carry no Power Platform connectors, tools or flows, so they are invisible in the connector fact table.
+/// In this CSV build the rows come from FactAgentKnowledge.csv.
+table AgentKnowledge
+	lineageTag: fb1a1d34-195d-46a9-8d95-97b8021dca41
+
+	column AgentKey
+		dataType: string
+		isHidden
+		lineageTag: b106e797-393c-44e3-a7b7-1d65ae5fdab7
+		summarizeBy: none
+		sourceColumn: AgentKey
+
+	/// Friendly name of the knowledge source type, e.g. SharePoint sites, Public websites, Graph connectors.
+	column KnowledgeType
+		dataType: string
+		lineageTag: e63a9d46-db08-455f-b9fe-08d36e04564c
+		summarizeBy: none
+		sourceColumn: KnowledgeType
+
+	/// How many sources of this type the agent has configured.
+	column SourceCount
+		dataType: int64
+		formatString: #,0
+		lineageTag: f6b7c53d-86a2-4924-b88c-904630ac83c6
+		summarizeBy: sum
+		sourceColumn: SourceCount
+
+	partition AgentKnowledge = m
+		mode: import
+		source =
+				let
+				    Source =
+				        if SourceMode = "Live" then
+				            let
+				                Raw = FnArg("PowerPlatformResources | where type =~ 'microsoft.copilotstudio/agents' | extend p = properties, kbt = properties.componentsCounts.knowledgeByType | mv-expand k = bag_keys(kbt) | project AgentKey = strcat(tostring(p.environmentId), '|', tostring(name)), kt = tostring(k), SourceCount = toint(kbt[tostring(k)]) | where SourceCount > 0 | union (     PowerPlatformResources     | where type =~ 'microsoft.copilotstudio/agents'     | where tobool(properties.isWebSearchEnabledForKnowledge) == true     | project AgentKey = strcat(tostring(properties.environmentId), '|', tostring(name)),     kt = 'webSearch', SourceCount = toint(1) ) | project AgentKey, SourceCount, KnowledgeType = case( kt == 'files', 'Uploaded files', kt == 'fileGroups', 'File groups', kt == 'publicSites', 'Public websites', kt == 'sharepointSites', 'SharePoint sites', kt == 'dataverseSources', 'Dataverse tables', kt == 'graphConnectors', 'Microsoft Graph connectors', kt == 'powerPlatformConnectors', 'Power Platform connectors', kt == 'bingCustomSearch', 'Bing custom search', kt == 'teamsMessages', 'Teams messages', kt == 'webSearch', 'Web search', kt) | order by AgentKey asc, KnowledgeType asc"),
+				                Tbl = FnRecordsToTable(Raw, {"AgentKey", "KnowledgeType", "SourceCount"})
+				            in
+				                Tbl
+				        else FnCsv("FactAgentKnowledge.csv", {"AgentKey", "KnowledgeType", "SourceCount"}),
+				    Converted = Table.TransformColumns(Source, {{"SourceCount", FnToInt, Int64.Type}}),
+				    Final = Table.TransformColumnTypes(Converted, {{"AgentKey", type text}, {"KnowledgeType", type text}})
+				in
+				    Final

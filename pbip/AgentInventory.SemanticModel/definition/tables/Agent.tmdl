@@ -1,0 +1,644 @@
+/// Every Copilot Studio and Microsoft 365 Copilot Agent Builder agent in the tenant, sourced from the Power Platform inventory exposed through Azure Resource Graph.
+table Agent
+	lineageTag: ad81d766-caeb-475e-a302-4b6821980878
+
+	/// Unique agent identifier: environment id + agent id. Microsoft's pre-installed first-party agents reuse the same agent id in every environment, so the environment must be part of the key.
+	column AgentKey
+		dataType: string
+		isHidden
+		lineageTag: 1bc3a13b-6064-47bc-a80b-a6d6a63c7f5f
+		summarizeBy: none
+		sourceColumn: AgentKey
+
+	/// Raw agent (bot) identifier from the Power Platform inventory. Not unique across environments for first-party agents.
+	column AgentId
+		dataType: string
+		isHidden
+		lineageTag: 31ab7624-1e9c-494a-a698-04aa00683d30
+		summarizeBy: none
+		sourceColumn: AgentId
+
+	/// Display name of the agent.
+	column AgentName
+		dataType: string
+		lineageTag: 59e50879-c64c-493c-9522-631779ffde7b
+		summarizeBy: none
+		sourceColumn: AgentName
+
+	/// Normalised authoring platform: Copilot Studio, M365 Copilot Agent Builder or Azure AI Foundry.
+	column Platform
+		dataType: string
+		lineageTag: 63b7826f-dc70-4334-a749-cacb6d9fcf60
+		summarizeBy: none
+		sourceColumn: Platform
+
+	/// Raw createdIn value reported by the Power Platform inventory API.
+	column AuthoringSurface
+		dataType: string
+		lineageTag: 01463fe7-f1df-4c51-bf19-1f594b1e3934
+		summarizeBy: none
+		sourceColumn: AuthoringSurface
+
+	column EnvironmentId
+		dataType: string
+		isHidden
+		lineageTag: 0eff1a48-4546-4e07-9ba4-e08b32ad8fbd
+		summarizeBy: none
+		sourceColumn: EnvironmentId
+
+	column EnvironmentName
+		dataType: string
+		lineageTag: 80fcb779-d211-4b38-a3f8-a3085aaa09c0
+		summarizeBy: none
+		sourceColumn: EnvironmentName
+
+	column EnvironmentType
+		dataType: string
+		lineageTag: a96bf4a0-9c39-4056-a0c9-39a275c36bf6
+		summarizeBy: none
+		sourceColumn: EnvironmentType
+
+	column Region
+		dataType: string
+		lineageTag: 135d3afc-8be3-4dee-b9ac-1ec834c8a790
+		summarizeBy: none
+		sourceColumn: Region
+
+	column SchemaName
+		dataType: string
+		isHidden
+		lineageTag: 53919bcb-c45c-40e3-a7f5-29d270a817df
+		summarizeBy: none
+		sourceColumn: SchemaName
+
+	/// Generative (AI orchestration) or Classic (topic driven).
+	column Orchestration
+		dataType: string
+		lineageTag: 953a9aee-2175-4def-9b81-0585ead43e2c
+		summarizeBy: none
+		sourceColumn: Orchestration
+
+	/// Underlying LLM the agent is configured to use.
+	column Model
+		dataType: string
+		lineageTag: 5dd457f9-f047-44ad-9520-cc32c6d3223b
+		summarizeBy: none
+		sourceColumn: Model
+
+	/// Authentication mode. 'None' means anonymous end-user access.
+	column Authentication
+		dataType: string
+		lineageTag: dd733e8f-3234-4e63-89dc-450c4b2866b9
+		summarizeBy: none
+		sourceColumn: Authentication
+
+	column CreatedAt
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn:ss
+		lineageTag: 262cd6c4-73f7-4eae-a6a1-234e272f40d3
+		summarizeBy: none
+		sourceColumn: CreatedAt
+
+	column LastPublishedAt
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn:ss
+		lineageTag: c1b71843-cc5b-40d8-a255-063f2a61c16c
+		summarizeBy: none
+		sourceColumn: LastPublishedAt
+
+	/// Latest usage signal from Power Platform usage records.
+	column LastUsed
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn:ss
+		lineageTag: 19c4a25f-1eff-49b9-a547-7a969f52c9d0
+		summarizeBy: none
+		sourceColumn: LastUsed
+
+	column IsPublished
+		dataType: boolean
+		lineageTag: e6da3723-f290-48e4-8617-27dd03f5c7d1
+		summarizeBy: none
+		sourceColumn: IsPublished
+
+	column IsQuarantined
+		dataType: boolean
+		lineageTag: 00c784cd-fbef-4d4a-aa65-fb3ccd7d4207
+		summarizeBy: none
+		sourceColumn: IsQuarantined
+
+	column IsManaged
+		dataType: boolean
+		lineageTag: 81e976cb-a6ff-4e79-a5d1-68d79abb059a
+		summarizeBy: none
+		sourceColumn: IsManaged
+
+	column IsGithubCopilotAgent
+		dataType: boolean
+		lineageTag: 6b2d7021-b95b-4bc1-8c4f-8efbf2f4e38c
+		summarizeBy: none
+		sourceColumn: IsGithubCopilotAgent
+
+	column IsCLIAgent
+		dataType: boolean
+		lineageTag: 190912ed-b118-47dd-b30c-dbf957c95525
+		summarizeBy: none
+		sourceColumn: IsCLIAgent
+
+	column WebSearchEnabled
+		dataType: boolean
+		lineageTag: 7f78ee41-f855-4436-995e-b0eec2f5899d
+		summarizeBy: none
+		sourceColumn: WebSearchEnabled
+
+	column Channels
+		dataType: string
+		lineageTag: d3ea18f4-40c6-48cb-9413-d120d8881d49
+		summarizeBy: none
+		sourceColumn: Channels
+
+	column ChannelCount
+		dataType: int64
+		formatString: #,0
+		lineageTag: 7cf71a4d-48de-407b-ad93-a82bf6aeb01c
+		summarizeBy: sum
+		sourceColumn: ChannelCount
+
+	column TopicCount
+		dataType: int64
+		formatString: #,0
+		lineageTag: 4c947a9e-2048-47ab-8bb9-7b06b841ab68
+		summarizeBy: sum
+		sourceColumn: TopicCount
+
+	column ToolCount
+		dataType: int64
+		formatString: #,0
+		lineageTag: 97fc47cd-bd17-4dfb-89ca-76e384d04f8a
+		summarizeBy: sum
+		sourceColumn: ToolCount
+
+	column KnowledgeCount
+		dataType: int64
+		formatString: #,0
+		lineageTag: 7222222f-1412-4498-b87b-5eca43451c0a
+		summarizeBy: sum
+		sourceColumn: KnowledgeCount
+
+	column ConnectedAgentCount
+		dataType: int64
+		formatString: #,0
+		lineageTag: 8783933c-a776-4253-90e4-24fa7e45dab4
+		summarizeBy: sum
+		sourceColumn: ConnectedAgentCount
+
+	column ConnectorCount
+		dataType: int64
+		formatString: #,0
+		lineageTag: 4f2f68e4-7c6b-41c3-b77a-a3a89b539213
+		summarizeBy: sum
+		sourceColumn: ConnectorCount
+
+	column ConnectorOpsCount
+		dataType: int64
+		formatString: #,0
+		lineageTag: 2352d968-3642-4e4c-a114-bfbb61dc7090
+		summarizeBy: sum
+		sourceColumn: ConnectorOpsCount
+
+	column FlowCount
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1c77b049-1600-4121-82f2-4619d12f3722
+		summarizeBy: sum
+		sourceColumn: FlowCount
+
+	column SharedUserCount
+		dataType: int64
+		formatString: #,0
+		lineageTag: 4b8e7a20-36c1-4889-bf2a-03a3c3940c5f
+		summarizeBy: sum
+		sourceColumn: SharedUserCount
+
+	column SharedGroupCount
+		dataType: int64
+		formatString: #,0
+		lineageTag: 216b1c64-4d88-41ab-8576-674d382f2ef6
+		summarizeBy: sum
+		sourceColumn: SharedGroupCount
+
+	/// TRUE when the agent is shared with everyone in the tenant.
+	column SharedTenantWide
+		dataType: boolean
+		lineageTag: 08ed977e-064b-432c-8540-22090660623a
+		summarizeBy: none
+		sourceColumn: SharedTenantWide
+
+	column EditorUserCount
+		dataType: int64
+		formatString: #,0
+		lineageTag: bc93659d-1a10-4c4b-9feb-1c647f871ca4
+		summarizeBy: sum
+		sourceColumn: EditorUserCount
+
+	column OwnerId
+		dataType: string
+		isHidden
+		lineageTag: 2fa23df4-8418-413b-b9b0-f92a4f720afc
+		summarizeBy: none
+		sourceColumn: OwnerId
+
+	column CreatedBy
+		dataType: string
+		isHidden
+		lineageTag: c6296220-8b11-405c-bb02-9c5df96867bf
+		summarizeBy: none
+		sourceColumn: CreatedBy
+
+	/// Display name of the agent's creator, resolved from Entra ID via Microsoft Graph directoryObjects/getByIds.
+	column CreatedByName = IF ( 'Agent'[CreatedBy] = "00000000-0000-0000-0000-000000000000", "System / platform", LOOKUPVALUE ( 'User'[DisplayName], 'User'[UserKey], 'Agent'[CreatedBy] ) )
+		dataType: string
+		lineageTag: 8e20b68c-91f4-402a-b3be-e0b6903cdf4a
+		summarizeBy: none
+
+	/// Display name of the agent's current owner.
+	column OwnerName = IF ( 'Agent'[OwnerId] = "00000000-0000-0000-0000-000000000000", "System / platform", RELATED ( 'User'[DisplayName] ) )
+		dataType: string
+		lineageTag: 81a575dd-6539-4139-987a-ba03f0a60b85
+		summarizeBy: none
+
+	/// User principal name of the owner, where the identity resolved to a user.
+	column OwnerUpn = RELATED ( 'User'[UserPrincipalName] )
+		dataType: string
+		lineageTag: 76be2538-5d6f-4ba6-9b31-15e5dd80ac80
+		summarizeBy: none
+
+	column EntraAppId
+		dataType: string
+		isHidden
+		lineageTag: 4e095539-ec30-442b-8266-92c3702a419e
+		summarizeBy: none
+		sourceColumn: EntraAppId
+
+	column TitleId
+		dataType: string
+		isHidden
+		lineageTag: e3d1f6f3-0cb5-4512-aff2-54a59e67e345
+		summarizeBy: none
+		sourceColumn: TitleId
+
+	column DaysSinceLastUse
+		dataType: int64
+		formatString: #,0
+		lineageTag: 3ea7cdee-b093-485c-92fe-7b340d9ebc02
+		summarizeBy: sum
+		sourceColumn: DaysSinceLastUse
+
+	column AgeDays
+		dataType: int64
+		formatString: #,0
+		lineageTag: 583c5bd1-de8c-4612-94e6-a3b9417bbb38
+		summarizeBy: sum
+		sourceColumn: AgeDays
+
+	column CreatedMonth
+		dataType: string
+		lineageTag: 332b4809-9479-42ef-87e3-257deca432ad
+		summarizeBy: none
+		sourceColumn: CreatedMonth
+
+	/// Active (7d) / Active (30d) / Idle (90d) / Dormant (90d+) / No usage signal.
+	/// Activity according to Power Platform usage records alone. These cover only 9.7% of Copilot Studio agents and none of Agent Builder, so prefer ActivityStatus.
+	column ActivityStatusUsageRecords
+		dataType: string
+		lineageTag: 8f62db5f-a67b-4989-9d3f-6115c6a6d690
+		summarizeBy: none
+		sourceColumn: ActivityStatus
+
+	/// Heuristic governance risk score (0-11).
+	column RiskScore
+		dataType: int64
+		formatString: #,0
+		lineageTag: 925091ca-7fe9-4444-9da5-5c3366e6cc9e
+		summarizeBy: sum
+		sourceColumn: RiskScore
+
+	/// Low (<3), Medium (3-4), High (5+).
+	column RiskBand
+		dataType: string
+		lineageTag: 5c9b889f-2d32-4404-a65e-511d5659cf18
+		summarizeBy: none
+		sourceColumn: RiskBand
+
+	/// How many individual risk factors fired for this agent.
+	column RiskFactorCount
+		dataType: int64
+		formatString: #,0
+		lineageTag: 30729b2b-d896-4a0c-a655-a13ede26fe81
+		summarizeBy: sum
+		sourceColumn: RiskFactorCount
+
+	/// Human-readable list of every risk factor that contributed to the score, with its point value.
+	column RiskReasons
+		dataType: string
+		lineageTag: 07d64f9b-9dd2-43af-957f-fdade60d3fb6
+		summarizeBy: none
+		sourceColumn: RiskReasons
+
+	column CreatedDate
+		dataType: dateTime
+		isHidden
+		formatString: yyyy-mm-dd
+		lineageTag: 02775f64-63ff-42cb-81de-2e82a4ebd794
+		summarizeBy: none
+		sourceColumn: CreatedDate
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column LastUsedDate
+		dataType: dateTime
+		isHidden
+		formatString: yyyy-mm-dd
+		lineageTag: 6b293bd9-2437-4ecb-8833-e50bac519a2a
+		summarizeBy: none
+		sourceColumn: LastUsedDate
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	/// What kind of principal owns the agent. Agents whose owner id does not resolve to a directory object - deleted users, cross-tenant guests, or system identities Graph will not return - are labelled rather than left blank.
+	column OwnerPrincipalType = VAR p = RELATED ( 'User'[PrincipalType] ) RETURN IF ( ISBLANK ( p ) || p = "", "Not resolved in Entra", p )
+		dataType: string
+		lineageTag: 28bb19e6-d01d-4ec9-8765-ca301ba0562d
+		summarizeBy: none
+
+	/// Whether a person authored the agent, the platform provisioned it automatically, or no creator was recorded at all. Most tenants are dominated by platform-provisioned agents - default environment scaffolding, template copies and system bots - which drown out real human activity, so this is offered as a slicer on every page. Note that a DAX text column read from CSV holds an empty string rather than BLANK, so both must be tested.
+	column AgentOrigin = VAR creator = 'Agent'[CreatedByName] RETURN IF ( ISBLANK ( creator ) || creator = "", "Creator unknown", IF ( creator = "System / platform", "Platform-provisioned", "Human-built" ) )
+		dataType: string
+		lineageTag: e66b43ad-c9b2-446a-99f6-86021e38b036
+		summarizeBy: none
+
+	/// The agent's own Entra identity, shown in the Agent 365 registry as "Entra agent ID". This is not the same value as EntraAppId, which is the app registration behind the agent.
+	column EntraAgentId
+		dataType: string
+		lineageTag: d86ebc85-5708-4b78-bc0a-157dc8086461
+		summarizeBy: none
+		sourceColumn: EntraAgentId
+
+	/// Identifies the blueprint an agent was instantiated from, so sibling agents built from the same Microsoft template can be grouped.
+	column EntraAgentBlueprintId
+		dataType: string
+		isHidden
+		lineageTag: 92b62cb5-8ad5-4e61-81d9-56c048a1042e
+		summarizeBy: none
+		sourceColumn: EntraAgentBlueprintId
+
+	/// Runtime harness the agent was built on, e.g. Standard or the GitHub Copilot harness. Only populated for agents where the choice applies.
+	column Harness
+		dataType: string
+		lineageTag: d6a98846-107f-402b-a117-2b5cfbf88d0d
+		summarizeBy: none
+		sourceColumn: Harness
+
+	/// Length of the agent's instructions. Azure Resource Graph exposes the character count but not the instruction text itself, so this stands in as a "has instructions" signal and a rough measure of prompt complexity.
+	column InstructionsCharCount
+		dataType: int64
+		formatString: #,0
+		lineageTag: 468b38da-6b79-48b4-989b-b8e1f54f4c22
+		summarizeBy: sum
+		sourceColumn: InstructionsCharCount
+
+	column GraphConnectorCount
+		dataType: int64
+		formatString: #,0
+		lineageTag: 31610ae8-2727-40c0-9d10-3e5027383cf6
+		summarizeBy: sum
+		sourceColumn: GraphConnectorCount
+
+	column SharePointSiteCount
+		dataType: int64
+		formatString: #,0
+		lineageTag: cfb90433-4527-43a7-8d20-429fbeb92f54
+		summarizeBy: sum
+		sourceColumn: SharePointSiteCount
+
+	column PublicSiteCount
+		dataType: int64
+		formatString: #,0
+		lineageTag: a410348b-c4ea-4ea7-b563-314fe06a063b
+		summarizeBy: sum
+		sourceColumn: PublicSiteCount
+
+	column FileKnowledgeCount
+		dataType: int64
+		formatString: #,0
+		lineageTag: 3b8dede5-3aec-47fd-bb2d-066e0a3ca037
+		summarizeBy: sum
+		sourceColumn: FileKnowledgeCount
+
+	column DataverseSourceCount
+		dataType: int64
+		formatString: #,0
+		lineageTag: b3f9ce16-725f-446e-acbd-243fa281fae6
+		summarizeBy: sum
+		sourceColumn: DataverseSourceCount
+
+	/// Semicolon-separated list of the knowledge source kinds attached to the agent, e.g. "sharepointSites; graphConnectors". Absent kinds mean a count of zero.
+	column KnowledgeTypes
+		dataType: string
+		lineageTag: 93e14083-6584-4849-bcdb-9357e20ef21f
+		summarizeBy: none
+		sourceColumn: KnowledgeTypes
+
+	/// When the agent was quarantined. Blank unless IsQuarantined is true.
+	column QuarantinedAt
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn:ss
+		lineageTag: 9c133ebc-adf7-40bc-812b-94cbbea91c42
+		summarizeBy: none
+		sourceColumn: QuarantinedAt
+
+	/// Whether the agent carries any instruction text at all.
+	column HasInstructions = 'Agent'[InstructionsCharCount] > 0
+		dataType: boolean
+		lineageTag: 42e3b5a8-ee58-4cb0-932c-0875476c4aa0
+		summarizeBy: none
+
+	/// Number of distinct knowledge kinds attached, derived from KnowledgeTypes.
+	column KnowledgeTypeCount = IF ( ISBLANK ( 'Agent'[KnowledgeTypes] ) || 'Agent'[KnowledgeTypes] = "", 0, PATHLENGTH ( SUBSTITUTE ( 'Agent'[KnowledgeTypes], "; ", "|" ) ) )
+		dataType: int64
+		formatString: #,0
+		lineageTag: 4b7e78a0-ed8c-4332-99b6-8fa778072f8f
+		summarizeBy: sum
+
+	/// Most recent evidence the agent ran, taking the later of the Power Platform usage record and the last audit-log interaction.
+	/// Deliberately avoids CALCULATE. Context transition inside a calculated column takes a dependency on every column of its own table, and DaysSinceLastActivity and ActivityStatus both depend on this one - so CALCULATE ( MAX ( 'Interaction'[CreationTime] ) ) is circular here and silently evaluates to blank, reporting agents with real interactions as unused. MAXX over an explicit FILTER depends only on Agent[AgentKey], so it resolves.
+	column LastActivityAt = VAR ArgUse = 'Agent'[LastUsed] VAR K = 'Agent'[AgentKey] VAR Audit = MAXX ( FILTER ( 'Interaction', 'Interaction'[AgentKey] = K ), 'Interaction'[CreationTime] ) RETURN IF ( ISBLANK ( ArgUse ), Audit, IF ( ISBLANK ( Audit ), ArgUse, MAX ( ArgUse, Audit ) ) )
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn:ss
+		lineageTag: 26eee146-fef2-4f6c-8556-6723d38e6c2c
+		summarizeBy: none
+
+	/// Days since the agent last ran, from either source.
+	column DaysSinceLastActivity = IF ( ISBLANK ( 'Agent'[LastActivityAt] ), BLANK ( ), DATEDIFF ( 'Agent'[LastActivityAt], TODAY ( ), DAY ) )
+		dataType: int64
+		formatString: #,0
+		lineageTag: f70cdff4-0daf-43b2-9c11-8aac4f75a4d5
+		summarizeBy: sum
+
+	/// Activity from both the Power Platform usage record and the audit log, so an agent with real interactions is never reported as unused.
+	column ActivityStatus = VAR D = 'Agent'[DaysSinceLastActivity] RETURN IF ( ISBLANK ( D ), "No usage signal", IF ( D <= 7, "Active (7d)", IF ( D <= 30, "Active (30d)", IF ( D <= 90, "Idle (90d)", "Dormant (90d+)" ) ) ) )
+		dataType: string
+		lineageTag: 0ca1e80d-de13-4414-8d66-4668b6742d6b
+		summarizeBy: none
+
+	/// Groups agents the way the Agent 365 registry does, separating what the organisation built from what Microsoft ships pre-installed.
+	column CreatorCategory = VAR blueprint = 'Agent'[EntraAgentBlueprintId] VAR creator = 'Agent'[CreatedByName] RETURN IF ( 'Agent'[IsManaged] && ( ISBLANK ( creator ) || creator = "System / platform" ), "Microsoft", IF ( ISBLANK ( creator ) || creator = "", "Unattributed", IF ( NOT ISBLANK ( blueprint ) && blueprint <> "", "Built from Microsoft blueprint", "Your organization" ) ) )
+		dataType: string
+		lineageTag: 8bbb383e-9149-4548-a96c-ae86900b0162
+		summarizeBy: none
+
+	/// True when the agent reads from at least one Microsoft Graph connector, which widens its reach to indexed third-party content.
+	column HasGraphConnector = 'Agent'[GraphConnectorCount] > 0
+		dataType: boolean
+		lineageTag: c3ab58be-6bb4-4931-8a9a-58bb1cf600e7
+		summarizeBy: none
+
+	/// Ownerless agents are the ones nobody can be asked to review, so the registry calls them out separately.
+	column HasOwner = NOT ( ISBLANK ( 'Agent'[OwnerName] ) || 'Agent'[OwnerName] = "" )
+		dataType: boolean
+		lineageTag: b286622d-b37a-4e4c-9941-a90a7b61eca3
+		summarizeBy: none
+
+	partition Agent = m
+		mode: import
+		source =
+				let
+				    Source =
+				        if SourceMode = "Live" then
+				            let
+				                RawAgents = FnArg("PowerPlatformResources | where type =~ 'microsoft.copilotstudio/agents' | extend p = properties | extend cc = p.componentsCounts, cap = p.capabilitiesCounts, sv = p.sharedWithViewers, se = p.sharedWithEditors | extend kbt = cc.knowledgeByType | project AgentKey = strcat(tostring(p.environmentId), '|', tostring(name)), AgentId = tostring(name), AgentName = tostring(p.displayName), AuthoringSurface = tostring(p.createdIn), EnvironmentId = tostring(p.environmentId), Region = tostring(location), SchemaName = tostring(p.schemaName), Orchestration = tostring(p.orchestration), Model = tostring(p.model), Authentication = tostring(p.authentication), CreatedAt = tostring(p.createdAt), LastPublishedAt = tostring(p.lastPublishedAt), IsQuarantined = tobool(p.isQuarantined), IsManaged = tobool(p.isManaged), IsGithubCopilotAgent = tobool(p.isGithubCopilotAgent), IsCLIAgent = tobool(p.isCLIAgent), WebSearchEnabled = tobool(p.isWebSearchEnabledForKnowledge), Channels = strcat_array(p.channels, '; '), ChannelCount = coalesce(array_length(p.channels), 0), TopicCount = toint(cc.topics), ToolCount = toint(cc.tools), KnowledgeCount = toint(cc.knowledge), ConnectedAgentCount = toint(cc.connectedAgents), ConnectorCount = toint(cap.distinctPowerPlatformConnectors), ConnectorOpsCount = toint(cap.distinctPowerPlatformConnectorsOperations), FlowCount = toint(cap.distinctFlows), SharedUserCount = toint(sv.userCount), SharedGroupCount = toint(sv.groupCount), SharedTenantWide = tobool(sv.entireTenant), EditorUserCount = toint(se.userCount), OwnerId = tostring(p.ownerId), CreatedBy = tostring(p.createdBy), EntraAppId = tostring(p.entraAppId), TitleId = tostring(p.titleId), QuarantinedAt = tostring(p.quarantinedAt), EntraAgentId = tostring(p.entraAgentId), EntraAgentBlueprintId = tostring(p.entraAgentBlueprintId), Harness = tostring(p.harness), InstructionsCharCount = coalesce(toint(p.instructionsCharactersCount), 0), GraphConnectorCount = coalesce(toint(kbt.graphConnectors), 0), SharePointSiteCount = coalesce(toint(kbt.sharepointSites), 0), PublicSiteCount = coalesce(toint(kbt.publicSites), 0), FileKnowledgeCount = coalesce(toint(kbt.files), 0), DataverseSourceCount = coalesce(toint(kbt.dataverseSources), 0), KnowledgeTypes = strcat_array(bag_keys(kbt), '; ') | order by AgentKey asc"),
+				                RawUsage = FnArg("PowerPlatformResources | where type =~ 'microsoft.powerplatformusage/usagerecords' | where isnotnull(properties) | project ResourceKey = tostring(properties.resourceId), LastUsedRaw = tostring(properties.lastUsed) | where isnotempty(ResourceKey) and isnotempty(LastUsedRaw) | summarize LastUsedRaw = max(LastUsedRaw) by ResourceKey | order by ResourceKey asc"),
+				                RawEnvs = FnArg("PowerPlatformResources | where type =~ 'microsoft.powerplatform/environments' | extend p = properties | project EnvironmentId = tostring(name), EnvironmentName = tostring(p.displayName), Region = tostring(location), EnvironmentType = tostring(p.environmentType), IsManaged = tobool(p.isManaged), EnvironmentGroupId = tostring(p.environmentGroupId), CreatedAt = tostring(p.createdAt), LastModifiedAt = tostring(p.lastModifiedAt), CreatedBy = tostring(p.createdBy) | order by EnvironmentId asc"),
+				                tAgents = FnRecordsToTable(RawAgents, {"AgentKey", "AgentId", "AgentName", "AuthoringSurface", "EnvironmentId", "Region", "SchemaName", "Orchestration", "Model", "Authentication", "CreatedAt", "LastPublishedAt", "IsQuarantined", "IsManaged", "IsGithubCopilotAgent", "IsCLIAgent", "WebSearchEnabled", "Channels", "ChannelCount", "TopicCount", "ToolCount", "KnowledgeCount", "ConnectedAgentCount", "ConnectorCount", "ConnectorOpsCount", "FlowCount", "SharedUserCount", "SharedGroupCount", "SharedTenantWide", "EditorUserCount", "OwnerId", "CreatedBy", "EntraAppId", "TitleId", "QuarantinedAt", "EntraAgentId", "EntraAgentBlueprintId", "Harness", "InstructionsCharCount", "GraphConnectorCount", "SharePointSiteCount", "PublicSiteCount", "FileKnowledgeCount", "DataverseSourceCount", "KnowledgeTypes"}),
+				                tUsage = FnRecordsToTable(RawUsage, {"ResourceKey", "LastUsedRaw"}),
+				                tEnvs = FnRecordsToTable(RawEnvs, {"EnvironmentId", "EnvironmentName", "EnvironmentType"}),
+				                JoinUsage = Table.NestedJoin(tAgents, {"AgentId"}, tUsage, {"ResourceKey"}, "u", JoinKind.LeftOuter),
+				                ExpUsage = Table.ExpandTableColumn(JoinUsage, "u", {"LastUsedRaw"}, {"LastUsedRaw"}),
+				                JoinEnv = Table.NestedJoin(ExpUsage, {"EnvironmentId"}, tEnvs, {"EnvironmentId"}, "e", JoinKind.LeftOuter),
+				                ExpEnv = Table.ExpandTableColumn(JoinEnv, "e", {"EnvironmentName", "EnvironmentType"}, {"EnvironmentName", "EnvironmentType"}),
+				                FillEnv = Table.ReplaceValue(ExpEnv, each [EnvironmentName], each if [EnvironmentName] = null or [EnvironmentName] = "" then "Unlisted: " & [EnvironmentId] else [EnvironmentName], Replacer.ReplaceValue, {"EnvironmentName"}),
+				                FillEnvType = Table.ReplaceValue(FillEnv, each [EnvironmentType], each if [EnvironmentType] = null or [EnvironmentType] = "" then "Unknown" else [EnvironmentType], Replacer.ReplaceValue, {"EnvironmentType"}),
+				                FillModel = Table.ReplaceValue(FillEnvType, each [Model], each if [Model] = null or [Model] = "" then "Not specified" else [Model], Replacer.ReplaceValue, {"Model"}),
+				                Converted = Table.TransformColumns(FillModel, {{"CreatedAt", FnToDateTime, type datetime}, {"LastPublishedAt", FnToDateTime, type datetime}, {"LastUsedRaw", FnToDateTime, type datetime}, {"QuarantinedAt", FnToDateTime, type datetime}}),
+				                Bools = Table.TransformColumns(Converted, {{"IsQuarantined", FnToLogical, type logical}, {"IsManaged", FnToLogical, type logical}, {"IsGithubCopilotAgent", FnToLogical, type logical}, {"IsCLIAgent", FnToLogical, type logical}, {"WebSearchEnabled", FnToLogical, type logical}, {"SharedTenantWide", FnToLogical, type logical}}),
+				                Renamed = Table.RenameColumns(Bools, {{"LastUsedRaw", "LastUsed"}}),
+				                Typed = Table.TransformColumnTypes(Renamed, {{"EnvironmentName", type text}, {"EnvironmentType", type text}}),
+				                RawFoundry = FnArg("resources | where type startswith 'microsoft.cognitiveservices' or type startswith 'microsoft.machinelearningservices' | where (type endswith 'accounts/projects') or (tostring(kind) == 'Project') | extend p = properties | project AgentKey = tostring(id), AgentId = tostring(id), AgentName = tostring(split(name, '/')[-1]), EnvironmentId = tostring(subscriptionId), EnvironmentName = iff(name has '/', tostring(split(name, '/')[0]), tostring(name)), Region = tostring(location), CreatedAt = tostring(p.createdAtDate) | order by AgentKey asc"),
+				                FoundryRecords = List.Transform(RawFoundry, each [
+				                    AgentKey = Record.FieldOrDefault(_, "AgentKey", null),
+				                    AgentId = Record.FieldOrDefault(_, "AgentId", null),
+				                    AgentName = Record.FieldOrDefault(_, "AgentName", null),
+				                    AuthoringSurface = "Azure AI Foundry",
+				                    EnvironmentId = Record.FieldOrDefault(_, "EnvironmentId", null),
+				                    Region = Record.FieldOrDefault(_, "Region", null),
+				                    SchemaName = null,
+				                    Orchestration = "Generative",
+				                    Model = "See deployments",
+				                    Authentication = "Microsoft Entra",
+				                    CreatedAt = FnToDateTime(Record.FieldOrDefault(_, "CreatedAt", null)),
+				                    LastPublishedAt = null,
+				                    IsQuarantined = false,
+				                    IsManaged = true,
+				                    IsGithubCopilotAgent = false,
+				                    IsCLIAgent = false,
+				                    WebSearchEnabled = false,
+				                    Channels = "API / SDK",
+				                    ChannelCount = 1,
+				                    TopicCount = 0,
+				                    ToolCount = 0,
+				                    KnowledgeCount = 0,
+				                    ConnectedAgentCount = 0,
+				                    ConnectorCount = 0,
+				                    ConnectorOpsCount = 0,
+				                    FlowCount = 0,
+				                    SharedUserCount = 0,
+				                    SharedGroupCount = 0,
+				                    SharedTenantWide = false,
+				                    EditorUserCount = 0,
+				                    OwnerId = null,
+				                    CreatedBy = null,
+				                    EntraAppId = null,
+				                    TitleId = null,
+				                    QuarantinedAt = null,
+				                    EntraAgentId = null,
+				                    EntraAgentBlueprintId = null,
+				                    Harness = null,
+				                    InstructionsCharCount = 0,
+				                    GraphConnectorCount = 0,
+				                    SharePointSiteCount = 0,
+				                    PublicSiteCount = 0,
+				                    FileKnowledgeCount = 0,
+				                    DataverseSourceCount = 0,
+				                    KnowledgeTypes = null,
+				                    LastUsed = null,
+				                    EnvironmentName = Record.FieldOrDefault(_, "EnvironmentName", null),
+				                    EnvironmentType = "Azure subscription"
+				                ]),
+				                tFoundry = FnRecordsToTable(FoundryRecords, {"AgentKey", "AgentId", "AgentName", "AuthoringSurface", "EnvironmentId", "Region", "SchemaName", "Orchestration", "Model", "Authentication", "CreatedAt", "LastPublishedAt", "IsQuarantined", "IsManaged", "IsGithubCopilotAgent", "IsCLIAgent", "WebSearchEnabled", "Channels", "ChannelCount", "TopicCount", "ToolCount", "KnowledgeCount", "ConnectedAgentCount", "ConnectorCount", "ConnectorOpsCount", "FlowCount", "SharedUserCount", "SharedGroupCount", "SharedTenantWide", "EditorUserCount", "OwnerId", "CreatedBy", "EntraAppId", "TitleId", "QuarantinedAt", "EntraAgentId", "EntraAgentBlueprintId", "Harness", "InstructionsCharCount", "GraphConnectorCount", "SharePointSiteCount", "PublicSiteCount", "FileKnowledgeCount", "DataverseSourceCount", "KnowledgeTypes", "LastUsed", "EnvironmentName", "EnvironmentType"}),
+				                Combined = Table.Combine({Typed, tFoundry}),
+				                Unified = FnDistinctKey(Combined, "AgentKey"),
+				                Today = DateTime.LocalNow(),
+				                WithPlatform = Table.AddColumn(Unified, "Platform", each
+				                    if [AuthoringSurface] = "Copilot Studio Lite" then "M365 Copilot Agent Builder"
+				                    else if [AuthoringSurface] = null or [AuthoringSurface] = "" then "Copilot Studio"
+				                    else [AuthoringSurface], type text),
+				                WithPub = Table.AddColumn(WithPlatform, "IsPublished", each [LastPublishedAt] <> null, type logical),
+				                WithDays = Table.AddColumn(WithPub, "DaysSinceLastUse", each if [LastUsed] = null then null else Duration.Days(Today - [LastUsed]), Int64.Type),
+				                WithAge = Table.AddColumn(WithDays, "AgeDays", each if [CreatedAt] = null then null else Duration.Days(Today - [CreatedAt]), Int64.Type),
+				                WithMonth = Table.AddColumn(WithAge, "CreatedMonth", each if [CreatedAt] = null then null else Date.ToText(DateTime.Date([CreatedAt]), "yyyy-MM"), type text),
+				                WithStatus = Table.AddColumn(WithMonth, "ActivityStatus", each
+				                    if [DaysSinceLastUse] = null then "No usage signal"
+				                    else if [DaysSinceLastUse] <= 7 then "Active (7d)"
+				                    else if [DaysSinceLastUse] <= 30 then "Active (30d)"
+				                    else if [DaysSinceLastUse] <= 90 then "Idle (90d)"
+				                    else "Dormant (90d+)", type text),
+				                WithRiskList = Table.AddColumn(WithStatus, "RiskFactorList", each List.RemoveNulls({
+				                    (if [Authentication] = null or [Authentication] = "" or [Authentication] = "None" or [Authentication] = "No authentication" then "No authentication configured (+3)" else null),
+				                    (if [IsQuarantined] = true then "Agent is quarantined (+3)" else null),
+				                    (if [SharedTenantWide] = true then "Shared with the entire tenant (+2)" else null),
+				                    (if [SharedTenantWide] = true and [LastUsed] = null then "Shared tenant-wide and never used (+1)" else null),
+				                    (if [WebSearchEnabled] = true then "Web search enabled on knowledge (+1)" else null),
+				                    (if [ConnectorCount] <> null and [ConnectorCount] > 0 then "Uses one or more connectors (+1)" else null),
+				                    (if [ConnectedAgentCount] <> null and [ConnectedAgentCount] > 0 then "Connected to other agents (+1)" else null)
+				                }), type list),
+				                WithReasons = Table.AddColumn(WithRiskList, "RiskReasons", each if List.Count([RiskFactorList]) = 0 then "No risk factors detected" else Text.Combine([RiskFactorList], "; "), type text),
+				                WithFactorCount = Table.AddColumn(WithReasons, "RiskFactorCount", each List.Count([RiskFactorList]), Int64.Type),
+				                WithRisk = Table.AddColumn(WithFactorCount, "RiskScore", each
+				                    (if [SharedTenantWide] = true then 2 else 0)
+				                    + (if [IsQuarantined] = true then 3 else 0)
+				                    + (if [Authentication] = null or [Authentication] = "" or [Authentication] = "None" or [Authentication] = "No authentication" then 3 else 0)
+				                    + (if [WebSearchEnabled] = true then 1 else 0)
+				                    + (if [ConnectorCount] <> null and [ConnectorCount] > 0 then 1 else 0)
+				                    + (if [ConnectedAgentCount] <> null and [ConnectedAgentCount] > 0 then 1 else 0)
+				                    + (if [SharedTenantWide] = true and [LastUsed] = null then 1 else 0), Int64.Type),
+				                WithBand = Table.AddColumn(WithRisk, "RiskBand", each if [RiskScore] >= 5 then "High" else if [RiskScore] >= 3 then "Medium" else "Low", type text),
+				                Ordered = Table.SelectColumns(WithBand, {"AgentKey", "AgentId", "AgentName", "Platform", "AuthoringSurface", "EnvironmentId", "EnvironmentName", "EnvironmentType", "Region", "SchemaName", "Orchestration", "Model", "Authentication", "CreatedAt", "LastPublishedAt", "LastUsed", "IsPublished", "IsQuarantined", "IsManaged", "IsGithubCopilotAgent", "IsCLIAgent", "WebSearchEnabled", "Channels", "ChannelCount", "TopicCount", "ToolCount", "KnowledgeCount", "ConnectedAgentCount", "ConnectorCount", "ConnectorOpsCount", "FlowCount", "SharedUserCount", "SharedGroupCount", "SharedTenantWide", "EditorUserCount", "OwnerId", "CreatedBy", "EntraAppId", "TitleId", "QuarantinedAt", "EntraAgentId", "EntraAgentBlueprintId", "Harness", "KnowledgeTypes", "InstructionsCharCount", "GraphConnectorCount", "SharePointSiteCount", "PublicSiteCount", "FileKnowledgeCount", "DataverseSourceCount", "DaysSinceLastUse", "AgeDays", "CreatedMonth", "ActivityStatus", "RiskScore", "RiskBand", "RiskFactorCount", "RiskReasons"}, MissingField.UseNull),
+				                Retyped = Table.TransformColumnTypes(Ordered, {{"AgentKey", type text}, {"AgentId", type text}, {"AgentName", type text}, {"Platform", type text}, {"AuthoringSurface", type text}, {"EnvironmentId", type text}, {"EnvironmentName", type text}, {"EnvironmentType", type text}, {"Region", type text}, {"SchemaName", type text}, {"Orchestration", type text}, {"Model", type text}, {"Authentication", type text}, {"CreatedAt", type datetime}, {"LastPublishedAt", type datetime}, {"LastUsed", type datetime}, {"IsPublished", type logical}, {"IsQuarantined", type logical}, {"IsManaged", type logical}, {"IsGithubCopilotAgent", type logical}, {"IsCLIAgent", type logical}, {"WebSearchEnabled", type logical}, {"Channels", type text}, {"ChannelCount", Int64.Type}, {"TopicCount", Int64.Type}, {"ToolCount", Int64.Type}, {"KnowledgeCount", Int64.Type}, {"ConnectedAgentCount", Int64.Type}, {"ConnectorCount", Int64.Type}, {"ConnectorOpsCount", Int64.Type}, {"FlowCount", Int64.Type}, {"SharedUserCount", Int64.Type}, {"SharedGroupCount", Int64.Type}, {"SharedTenantWide", type logical}, {"EditorUserCount", Int64.Type}, {"OwnerId", type text}, {"CreatedBy", type text}, {"EntraAppId", type text}, {"TitleId", type text}, {"QuarantinedAt", type datetime}, {"EntraAgentId", type text}, {"EntraAgentBlueprintId", type text}, {"Harness", type text}, {"KnowledgeTypes", type text}, {"InstructionsCharCount", Int64.Type}, {"GraphConnectorCount", Int64.Type}, {"SharePointSiteCount", Int64.Type}, {"PublicSiteCount", Int64.Type}, {"FileKnowledgeCount", Int64.Type}, {"DataverseSourceCount", Int64.Type}, {"DaysSinceLastUse", Int64.Type}, {"AgeDays", Int64.Type}, {"CreatedMonth", type text}, {"ActivityStatus", type text}, {"RiskScore", Int64.Type}, {"RiskBand", type text}, {"RiskFactorCount", Int64.Type}, {"RiskReasons", type text}}),
+				                WithCreatedDate = Table.AddColumn(Retyped, "CreatedDate", each if [CreatedAt] = null then null else DateTime.Date([CreatedAt]), type date),
+				                WithLastUsedDate = Table.AddColumn(WithCreatedDate, "LastUsedDate", each if [LastUsed] = null then null else DateTime.Date([LastUsed]), type date)
+				            in
+				                WithLastUsedDate
+				        else
+				            let
+				                Source = Csv.Document(File.Contents(DataFolder & "\DimAgent.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				                Headers = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				                // MissingField.UseNull so an extract taken before the newer fields were collected still
+				                // loads: the columns arrive blank rather than failing the refresh.
+				                Kept = Table.SelectColumns(Headers, {"AgentKey", "AgentId", "AgentName", "Platform", "AuthoringSurface", "EnvironmentId", "EnvironmentName", "EnvironmentType", "Region", "SchemaName", "Orchestration", "Model", "Authentication", "CreatedAt", "LastPublishedAt", "LastUsed", "IsPublished", "IsQuarantined", "IsManaged", "IsGithubCopilotAgent", "IsCLIAgent", "WebSearchEnabled", "Channels", "ChannelCount", "TopicCount", "ToolCount", "KnowledgeCount", "ConnectedAgentCount", "ConnectorCount", "ConnectorOpsCount", "FlowCount", "SharedUserCount", "SharedGroupCount", "SharedTenantWide", "EditorUserCount", "OwnerId", "CreatedBy", "EntraAppId", "TitleId", "DaysSinceLastUse", "AgeDays", "CreatedMonth", "ActivityStatus", "RiskScore", "RiskBand", "RiskFactorCount", "RiskReasons", "EntraAgentId", "EntraAgentBlueprintId", "Harness", "InstructionsCharCount", "GraphConnectorCount", "SharePointSiteCount", "PublicSiteCount", "FileKnowledgeCount", "DataverseSourceCount", "KnowledgeTypes", "QuarantinedAt"}, MissingField.UseNull),
+				                Converted = Table.TransformColumns(Kept, {{"CreatedAt", FnToDateTime, type datetime}, {"LastPublishedAt", FnToDateTime, type datetime}, {"LastUsed", FnToDateTime, type datetime}, {"IsPublished", FnToBool, type logical}, {"IsQuarantined", FnToBool, type logical}, {"IsManaged", FnToBool, type logical}, {"IsGithubCopilotAgent", FnToBool, type logical}, {"IsCLIAgent", FnToBool, type logical}, {"WebSearchEnabled", FnToBool, type logical}, {"ChannelCount", FnToInt, Int64.Type}, {"TopicCount", FnToInt, Int64.Type}, {"ToolCount", FnToInt, Int64.Type}, {"KnowledgeCount", FnToInt, Int64.Type}, {"ConnectedAgentCount", FnToInt, Int64.Type}, {"ConnectorCount", FnToInt, Int64.Type}, {"ConnectorOpsCount", FnToInt, Int64.Type}, {"FlowCount", FnToInt, Int64.Type}, {"SharedUserCount", FnToInt, Int64.Type}, {"SharedGroupCount", FnToInt, Int64.Type}, {"SharedTenantWide", FnToBool, type logical}, {"EditorUserCount", FnToInt, Int64.Type}, {"DaysSinceLastUse", FnToInt, Int64.Type}, {"AgeDays", FnToInt, Int64.Type}, {"RiskScore", FnToInt, Int64.Type}, {"RiskFactorCount", FnToInt, Int64.Type}, {"InstructionsCharCount", FnToInt, Int64.Type}, {"GraphConnectorCount", FnToInt, Int64.Type}, {"SharePointSiteCount", FnToInt, Int64.Type}, {"PublicSiteCount", FnToInt, Int64.Type}, {"FileKnowledgeCount", FnToInt, Int64.Type}, {"DataverseSourceCount", FnToInt, Int64.Type}, {"QuarantinedAt", FnToDateTime, type datetime}}),
+				                Typed = Table.TransformColumnTypes(Converted, {{"AgentKey", type text}, {"AgentId", type text}, {"AgentName", type text}, {"Platform", type text}, {"AuthoringSurface", type text}, {"EnvironmentId", type text}, {"EnvironmentName", type text}, {"EnvironmentType", type text}, {"Region", type text}, {"SchemaName", type text}, {"Orchestration", type text}, {"Model", type text}, {"Authentication", type text}, {"Channels", type text}, {"OwnerId", type text}, {"CreatedBy", type text}, {"EntraAppId", type text}, {"TitleId", type text}, {"CreatedMonth", type text}, {"ActivityStatus", type text}, {"RiskBand", type text}, {"RiskReasons", type text}, {"EntraAgentId", type text}, {"EntraAgentBlueprintId", type text}, {"Harness", type text}, {"KnowledgeTypes", type text}}),
+				                WithCreatedDate = Table.AddColumn(Typed, "CreatedDate", each if [CreatedAt] = null then null else DateTime.Date([CreatedAt]), type date),
+				                WithLastUsedDate = Table.AddColumn(WithCreatedDate, "LastUsedDate", each if [LastUsed] = null then null else DateTime.Date([LastUsed]), type date)
+				            in
+				                WithLastUsedDate
+				in
+				    Source

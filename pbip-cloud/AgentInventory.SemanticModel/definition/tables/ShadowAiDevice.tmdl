@@ -1,0 +1,59 @@
+/// Device-grain detail behind ShadowAiSignal - which machines carry or ran each AI tool.
+/// Installed rows carry a version in Detail and no user, because software inventory is a machine-level
+/// snapshot. Executed rows carry the signed-in user and a run count over the last 30 days.
+table ShadowAiDevice
+	lineageTag: ad6d131b-5ad8-428c-ab71-26962aa406af
+
+	column Layer
+		dataType: string
+		lineageTag: 49b841e1-57ed-4807-a4bc-d224c2386ebc
+		sourceColumn: Layer
+
+	column DeviceName
+		dataType: string
+		lineageTag: f60ed6a9-4dfb-451d-98c0-237eb0263906
+		sourceColumn: DeviceName
+
+	column AppName
+		dataType: string
+		lineageTag: 51e5286c-61b9-4fe1-9519-1098d6a6f34c
+		sourceColumn: AppName
+
+	column Posture
+		dataType: string
+		lineageTag: c686cdb6-3bab-4ff7-91b4-871b15bb2dbc
+		sourceColumn: Posture
+
+	column Detected
+		dataType: string
+		lineageTag: 4603adb5-b641-4e4d-9d84-0cc9f311689a
+		sourceColumn: Detected
+
+	/// Software version for installed rows, run count for executed rows.
+	column Detail
+		dataType: string
+		lineageTag: 02d1d584-a016-48b4-a604-8283e6008754
+		sourceColumn: Detail
+
+	column UserUpn
+		dataType: string
+		lineageTag: 399528ea-a751-41ff-934f-3656388ad0fb
+		sourceColumn: UserUpn
+
+	column LastSeen
+		dataType: dateTime
+		formatString: dd/mm/yyyy hh:nn:ss
+		lineageTag: 99cdd015-79b6-4c09-9ad4-6f8addfe10e8
+		sourceColumn: LastSeen
+
+	partition ShadowAiDevice = m
+		mode: import
+		source =
+				let
+				    Source = SrcShadowDevice,
+				    Typed = Table.TransformColumnTypes(Source, {{"LastSeen", type datetime}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+

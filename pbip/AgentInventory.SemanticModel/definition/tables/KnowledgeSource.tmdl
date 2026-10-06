@@ -1,0 +1,92 @@
+/// One row per individual named knowledge source - the actual SharePoint site, public website, Graph connector or Azure AI Search index an agent reads. Azure Resource Graph carries only counts, so these names are swept from each environment's own Dataverse by the collector.
+/// This lane always reads FactAgentKnowledgeSource.csv. The named-source sweep writes Dataverse for the
+/// cloud model and this CSV for the local one, so there is no Live variant to switch to.
+table KnowledgeSource
+	lineageTag: 48dc02c8-6cdc-46e8-a1dc-70125e4c6c83
+
+	column SourceId
+		dataType: string
+		isHidden
+		lineageTag: 57fa3338-087d-494c-ad5e-d0e60ef29bab
+		summarizeBy: none
+		sourceColumn: SourceId
+
+	column AgentKey
+		dataType: string
+		isHidden
+		lineageTag: f5231f17-97a5-4d97-a4d6-1d2f45e61924
+		summarizeBy: none
+		sourceColumn: AgentKey
+
+	/// The name the maker gave the source, or the URL itself when they gave it none.
+	column SourceName
+		dataType: string
+		lineageTag: 6f83c17e-05ea-4c4d-86a2-4cae90af5516
+		summarizeBy: none
+		sourceColumn: SourceName
+
+	/// Friendly source type, using the same vocabulary as AgentKnowledge so the count-level and name-level tables slice together.
+	column KnowledgeType
+		dataType: string
+		lineageTag: 7820b0e0-fa07-40bc-8215-e47def65be1a
+		summarizeBy: none
+		sourceColumn: KnowledgeType
+
+	/// The underlying Copilot Studio source kind, e.g. SharePointKnowledgeSource, FederatedStructuredSearchSource. Kept because two distinct kinds can share one friendly type.
+	column SourceKind
+		dataType: string
+		lineageTag: cbd37505-1ab8-46a1-a5a3-1aafec1fc3c9
+		summarizeBy: none
+		sourceColumn: SourceKind
+
+	/// TRUE when the source reads content from outside the tenant boundary - public websites, Graph connectors, Azure AI Search indexes and federated systems.
+	column IsExternal
+		dataType: boolean
+		lineageTag: 80464608-8526-47d0-87c1-eb669923e68c
+		summarizeBy: none
+		sourceColumn: IsExternal
+
+	/// The site URL, index or connector name the agent actually reads. Blank for kinds that carry only an internal configuration id, such as Dataverse tables and file groups.
+	column Locator
+		dataType: string
+		lineageTag: ad2e7f42-f9a9-4ac0-ae27-ec3f47c0dd8f
+		summarizeBy: none
+		sourceColumn: Locator
+
+	/// Host of the locator, so grounding can be grouped by site rather than by thousands of unique URLs.
+	column LocatorHost
+		dataType: string
+		lineageTag: 86759749-a864-4f51-b80e-fc1ac3ad27b9
+		summarizeBy: none
+		sourceColumn: LocatorHost
+
+	/// The owning agent's name, resolved across the relationship to the agent inventory. Dataverse stores no name against a knowledge source, so this is the only way to label one. Falls back to a legible marker rather than a blank when the sweep captured a source for an agent Azure Resource Graph no longer returns - the source really exists, the agent has since been deleted.
+	column AgentDisplayName = VAR n = RELATED ( 'Agent'[AgentName] ) RETURN IF ( ISBLANK ( n ) || n = "", "Agent no longer in inventory", n )
+		dataType: string
+		lineageTag: b3db60f4-bedb-4b6c-97da-c4a98034d7ee
+		summarizeBy: none
+
+	/// The environment the source is grounded in. Taken from the agent where it still exists, otherwise from the environment id embedded in the agent key, so a source stays attributable to a tenant location even after its agent has gone.
+	column EnvironmentDisplayName = VAR env = RELATED ( 'Agent'[EnvironmentName] ) VAR pos = FIND ( "|", 'KnowledgeSource'[AgentKey], 1, 0 ) VAR envId = IF ( pos > 1, LEFT ( 'KnowledgeSource'[AgentKey], pos - 1 ), "" ) VAR fromDim = IF ( envId <> "", LOOKUPVALUE ( 'Environment'[EnvironmentName], 'Environment'[EnvironmentId], envId ) ) RETURN IF ( NOT ISBLANK ( env ) && env <> "", env, IF ( NOT ISBLANK ( fromDim ) && fromDim <> "", fromDim, IF ( envId = "", "Unknown environment", "Unlisted environment (" & envId & ")" ) ) )
+		dataType: string
+		lineageTag: 60aa1f2b-ec50-459d-a495-46c2e197093f
+		summarizeBy: none
+
+	/// When the out-of-band sweep that produced this row ran. Power BI refreshes from Dataverse, not from the 520 environments, so this - not the dataset refresh time - is the true age of the named-source data.
+	column CollectedAt
+		dataType: dateTime
+		isHidden
+		lineageTag: 69a2e922-6278-4bcd-a261-41a126dba6d3
+		summarizeBy: none
+		sourceColumn: CollectedAt
+
+	partition KnowledgeSource = m
+		mode: import
+		source =
+				let
+				    Src = FnCsv("FactAgentKnowledgeSource.csv", {"SourceId", "AgentKey", "SourceName", "KnowledgeType", "SourceKind", "IsExternal", "Locator", "LocatorHost", "CollectedAt"}),
+				    Keyed = Table.SelectRows(Src, each [AgentKey] <> null and [AgentKey] <> ""),
+				    Converted = Table.TransformColumns(Keyed, {{"IsExternal", FnToBool, type logical}, {"CollectedAt", FnToDateTime, type datetime}}),
+				    Final = Table.TransformColumnTypes(Converted, {{"SourceId", type text}, {"AgentKey", type text}, {"SourceName", type text}, {"KnowledgeType", type text}, {"SourceKind", type text}, {"Locator", type text}, {"LocatorHost", type text}})
+				in
+				    Final

@@ -1,0 +1,80 @@
+/// Power Platform environments - the security and data boundary each agent lives in.
+table Environment
+	lineageTag: 57f8162f-00e6-47a0-9e81-da6099127acf
+
+	column EnvironmentId
+		dataType: string
+		isHidden
+		lineageTag: 79c11bbd-1953-449b-b3d8-f7b391fd947f
+		summarizeBy: none
+		sourceColumn: EnvironmentId
+
+	column EnvironmentName
+		dataType: string
+		lineageTag: 7b7a177a-7a02-4f29-95b2-26878ce981da
+		summarizeBy: none
+		sourceColumn: EnvironmentName
+
+	column Region
+		dataType: string
+		lineageTag: b4519eee-c912-490d-a24b-b9e759ebb7aa
+		summarizeBy: none
+		sourceColumn: Region
+
+	column EnvironmentType
+		dataType: string
+		lineageTag: b1f13891-c03c-448b-95cd-9d5f8582fb9d
+		summarizeBy: none
+		sourceColumn: EnvironmentType
+
+	column IsManaged
+		dataType: boolean
+		lineageTag: 99fbff81-a7e7-4af7-977f-ba1a2011bcb4
+		summarizeBy: none
+		sourceColumn: IsManaged
+
+	column EnvironmentGroupId
+		dataType: string
+		isHidden
+		lineageTag: 407afa94-aa6b-4875-8e76-c2387ad7037d
+		summarizeBy: none
+		sourceColumn: EnvironmentGroupId
+
+	column CreatedAt
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn:ss
+		lineageTag: 9d1939d9-fe3c-4076-9100-ddb3925c21e3
+		summarizeBy: none
+		sourceColumn: CreatedAt
+
+	column LastModifiedAt
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn:ss
+		lineageTag: a8ada422-77e0-467a-8511-19aedb7f5aad
+		summarizeBy: none
+		sourceColumn: LastModifiedAt
+
+	column CreatedBy
+		dataType: string
+		isHidden
+		lineageTag: 6824c837-f2ab-4096-8387-ec71448981e9
+		summarizeBy: none
+		sourceColumn: CreatedBy
+
+	/// Which adoption band the environment falls into, computed from its own agents. COUNTROWS over an empty FILTER returns BLANK rather than 0, and DAX treats BLANK = 0 as true, so environments with agents but no recent usage land in "No adoption" as intended.
+	column AdoptionBand = VAR agents = COUNTROWS ( RELATEDTABLE ( 'Agent' ) ) VAR active = COUNTROWS ( FILTER ( RELATEDTABLE ( 'Agent' ), 'Agent'[ActivityStatus] IN { "Active (7d)", "Active (30d)" } ) ) VAR rate = DIVIDE ( active, agents ) RETURN SWITCH ( TRUE (), ISBLANK ( agents ), "No agents", rate = 0, "No adoption", rate < 0.05, "Under 5%", rate < 0.1, "5-10%", rate < 0.25, "10-25%", "25% and above" )
+		dataType: string
+		lineageTag: 3464c19c-7881-4752-a9c1-394de149b0bc
+		summarizeBy: none
+
+	partition Environment = m
+		mode: import
+		source =
+				let
+				    Raw = FnArg("PowerPlatformResources | where type =~ 'microsoft.powerplatform/environments' | extend p = properties | project EnvironmentId = tostring(name), EnvironmentName = tostring(p.displayName), Region = tostring(location), EnvironmentType = tostring(p.environmentType), IsManaged = tobool(p.isManaged), EnvironmentGroupId = tostring(p.environmentGroupId), CreatedAt = tostring(p.createdAt), LastModifiedAt = tostring(p.lastModifiedAt), CreatedBy = tostring(p.createdBy) | order by EnvironmentId asc"),
+				    Kept = FnRecordsToTable(Raw, {"EnvironmentId", "EnvironmentName", "Region", "EnvironmentType", "IsManaged", "EnvironmentGroupId", "CreatedAt", "LastModifiedAt", "CreatedBy"}),
+				    Converted = Table.TransformColumns(Kept, {{"IsManaged", FnToBool, type logical}, {"CreatedAt", FnToDateTime, type datetime}, {"LastModifiedAt", FnToDateTime, type datetime}}),
+				    Final = Table.TransformColumnTypes(Converted, {{"EnvironmentId", type text}, {"EnvironmentName", type text}, {"Region", type text}, {"EnvironmentType", type text}, {"EnvironmentGroupId", type text}, {"CreatedBy", type text}})
+				in
+				    Final
+

@@ -1,0 +1,37 @@
+/// One row per agent per knowledge source type - what each agent is actually grounded in. This is the only integration surface Agent Builder agents have: they carry no Power Platform connectors, tools or flows, so they are invisible in the connector fact table.
+table AgentKnowledge
+	lineageTag: 6aad2f1e-997d-4b0d-be8c-148c913682fd
+
+	column AgentKey
+		dataType: string
+		isHidden
+		lineageTag: 94ce6f0c-f74b-466c-a7cf-276df7aa0847
+		summarizeBy: none
+		sourceColumn: AgentKey
+
+	/// Friendly name of the knowledge source type, e.g. SharePoint sites, Public websites, Graph connectors.
+	column KnowledgeType
+		dataType: string
+		lineageTag: 135c89d6-2659-47e3-9f80-010c3792b183
+		summarizeBy: none
+		sourceColumn: KnowledgeType
+
+	/// How many sources of this type the agent has configured.
+	column SourceCount
+		dataType: int64
+		formatString: #,0
+		lineageTag: 8446ac48-3b65-4e4f-87e6-275924dc93eb
+		summarizeBy: sum
+		sourceColumn: SourceCount
+
+	partition AgentKnowledge = m
+		mode: import
+		source =
+				let
+				    Raw = FnArg("PowerPlatformResources | where type =~ 'microsoft.copilotstudio/agents' | extend p = properties, kbt = properties.componentsCounts.knowledgeByType | mv-expand k = bag_keys(kbt) | project AgentKey = strcat(tostring(p.environmentId), '|', tostring(name)), kt = tostring(k), SourceCount = toint(kbt[tostring(k)]) | where SourceCount > 0 | union (     PowerPlatformResources     | where type =~ 'microsoft.copilotstudio/agents'     | where tobool(properties.isWebSearchEnabledForKnowledge) == true     | project AgentKey = strcat(tostring(properties.environmentId), '|', tostring(name)),     kt = 'webSearch', SourceCount = toint(1) ) | project AgentKey, SourceCount, KnowledgeType = case( kt == 'files', 'Uploaded files', kt == 'fileGroups', 'File groups', kt == 'publicSites', 'Public websites', kt == 'sharepointSites', 'SharePoint sites', kt == 'dataverseSources', 'Dataverse tables', kt == 'graphConnectors', 'Microsoft Graph connectors', kt == 'powerPlatformConnectors', 'Power Platform connectors', kt == 'bingCustomSearch', 'Bing custom search', kt == 'teamsMessages', 'Teams messages', kt == 'webSearch', 'Web search', kt) | order by AgentKey asc, KnowledgeType asc"),
+				    Kept = FnRecordsToTable(Raw, {"AgentKey", "KnowledgeType", "SourceCount"}),
+				    Converted = Table.TransformColumns(Kept, {{"SourceCount", FnToInt, Int64.Type}}),
+				    Final = Table.TransformColumnTypes(Converted, {{"AgentKey", type text}, {"KnowledgeType", type text}})
+				in
+				    Final
+

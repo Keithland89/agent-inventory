@@ -1,0 +1,73 @@
+/// Autonomous agent flows and Microsoft 365 agent flows registered in the tenant.
+table AgentFlow
+	lineageTag: 7251e05a-b333-4795-b820-91dbe2104f4c
+
+	column FlowId
+		dataType: string
+		isHidden
+		lineageTag: bd78731c-53b1-4661-ac73-2bf134ae3947
+		summarizeBy: none
+		sourceColumn: FlowId
+
+	column FlowName
+		dataType: string
+		lineageTag: 7eb79940-4ec8-419b-87e2-924ab2aee8ef
+		summarizeBy: none
+		sourceColumn: FlowName
+
+	column FlowType
+		dataType: string
+		lineageTag: 7f1ecc23-caab-4590-aff9-efba9fd50ce6
+		summarizeBy: none
+		sourceColumn: FlowType
+
+	column EnvironmentId
+		dataType: string
+		isHidden
+		lineageTag: cba497df-ef6d-4066-9596-8ca841cf7dee
+		summarizeBy: none
+		sourceColumn: EnvironmentId
+
+	column State
+		dataType: string
+		lineageTag: e774b533-6bfc-44d3-b7c9-40c2d5fcc521
+		summarizeBy: none
+		sourceColumn: State
+
+	column CreatedAt
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn:ss
+		lineageTag: eab6165e-c31f-4572-88ab-770d4c2acc37
+		summarizeBy: none
+		sourceColumn: CreatedAt
+
+	column Region
+		dataType: string
+		lineageTag: 55099952-d4d4-4482-a5ed-95761a8fc560
+		summarizeBy: none
+		sourceColumn: Region
+
+	column LastUsed
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn:ss
+		lineageTag: 4c0da362-a646-4539-a496-afa33e5945bd
+		summarizeBy: none
+		sourceColumn: LastUsed
+
+	partition AgentFlow = m
+		mode: import
+		source =
+				let
+				    Raw = FnArg("PowerPlatformResources | where type in~ ('microsoft.powerautomate/agentflows','microsoft.powerautomate/m365agentflows') | extend p = properties | project FlowId = tostring(name), FlowName = tostring(p.displayName), FlowType = iff(type has 'm365agentflows', 'M365 Agent Flow', 'Agent Flow'), EnvironmentId = tostring(p.environmentId), State = tostring(p.state), CreatedAt = tostring(p.createdAt), Region = tostring(location) | order by FlowId asc"),
+				    Usage = FnArg("PowerPlatformResources | where type =~ 'microsoft.powerplatformusage/usagerecords' | where isnotnull(properties) | project ResourceKey = tostring(properties.resourceId), LastUsedRaw = tostring(properties.lastUsed) | where isnotempty(ResourceKey) and isnotempty(LastUsedRaw) | summarize LastUsedRaw = max(LastUsedRaw) by ResourceKey | order by ResourceKey asc"),
+				    tF = FnRecordsToTable(Raw, {"FlowId", "FlowName", "FlowType", "EnvironmentId", "State", "CreatedAt", "Region"}),
+				    tU = FnRecordsToTable(Usage, {"ResourceKey", "LastUsedRaw"}),
+				    Joined = Table.NestedJoin(tF, {"FlowId"}, tU, {"ResourceKey"}, "u", JoinKind.LeftOuter),
+				    Expanded = Table.ExpandTableColumn(Joined, "u", {"LastUsedRaw"}, {"LastUsedRaw"}),
+				    WithUse = Table.AddColumn(Expanded, "LastUsed", each FnToDateTime([LastUsedRaw]), type datetime),
+				    Kept = Table.SelectColumns(WithUse, {"FlowId", "FlowName", "FlowType", "EnvironmentId", "State", "CreatedAt", "Region", "LastUsed"}, MissingField.UseNull),
+				    Converted = Table.TransformColumns(Kept, {{"CreatedAt", FnToDateTime, type datetime}}),
+				    Final = Table.TransformColumnTypes(Converted, {{"FlowId", type text}, {"FlowName", type text}, {"FlowType", type text}, {"EnvironmentId", type text}, {"State", type text}, {"Region", type text}})
+				in
+				    Final
+

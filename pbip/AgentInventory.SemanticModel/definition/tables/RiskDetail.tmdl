@@ -1,0 +1,69 @@
+/// Every individual governance risk factor that fired for an agent, with the points it contributed. Use this to explain a risk score.
+table RiskDetail
+	lineageTag: f287ece0-5203-4901-b3b8-22ca1d740935
+
+	column AgentKey
+		dataType: string
+		isHidden
+		lineageTag: 439e64bf-cbc8-497f-9958-743c6848761b
+		summarizeBy: none
+		sourceColumn: AgentKey
+
+	column AgentName
+		dataType: string
+		lineageTag: 902c6166-29da-42a8-a64b-76dabc962797
+		summarizeBy: none
+		sourceColumn: AgentName
+
+	column EnvironmentName
+		dataType: string
+		lineageTag: 9514e8b3-8bbd-483a-9126-eadac899d719
+		summarizeBy: none
+		sourceColumn: EnvironmentName
+
+	column Platform
+		dataType: string
+		lineageTag: 2d6064f9-4e03-4b1d-b11b-1be65c6b477e
+		summarizeBy: none
+		sourceColumn: Platform
+
+	/// The individual governance condition that fired.
+	column RiskFactor
+		dataType: string
+		lineageTag: 2edc71eb-7b52-4931-94e6-df9b9eaa9ef7
+		summarizeBy: none
+		sourceColumn: RiskFactor
+
+	/// Points this factor contributed to the agent's total risk score.
+	column Points
+		dataType: int64
+		formatString: #,0
+		lineageTag: 13bd1121-0e1c-4656-b368-58dd29222da4
+		summarizeBy: sum
+		sourceColumn: Points
+
+	column RiskScore
+		dataType: int64
+		formatString: #,0
+		lineageTag: 5623cf9e-5f1d-491d-b8a0-6f192e085c32
+		summarizeBy: sum
+		sourceColumn: RiskScore
+
+	column RiskBand
+		dataType: string
+		lineageTag: e451e27f-6305-4b53-99d5-d630a7d49a5e
+		summarizeBy: none
+		sourceColumn: RiskBand
+
+	partition RiskDetail = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "\FactRiskFactor.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Headers = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Kept = Table.SelectColumns(Headers, {"AgentKey", "AgentName", "EnvironmentName", "Platform", "RiskFactor", "Points", "RiskScore", "RiskBand"}, MissingField.UseNull),
+				    Converted = Table.TransformColumns(Kept, {{"Points", FnToInt, Int64.Type}, {"RiskScore", FnToInt, Int64.Type}}),
+				    Typed = Table.TransformColumnTypes(Converted, {{"AgentKey", type text}, {"AgentName", type text}, {"EnvironmentName", type text}, {"Platform", type text}, {"RiskFactor", type text}, {"RiskBand", type text}})
+				in
+				    Typed
+

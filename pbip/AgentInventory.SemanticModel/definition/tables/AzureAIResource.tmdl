@@ -1,0 +1,124 @@
+/// Azure AI Foundry accounts, hubs and projects - the surface that hosts Foundry Agent Service agents.
+table AzureAIResource
+	lineageTag: 7a78e03e-3ef5-4449-a027-7d8cf5b845e2
+
+	column ResourceId
+		dataType: string
+		isHidden
+		lineageTag: 85d46c17-205e-41c4-9943-1185a6f527d1
+		summarizeBy: none
+		sourceColumn: ResourceId
+
+	column ResourceName
+		dataType: string
+		lineageTag: 9117a305-f21d-446a-96c8-286eedf27f12
+		summarizeBy: none
+		sourceColumn: ResourceName
+
+	column ParentAccount
+		dataType: string
+		lineageTag: 2456d0e4-3bbb-41cc-930e-d7683609731e
+		summarizeBy: none
+		sourceColumn: ParentAccount
+
+	column ResourceType
+		dataType: string
+		lineageTag: 0f938026-aa75-43f9-8b05-c86dcace0299
+		summarizeBy: none
+		sourceColumn: ResourceType
+
+	column Kind
+		dataType: string
+		lineageTag: 05430cd3-45da-4350-b389-e8fef24ca942
+		summarizeBy: none
+		sourceColumn: Kind
+
+	/// Foundry project / AI Foundry account / Foundry hub / Azure OpenAI.
+	column Category
+		dataType: string
+		lineageTag: a51d0ac5-720a-4080-a879-aebce16e3eb9
+		summarizeBy: none
+		sourceColumn: Category
+
+	/// TRUE for Foundry projects, which are the resources that host Foundry Agent Service agents.
+	column IsAgentHost
+		dataType: boolean
+		lineageTag: 860cfb94-c3f3-4a61-bd66-4be7cca6d840
+		summarizeBy: none
+		sourceColumn: IsAgentHost
+
+	column Region
+		dataType: string
+		lineageTag: 39b32915-5c33-4e45-a174-72507d966ad8
+		summarizeBy: none
+		sourceColumn: Region
+
+	column ResourceGroup
+		dataType: string
+		lineageTag: 66adb0fe-1da6-4472-baaa-3a31310c0930
+		summarizeBy: none
+		sourceColumn: ResourceGroup
+
+	column SubscriptionId
+		dataType: string
+		lineageTag: 55ca057d-7eaf-41b2-922f-ff86c889af23
+		summarizeBy: none
+		sourceColumn: SubscriptionId
+
+	column Endpoint
+		dataType: string
+		isHidden
+		lineageTag: 55e84ee0-ca30-485b-b5ad-f1d5e490293a
+		summarizeBy: none
+		sourceColumn: Endpoint
+
+	column Sku
+		dataType: string
+		lineageTag: 7321c7dd-3b12-441c-a77f-caef821e33d5
+		summarizeBy: none
+		sourceColumn: Sku
+
+	column PublicAccess
+		dataType: string
+		lineageTag: 50609f86-f449-4bec-8dd7-8dc73895fd3e
+		summarizeBy: none
+		sourceColumn: PublicAccess
+
+	column LocalAuthOff
+		dataType: boolean
+		lineageTag: fc2dd565-931d-4e76-bb97-824daf1d5898
+		summarizeBy: none
+		sourceColumn: LocalAuthOff
+
+	column CreatedAt
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn:ss
+		lineageTag: ce0a4749-dd9a-4b3b-b53e-4691c42e7b54
+		summarizeBy: none
+		sourceColumn: CreatedAt
+
+	partition AzureAIResource = m
+		mode: import
+		source =
+				let
+				    Source = if SourceMode = "Live" then (
+				        let
+				            Raw = FnArg("resources | where type startswith 'microsoft.cognitiveservices' or type startswith 'microsoft.machinelearningservices' | where type !endswith 'deployments' | extend p = properties, resKind = tostring(kind) | extend isProject = (type endswith 'accounts/projects') or (resKind == 'Project') | project ResourceId = tostring(id), ResourceName = tostring(split(name, '/')[-1]), ParentAccount = iff(name has '/', tostring(split(name, '/')[0]), ''), ResourceType = tostring(type), Kind = resKind, Category = case(isProject, 'Foundry project', resKind == 'AIServices', 'AI Foundry account', resKind == 'Hub', 'Foundry hub', resKind == 'OpenAI', 'Azure OpenAI', resKind), IsAgentHost = isProject, Region = tostring(location), ResourceGroup = tostring(resourceGroup), SubscriptionId = tostring(subscriptionId), Endpoint = tostring(p.endpoint), Sku = tostring(sku.name), PublicAccess = tostring(p.publicNetworkAccess), LocalAuthOff = tobool(p.disableLocalAuth), CreatedAt = tostring(p.createdAtDate)"),
+				            Kept = FnRecordsToTable(Raw, {"ResourceId", "ResourceName", "ParentAccount", "ResourceType", "Kind", "Category", "IsAgentHost", "Region", "ResourceGroup", "SubscriptionId", "Endpoint", "Sku", "PublicAccess", "LocalAuthOff", "CreatedAt"}),
+				            Converted = Table.TransformColumns(Kept, {{"IsAgentHost", FnToBool, type logical}, {"LocalAuthOff", FnToBool, type logical}, {"CreatedAt", FnToDateTime, type datetime}}),
+				            Final = Table.TransformColumnTypes(Converted, {{"ResourceId", type text}, {"ResourceName", type text}, {"ParentAccount", type text}, {"ResourceType", type text}, {"Kind", type text}, {"Category", type text}, {"Region", type text}, {"ResourceGroup", type text}, {"SubscriptionId", type text}, {"Endpoint", type text}, {"Sku", type text}, {"PublicAccess", type text}})
+				        in
+				            Final
+				    ) else (
+				        let
+				            Source = Csv.Document(File.Contents(DataFolder & "\DimAzureAIResource.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				            Headers = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				            Kept = Table.SelectColumns(Headers, {"ResourceId", "ResourceName", "ParentAccount", "ResourceType", "Kind", "Category", "IsAgentHost", "Region", "ResourceGroup", "SubscriptionId", "Endpoint", "Sku", "PublicAccess", "LocalAuthOff", "CreatedAt"}, MissingField.UseNull),
+				            Converted = Table.TransformColumns(Kept, {{"IsAgentHost", FnToBool, type logical}, {"LocalAuthOff", FnToBool, type logical}, {"CreatedAt", FnToDateTime, type datetime}}),
+				            Typed = Table.TransformColumnTypes(Converted, {{"ResourceId", type text}, {"ResourceName", type text}, {"ParentAccount", type text}, {"ResourceType", type text}, {"Kind", type text}, {"Category", type text}, {"Region", type text}, {"ResourceGroup", type text}, {"SubscriptionId", type text}, {"Endpoint", type text}, {"Sku", type text}, {"PublicAccess", type text}})
+				        in
+				            Typed
+				    )
+				in
+				    Source
+

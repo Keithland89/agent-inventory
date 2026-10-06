@@ -1,0 +1,47 @@
+/// Entra ID principals that created or own agents, resolved from Dataverse systemusers. Rows without an Entra object id are dropped, so this covers only principals Dataverse has actually seen.
+table User
+	lineageTag: 8a6eb956-3203-4941-91c6-8dcecc100c47
+
+	column UserKey
+		dataType: string
+		isHidden
+		lineageTag: b5cf5b48-115a-43f3-b634-0428c76becac
+		summarizeBy: none
+		sourceColumn: UserKey
+
+	column DisplayName
+		dataType: string
+		lineageTag: 64e0c06e-b0d3-42d8-bcfd-1d4447c27894
+		summarizeBy: none
+		sourceColumn: DisplayName
+
+	column UserPrincipalName
+		dataType: string
+		lineageTag: 884b4f4d-40fd-4ece-9630-7ea4053ba28b
+		summarizeBy: none
+		sourceColumn: UserPrincipalName
+
+	/// user / servicePrincipal / group.
+	column PrincipalType
+		dataType: string
+		lineageTag: 7e6808b4-44b6-414a-88a8-f54f05271933
+		summarizeBy: none
+		sourceColumn: PrincipalType
+
+	partition User = m
+		mode: import
+		source =
+				let
+				    Src = FnDataverse("systemusers", {"azureactivedirectoryobjectid", "fullname", "internalemailaddress", "applicationid"}),
+				    // OData.Feed returns Edm.Guid as a Guid value, not text. UserKey joins to
+				    // Agent[OwnerId], which is text, so both guid columns are coerced explicitly.
+				    Typed0 = Table.AddColumn(Src, "PrincipalType", each if [applicationid] = null then "user" else "application", type text),
+				    AsText = Table.TransformColumns(Typed0, {{"azureactivedirectoryobjectid", each if _ = null then null else Text.Lower(Text.From(_)), type text}}),
+				    Real = Table.SelectRows(AsText, each [azureactivedirectoryobjectid] <> null and [azureactivedirectoryobjectid] <> ""),
+				    Ren = Table.RenameColumns(Real, {{"azureactivedirectoryobjectid", "UserKey"}, {"fullname", "DisplayName"}, {"internalemailaddress", "UserPrincipalName"}}),
+				    Uniq = FnDistinctKey(Ren, "UserKey"),
+				    Kept = Table.SelectColumns(Uniq, {"UserKey", "DisplayName", "UserPrincipalName", "PrincipalType"}, MissingField.UseNull),
+				    Typed = Table.TransformColumnTypes(Kept, {{"UserKey", type text}, {"DisplayName", type text}, {"UserPrincipalName", type text}})
+				in
+				    Typed
+

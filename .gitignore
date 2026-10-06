@@ -1,0 +1,35 @@
+# Build output
+tools/**/bin/
+tools/**/obj/
+
+# Node dependencies and cached schemas
+tools/**/node_modules/
+tools/pbir-validate/.schema-cache/
+
+# Power BI Desktop local state
+**/.pbi/localSettings.json
+**/.pbi/cache.abf
+
+# Purview audit raw cache - large, and contains user prompts' metadata
+data/audit-raw-cache.json
+probe/audit-probe/
+
+# Generated tenant extract. ~150 MB of regenerable data, and FactCopilotInteraction.csv
+# carries user-level interaction rows, so it is never committed. The local build reads this
+# folder; the anonymised sample in sample-data\ is what ships. pbip-cloud does not need it.
+# Note: a negation cannot rescue a file inside an excluded *directory*, so this
+# excludes the directory's contents rather than the directory itself.
+data/*
+!data/README.md
+
+# Never commit credentials.
+*.secret.xml
+audit-secret.xml
+
+# Raw Power Automate flow exports. Unlike the solution export - which masks secret-typed
+# environment variables as ****** - the flow API resolves environment-variable defaults
+# in plaintext, so these embed the live client secret at
+#   properties.definition.parameters.Audit_Secret (poc_Audit_Secret).defaultValue
+# The same flows ship safely in solution\CopilotInteractionLogging*.zip, so these raw
+# exports are kept locally for reference only and never committed.
+work/flow-*.json

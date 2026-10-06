@@ -1,0 +1,96 @@
+/// One row per individual named knowledge source - the actual SharePoint site, public website, Graph connector or Azure AI Search index an agent reads. Azure Resource Graph carries only counts, so these names are swept from each environment's own Dataverse by the collector.
+table KnowledgeSource
+	lineageTag: 9028f4bf-85b8-451c-857c-673d44f244bc
+
+	column SourceId
+		dataType: string
+		isHidden
+		lineageTag: ef32c07a-ab16-4c49-bcfd-b2921e3cf126
+		summarizeBy: none
+		sourceColumn: SourceId
+
+	column AgentKey
+		dataType: string
+		isHidden
+		lineageTag: f4bfc22e-5634-4f5b-9a1d-22a3247aea36
+		summarizeBy: none
+		sourceColumn: AgentKey
+
+	/// The name the maker gave the source, or the URL itself when they gave it none.
+	column SourceName
+		dataType: string
+		lineageTag: 5bead9aa-398b-4580-9043-6a864fd8a114
+		summarizeBy: none
+		sourceColumn: SourceName
+
+	/// Friendly source type, using the same vocabulary as AgentKnowledge so the count-level and name-level tables slice together.
+	column KnowledgeType
+		dataType: string
+		lineageTag: cdacc60f-ba28-454c-97e5-ec69385e49a1
+		summarizeBy: none
+		sourceColumn: KnowledgeType
+
+	/// The underlying Copilot Studio source kind, e.g. SharePointKnowledgeSource, FederatedStructuredSearchSource. Kept because two distinct kinds can share one friendly type.
+	column SourceKind
+		dataType: string
+		lineageTag: 14858ca3-8015-40d1-b43f-d08e2fa317ae
+		summarizeBy: none
+		sourceColumn: SourceKind
+
+	/// TRUE when the source reads content from outside the tenant boundary - public websites, Graph connectors, Azure AI Search indexes and federated systems.
+	column IsExternal
+		dataType: boolean
+		lineageTag: 79726062-b943-48c4-b814-7b73bb01acea
+		summarizeBy: none
+		sourceColumn: IsExternal
+
+	/// The site URL, index or connector name the agent actually reads. Blank for kinds that carry only an internal configuration id, such as Dataverse tables and file groups.
+	column Locator
+		dataType: string
+		lineageTag: c3419292-136e-4241-9534-e27e2ae4f821
+		summarizeBy: none
+		sourceColumn: Locator
+
+	/// Host of the locator, so grounding can be grouped by site rather than by thousands of unique URLs.
+	column LocatorHost
+		dataType: string
+		lineageTag: 76cd0a04-ff47-4b41-a121-f43e564283bd
+		summarizeBy: none
+		sourceColumn: LocatorHost
+
+	/// The owning agent's name, resolved across the relationship to the agent inventory. Dataverse stores no name against a knowledge source, so this is the only way to label one. Falls back to a legible marker rather than a blank when the sweep captured a source for an agent Azure Resource Graph no longer returns - the source really exists, the agent has since been deleted.
+	column AgentDisplayName = VAR n = RELATED ( 'Agent'[AgentName] ) RETURN IF ( ISBLANK ( n ) || n = "", "Agent no longer in inventory", n )
+		dataType: string
+		lineageTag: 3b7c1a94-6e25-4d80-91af-2c6d5e084713
+		summarizeBy: none
+
+	/// The environment the source is grounded in. Taken from the agent where it still exists, otherwise from the environment id embedded in the agent key, so a source stays attributable to a tenant location even after its agent has gone.
+	column EnvironmentDisplayName = VAR env = RELATED ( 'Agent'[EnvironmentName] ) VAR pos = FIND ( "|", 'KnowledgeSource'[AgentKey], 1, 0 ) VAR envId = IF ( pos > 1, LEFT ( 'KnowledgeSource'[AgentKey], pos - 1 ), "" ) VAR fromDim = IF ( envId <> "", LOOKUPVALUE ( 'Environment'[EnvironmentName], 'Environment'[EnvironmentId], envId ) ) RETURN IF ( NOT ISBLANK ( env ) && env <> "", env, IF ( NOT ISBLANK ( fromDim ) && fromDim <> "", fromDim, IF ( envId = "", "Unknown environment", "Unlisted environment (" & envId & ")" ) ) )
+		dataType: string
+		lineageTag: 8d4e2f60-15b7-43ca-b8e1-7f9c0a3d6b52
+		summarizeBy: none
+
+	/// When the out-of-band sweep that produced this row ran. Power BI refreshes from Dataverse, not from the 520 environments, so this - not the dataset refresh time - is the true age of the named-source data.
+	column CollectedAt
+		dataType: dateTime
+		isHidden
+		lineageTag: ef3be549-5b20-4188-a583-901b9f87a6a6
+		summarizeBy: none
+		sourceColumn: CollectedAt
+
+	partition KnowledgeSource = m
+		mode: import
+		source =
+				let
+				    Src = SrcKnowledgeSource,
+				    Ren = Table.RenameColumns(Src, {
+				        {"poc_sourceid", "SourceId"}, {"poc_agentkey", "AgentKey"}, {"poc_sourcename", "SourceName"},
+				        {"poc_knowledgetype", "KnowledgeType"}, {"poc_sourcekind", "SourceKind"},
+				        {"poc_isexternal", "IsExternal"}, {"poc_locator", "Locator"}, {"poc_locatorhost", "LocatorHost"},
+				        {"poc_collectedat", "CollectedAt"}}),
+				    Keyed = Table.SelectRows(Ren, each [AgentKey] <> null and [AgentKey] <> ""),
+				    Converted = Table.TransformColumns(Keyed, {{"IsExternal", FnToBool, type logical}, {"CollectedAt", FnToDateTime, type datetime}}),
+				    Final = Table.TransformColumnTypes(Converted, {{"SourceId", type text}, {"AgentKey", type text}, {"SourceName", type text}, {"KnowledgeType", type text}, {"SourceKind", type text}, {"Locator", type text}, {"LocatorHost", type text}})
+				in
+				    Final
+

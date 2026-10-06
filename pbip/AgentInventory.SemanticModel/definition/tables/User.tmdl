@@ -1,0 +1,42 @@
+/// Entra ID principals that created or own agents, resolved via Microsoft Graph directoryObjects/getByIds.
+table User
+	lineageTag: 240ef5aa-f8d0-48f6-8497-73a81a7c49c6
+
+	column UserKey
+		dataType: string
+		isHidden
+		lineageTag: 94ae048f-38df-4d09-b486-86af0ce0d9e9
+		summarizeBy: none
+		sourceColumn: UserKey
+
+	column DisplayName
+		dataType: string
+		lineageTag: 615b877d-d62b-40bf-b853-db8ab67e9f57
+		summarizeBy: none
+		sourceColumn: DisplayName
+
+	column UserPrincipalName
+		dataType: string
+		lineageTag: 295d5fcf-cad6-4086-8336-2b0fe2427cdc
+		summarizeBy: none
+		sourceColumn: UserPrincipalName
+
+	/// user / servicePrincipal / group.
+	column PrincipalType
+		dataType: string
+		lineageTag: 58d237c5-95e7-4340-9af5-b5cd47cd8b3f
+		summarizeBy: none
+		sourceColumn: PrincipalType
+
+	partition User = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents(DataFolder & "\DimUser.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				    Headers = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				    Kept = Table.SelectColumns(Headers, {"UserKey", "DisplayName", "UserPrincipalName", "PrincipalType"}, MissingField.UseNull),
+				    Converted = Table.TransformColumns(Kept, {}),
+				    Typed = Table.TransformColumnTypes(Converted, {{"UserKey", type text}, {"DisplayName", type text}, {"UserPrincipalName", type text}, {"PrincipalType", type text}})
+				in
+				    Typed
+

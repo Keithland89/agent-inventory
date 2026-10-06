@@ -1,0 +1,87 @@
+/// Autonomous agent flows and Microsoft 365 agent flows registered in the tenant.
+table AgentFlow
+	lineageTag: 790a3212-246c-4dc8-a3c4-8afae03a41e7
+
+	column FlowId
+		dataType: string
+		isHidden
+		lineageTag: 313f9e33-767e-474a-ba9b-c944cd08ce70
+		summarizeBy: none
+		sourceColumn: FlowId
+
+	column FlowName
+		dataType: string
+		lineageTag: c539215f-ea0d-4469-b2b3-5d1307ee0f21
+		summarizeBy: none
+		sourceColumn: FlowName
+
+	column FlowType
+		dataType: string
+		lineageTag: 09dbc689-c215-40d9-a1a2-bf1ca84f449e
+		summarizeBy: none
+		sourceColumn: FlowType
+
+	column EnvironmentId
+		dataType: string
+		isHidden
+		lineageTag: 68c70a70-77fb-45a6-8770-6b4c39b19751
+		summarizeBy: none
+		sourceColumn: EnvironmentId
+
+	column State
+		dataType: string
+		lineageTag: 36d7ab57-69d4-4a81-ac49-61f5951b524d
+		summarizeBy: none
+		sourceColumn: State
+
+	column CreatedAt
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn:ss
+		lineageTag: b43b0063-e551-470d-9e9a-b6f290e56b66
+		summarizeBy: none
+		sourceColumn: CreatedAt
+
+	column Region
+		dataType: string
+		lineageTag: 8f1bcf35-d405-4b73-bf8d-e37533285a11
+		summarizeBy: none
+		sourceColumn: Region
+
+	column LastUsed
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn:ss
+		lineageTag: 6accca48-4032-4953-a707-7ca08b888d5f
+		summarizeBy: none
+		sourceColumn: LastUsed
+
+	partition AgentFlow = m
+		mode: import
+		source =
+				let
+				    Source = if SourceMode = "Live" then (
+				        let
+				            Raw = FnArg("PowerPlatformResources | where type in~ ('microsoft.powerautomate/agentflows','microsoft.powerautomate/m365agentflows') | extend p = properties | project FlowId = tostring(name), FlowName = tostring(p.displayName), FlowType = iff(type has 'm365agentflows', 'M365 Agent Flow', 'Agent Flow'), EnvironmentId = tostring(p.environmentId), State = tostring(p.state), CreatedAt = tostring(p.createdAt), Region = tostring(location)"),
+				            Usage = FnArg("PowerPlatformResources | where type =~ 'microsoft.powerplatformusage/usagerecords' | where isnotnull(properties) | project ResourceKey = tostring(properties.resourceId), LastUsedRaw = tostring(properties.lastUsed) | where isnotempty(ResourceKey) and isnotempty(LastUsedRaw) | summarize LastUsedRaw = max(LastUsedRaw) by ResourceKey"),
+				            tF = FnRecordsToTable(Raw, {"FlowId", "FlowName", "FlowType", "EnvironmentId", "State", "CreatedAt", "Region"}),
+				            tU = FnRecordsToTable(Usage, {"ResourceKey", "LastUsedRaw"}),
+				            Joined = Table.NestedJoin(tF, {"FlowId"}, tU, {"ResourceKey"}, "u", JoinKind.LeftOuter),
+				            Expanded = Table.ExpandTableColumn(Joined, "u", {"LastUsedRaw"}, {"LastUsedRaw"}),
+				            WithUse = Table.AddColumn(Expanded, "LastUsed", each FnToDateTime([LastUsedRaw]), type datetime),
+				            Kept = Table.SelectColumns(WithUse, {"FlowId", "FlowName", "FlowType", "EnvironmentId", "State", "CreatedAt", "Region", "LastUsed"}, MissingField.UseNull),
+				            Converted = Table.TransformColumns(Kept, {{"CreatedAt", FnToDateTime, type datetime}}),
+				            Final = Table.TransformColumnTypes(Converted, {{"FlowId", type text}, {"FlowName", type text}, {"FlowType", type text}, {"EnvironmentId", type text}, {"State", type text}, {"Region", type text}})
+				        in
+				            Final
+				    ) else (
+				        let
+				            Source = Csv.Document(File.Contents(DataFolder & "\FactAgentFlow.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				            Headers = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				            Kept = Table.SelectColumns(Headers, {"FlowId", "FlowName", "FlowType", "EnvironmentId", "State", "CreatedAt", "Region", "LastUsed"}, MissingField.UseNull),
+				            Converted = Table.TransformColumns(Kept, {{"CreatedAt", FnToDateTime, type datetime}, {"LastUsed", FnToDateTime, type datetime}}),
+				            Typed = Table.TransformColumnTypes(Converted, {{"FlowId", type text}, {"FlowName", type text}, {"FlowType", type text}, {"EnvironmentId", type text}, {"State", type text}, {"Region", type text}})
+				        in
+				            Typed
+				    )
+				in
+				    Source
+

@@ -1,0 +1,73 @@
+/// Shadow AI seen on Defender-managed endpoints, one row per tool per detection layer.
+/// Three layers, deliberately kept separate because they answer different questions and have different
+/// blind spots: Installed says a packaged app is present, Executed says it actually ran, Network says
+/// the device reached an AI service at all. A tool absent from Installed but present in Network is the
+/// normal shape for browser-based use.
+/// Empty when Defender is unlicensed, has no onboarded devices, or refuses the refresh account - see FnHunt.
+/// In this CSV build the rows come from FactShadowAiSignal.csv.
+/// Set SourceMode to Live to query Defender directly instead. A missing CSV yields an empty table.
+table ShadowAiSignal
+	lineageTag: 5bc02f88-929d-492b-bf6f-9a5833ac1796
+
+	/// Installed, Executed or Network. See the table description for what each proves.
+	column Layer
+		dataType: string
+		lineageTag: a89a4436-4d45-4db3-9a35-ad5719c3fb5a
+		sourceColumn: Layer
+
+	column Category
+		dataType: string
+		lineageTag: 0bba7544-284e-440c-b515-19e928be7c49
+		sourceColumn: Category
+
+	column Vendor
+		dataType: string
+		lineageTag: 78b37c5d-8c6e-497d-a6e3-441aab23da3a
+		sourceColumn: Vendor
+
+	column AppName
+		dataType: string
+		lineageTag: 57e3748b-d3de-4f2a-9b6d-5579371afdef
+		sourceColumn: AppName
+
+	/// Sanctioned or Unsanctioned, taken from ShadowAiWatchlist. This is local policy, not an API verdict.
+	column Posture
+		dataType: string
+		lineageTag: 643c4c10-a3af-40aa-9a19-7f01d410613a
+		sourceColumn: Posture
+
+	/// The raw string Defender returned - software name, process file name or URL - before it was mapped to a watchlist app.
+	column Detected
+		dataType: string
+		lineageTag: bfa9e3f5-abd3-4b11-977a-af6088dd7c69
+		sourceColumn: Detected
+
+	column DeviceCount
+		dataType: int64
+		formatString: #,0
+		lineageTag: e45858c1-a181-4106-84c4-e65b82d342da
+		sourceColumn: DeviceCount
+
+	column UserCount
+		dataType: int64
+		formatString: #,0
+		lineageTag: 06da8b3d-e2c2-4089-b1f0-099b94472fd9
+		sourceColumn: UserCount
+
+	column LastSeen
+		dataType: dateTime
+		formatString: dd/mm/yyyy hh:nn:ss
+		lineageTag: 1c082579-ed91-4023-bc61-0a7ea4c283fc
+		sourceColumn: LastSeen
+
+	partition ShadowAiSignal = m
+		mode: import
+		source =
+				let
+				    Source =
+				        if SourceMode = "Live" then Table.Combine({SrcShadowInstalled, SrcShadowExecuted, SrcShadowNetwork})
+				        else FnCsv("FactShadowAiSignal.csv", {"Layer", "Category", "Vendor", "AppName", "Posture", "Detected", "DeviceCount", "UserCount", "LastSeen"}),
+				    Converted = Table.TransformColumns(Source, {{"DeviceCount", FnToInt, Int64.Type}, {"UserCount", FnToInt, Int64.Type}, {"LastSeen", FnToDateTime, type datetime}}),
+				    Typed = Table.TransformColumnTypes(Converted, {{"Layer", type text}, {"Category", type text}, {"Vendor", type text}, {"AppName", type text}, {"Posture", type text}, {"Detected", type text}})
+				in
+				    Typed

@@ -1,0 +1,92 @@
+/// Power Platform environments - the security and data boundary each agent lives in.
+table Environment
+	lineageTag: d51d62b9-699c-4bed-b0d7-bd3f718ddea2
+
+	column EnvironmentId
+		dataType: string
+		isHidden
+		lineageTag: dbe5d9ed-0756-4beb-8db6-90bb3f5c4779
+		summarizeBy: none
+		sourceColumn: EnvironmentId
+
+	column EnvironmentName
+		dataType: string
+		lineageTag: b73507d1-3065-4080-8fe0-60ac77ed05d9
+		summarizeBy: none
+		sourceColumn: EnvironmentName
+
+	column Region
+		dataType: string
+		lineageTag: 4d65a56b-08f4-4b67-beaa-845462679201
+		summarizeBy: none
+		sourceColumn: Region
+
+	column EnvironmentType
+		dataType: string
+		lineageTag: a93d1f3b-492a-4f76-8eb1-9bfa9b95d770
+		summarizeBy: none
+		sourceColumn: EnvironmentType
+
+	column IsManaged
+		dataType: boolean
+		lineageTag: b0e4b7ae-e438-47d7-9ef9-76e6c4f3af15
+		summarizeBy: none
+		sourceColumn: IsManaged
+
+	column EnvironmentGroupId
+		dataType: string
+		isHidden
+		lineageTag: a7cc92d0-f9e1-497e-aed2-2ba70fbeac53
+		summarizeBy: none
+		sourceColumn: EnvironmentGroupId
+
+	column CreatedAt
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn:ss
+		lineageTag: 2d3beb09-f09f-4f46-b0a8-4e69fec9dc9b
+		summarizeBy: none
+		sourceColumn: CreatedAt
+
+	column LastModifiedAt
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn:ss
+		lineageTag: 1ca7e2b4-c791-40fe-9716-77a880b7c4d1
+		summarizeBy: none
+		sourceColumn: LastModifiedAt
+
+	column CreatedBy
+		dataType: string
+		isHidden
+		lineageTag: 9d77bf40-a1eb-4bb0-ba37-71b80390ec1e
+		summarizeBy: none
+		sourceColumn: CreatedBy
+
+	column AdoptionBand = VAR agents = COUNTROWS ( RELATEDTABLE ( 'Agent' ) ) VAR active = COUNTROWS ( FILTER ( RELATEDTABLE ( 'Agent' ), 'Agent'[ActivityStatus] IN { "Active (7d)", "Active (30d)" } ) ) VAR rate = DIVIDE ( active, agents ) RETURN SWITCH ( TRUE (), ISBLANK ( agents ), "No agents", rate = 0, "No adoption", rate < 0.05, "Under 5%", rate < 0.1, "5-10%", rate < 0.25, "10-25%", "25% and above" )
+		dataType: string
+		lineageTag: 8f64ff42-c1ff-4f37-a113-e72d4cbce48a
+		summarizeBy: none
+
+	partition Environment = m
+		mode: import
+		source =
+				let
+				    Source = if SourceMode = "Live" then (
+				        let
+				            Raw = FnArg("PowerPlatformResources | where type =~ 'microsoft.powerplatform/environments' | extend p = properties | project EnvironmentId = tostring(name), EnvironmentName = tostring(p.displayName), Region = tostring(location), EnvironmentType = tostring(p.environmentType), IsManaged = tobool(p.isManaged), EnvironmentGroupId = tostring(p.environmentGroupId), CreatedAt = tostring(p.createdAt), LastModifiedAt = tostring(p.lastModifiedAt), CreatedBy = tostring(p.createdBy)"),
+				            Kept = FnRecordsToTable(Raw, {"EnvironmentId", "EnvironmentName", "Region", "EnvironmentType", "IsManaged", "EnvironmentGroupId", "CreatedAt", "LastModifiedAt", "CreatedBy"}),
+				            Converted = Table.TransformColumns(Kept, {{"IsManaged", FnToBool, type logical}, {"CreatedAt", FnToDateTime, type datetime}, {"LastModifiedAt", FnToDateTime, type datetime}}),
+				            Final = Table.TransformColumnTypes(Converted, {{"EnvironmentId", type text}, {"EnvironmentName", type text}, {"Region", type text}, {"EnvironmentType", type text}, {"EnvironmentGroupId", type text}, {"CreatedBy", type text}})
+				        in
+				            Final
+				    ) else (
+				        let
+				            Source = Csv.Document(File.Contents(DataFolder & "\DimEnvironment.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+				            Headers = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+				            Kept = Table.SelectColumns(Headers, {"EnvironmentId", "EnvironmentName", "Region", "EnvironmentType", "IsManaged", "EnvironmentGroupId", "CreatedAt", "LastModifiedAt", "CreatedBy"}, MissingField.UseNull),
+				            Converted = Table.TransformColumns(Kept, {{"IsManaged", FnToBool, type logical}, {"CreatedAt", FnToDateTime, type datetime}, {"LastModifiedAt", FnToDateTime, type datetime}}),
+				            Typed = Table.TransformColumnTypes(Converted, {{"EnvironmentId", type text}, {"EnvironmentName", type text}, {"Region", type text}, {"EnvironmentType", type text}, {"EnvironmentGroupId", type text}, {"CreatedBy", type text}})
+				        in
+				            Typed
+				    )
+				in
+				    Source
