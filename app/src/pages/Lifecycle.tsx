@@ -5,12 +5,14 @@ import { STAGE_HELP, STAGES, stageMix, stageMoves, stagesByMonth, userDays, type
 import { agentTrends, LIFECYCLE, LIFECYCLE_HELP, overallReturnRate, reviewAgents, VERDICT_HELP, VERDICTS, type AgentReview, type Verdict } from '../metrics/lifecycle'
 import { div } from '../metrics/measures'
 import { dayNum, lastDataDay } from '../metrics/periods'
+import { href, useParam } from '../routes'
 import { BarList, ColumnChart, Distribution, GroupedBars } from '../ui/charts'
 import { DataTable } from '../ui/DataTable'
 import { dateLabel, DASH, int, monthLabel, pct } from '../ui/format'
 import { Empty, Grid, Kpi, KpiRow, Panel, Select } from '../ui/primitives'
 import { LIFECYCLE_COLOR, RISK_COLOR, STAGE_COLOR, VERDICT_COLOR } from '../ui/theme'
 import { agentCol, date, num, rowsOf, text } from './helpers'
+import { useScrollOnParam } from '../ui/scroll'
 
 const options = (values: readonly string[]) => values.map((v) => ({ value: v, label: v }))
 const signed = (n: number) => (Number.isFinite(n) ? `${n > 0 ? '+' : n < 0 ? '−' : ''}${int(Math.abs(n))}` : DASH)
@@ -110,9 +112,20 @@ export function HabitStages() {
   )
 }
 
+/** Verdicts by how urgently they need someone to act; the table sorts by this by default. */
+const SEVERITY: readonly Verdict[] = ['Retire', 'Review', 'Watch', 'Promote', 'Keep']
+const VERDICT_FILTER = [
+  { value: '', label: 'Needs action' },
+  ...VERDICTS.map((v) => ({ value: v, label: v })),
+  { value: 'all', label: 'All, including Keep' },
+]
+
 export function LifecycleReview() {
   const { ds, scope, openAgent } = useData()
-  const [verdict, setVerdict] = useState<Verdict | ''>('')
+  const [param, setParam] = useParam('verdict')
+  const verdict: Verdict | '' | 'all' = param === 'all' || (VERDICTS as readonly string[]).includes(param) ? (param as Verdict | 'all') : ''
+  const setVerdict = (v: string) => setParam(v)
+  useScrollOnParam('lifecycle-agents', param)
   const m = useMemo(() => {
     const end = lastDataDay(ds.interactions)
     const trends = agentTrends(scope.interactions, end)
@@ -125,14 +138,16 @@ export function LifecycleReview() {
     }
     return {
       end,
-      reviews,
+      reviews: [...reviews].sort((a, b) => (b.trend?.users ?? 0) - (a.trend?.users ?? 0)),
       stages: tally(LIFECYCLE, (r) => r.stage),
       verdicts: tally(VERDICTS, (r) => r.verdict),
       returnRate: overallReturnRate(inScope),
     }
   }, [ds.interactions, scope.interactions, scope.agents, scope.keys])
   const n = (k: string, list: { key: string; value: number }[]) => list.find((x) => x.key === k)?.value ?? 0
-  const rows = verdict ? m.reviews.filter((r) => r.verdict === verdict) : m.reviews
+  const rows = verdict === 'all' ? m.reviews : verdict ? m.reviews.filter((r) => r.verdict === verdict) : m.reviews.filter((r) => r.verdict !== 'Keep')
+  const kept = n('Keep', m.verdicts)
+  const link = (v: Verdict) => href('usage', 'lifecycle', { verdict: v })
 
   return (
     <>
@@ -143,9 +158,9 @@ export function LifecycleReview() {
       <KpiRow>
         <Kpi label="Growing" value={int(n('Growing', m.stages))} tone="licensed" help={LIFECYCLE_HELP.Growing} />
         <Kpi label="Declining" value={int(n('Declining', m.stages))} help={LIFECYCLE_HELP.Declining} />
-        <Kpi label="To promote" value={int(n('Promote', m.verdicts))} help={VERDICT_HELP.Promote} />
-        <Kpi label="To review" value={int(n('Review', m.verdicts))} tone="unlicensed" help={VERDICT_HELP.Review} />
-        <Kpi label="To retire" value={int(n('Retire', m.verdicts))} help={VERDICT_HELP.Retire} />
+        <Kpi label="To promote" value={int(n('Promote', m.verdicts))} help={VERDICT_HELP.Promote} href={link('Promote')} />
+        <Kpi label="To review" value={int(n('Review', m.verdicts))} tone="unlicensed" help={VERDICT_HELP.Review} href={link('Review')} />
+        <Kpi label="To retire" value={int(n('Retire', m.verdicts))} help={VERDICT_HELP.Retire} href={link('Retire')} />
         <Kpi
           label="Return rate"
           value={pct(m.returnRate)}
@@ -163,17 +178,23 @@ export function LifecycleReview() {
             color={VERDICT_COLOR.Keep}
             fmt={int}
             keepOrder
-            selected={verdict}
-            onSelect={(k) => setVerdict((cur) => (cur === k ? '' : (k as Verdict)))}
+            selected={verdict === 'all' ? '' : verdict}
+            onSelect={(k) => setVerdict(verdict === k ? '' : k)}
           />
         </Panel>
         <Panel title="How verdicts work" help="Checked in this order: Retire, Review, then Watch, Promote and Keep.">
           <Rules order={VERDICTS} help={VERDICT_HELP} color={VERDICT_COLOR} />
         </Panel>
         <Panel
+          id="lifecycle-agents"
           title="Agents to act on"
           span={3}
-          actions={<Select label="Verdict" value={verdict} onChange={(v) => setVerdict(v as Verdict | '')} options={options(VERDICTS)} allLabel="All" />}
+          note={
+            verdict === ''
+              ? `Most urgent first. ${kept ? `${int(kept)} agents marked Keep are hidden.` : ''}`.trim()
+              : undefined
+          }
+          actions={<Select label="Verdict" value={verdict} onChange={setVerdict} options={VERDICT_FILTER} />}
         >
           {rows.length ? (
             <DataTable
@@ -181,14 +202,17 @@ export function LifecycleReview() {
               rows={rowsOf(rows, (r) => r.agent.key)}
               search={(r) => `${r.agent.name} ${r.agent.envName} ${r.agent.ownerName} ${r.reason}`}
               onRowClick={(r) => openAgent(r.agent.key)}
-              initialSort={{ key: 'users', desc: true }}
+              initialSort={{ key: 'verdict' }}
               columns={[
                 agentCol((r: AgentReview) => r.agent),
                 {
                   key: 'verdict',
                   label: 'Verdict',
-                  value: (r: AgentReview) => VERDICTS.indexOf(r.verdict),
+                  value: (r: AgentReview) => SEVERITY.indexOf(r.verdict),
                   render: (r: AgentReview) => <b style={{ color: VERDICT_COLOR[r.verdict] }}>{r.verdict}</b>,
+                  align: 'left',
+                  nowrap: true,
+                  help: 'Sorted by urgency: Retire, Review, Watch, Promote, then Keep.',
                 },
                 text('reason', 'Why', (r: AgentReview) => r.reason, '20%'),
                 text('stage', 'Stage', (r: AgentReview) => r.stage),
@@ -206,7 +230,7 @@ export function LifecycleReview() {
               ]}
             />
           ) : (
-            <Empty>No agents with this verdict.</Empty>
+            <Empty>{verdict === '' ? 'No agent needs action: every agent in view is marked Keep.' : 'No agents with this verdict for these filters.'}</Empty>
           )}
         </Panel>
       </Grid>

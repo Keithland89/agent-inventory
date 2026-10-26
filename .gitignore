@@ -33,3 +33,6 @@ audit-secret.xml
 # The same flows ship safely in solution\CopilotInteractionLogging*.zip, so these raw
 # exports are kept locally for reference only and never committed.
 work/flow-*.json
+
+# Local design-review snapshots (impeccable skill)
+app/.impeccable/

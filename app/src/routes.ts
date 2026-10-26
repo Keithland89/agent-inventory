@@ -108,20 +108,33 @@ export const TABS: TabDef[] = [
   },
 ]
 
+/** The side navigation: sections grouped by the job they serve. A group without a label is a single top-level link. */
+export const NAV_GROUPS: { label?: string; tabs: TabId[] }[] = [
+  { tabs: ['overview'] },
+  { label: 'Agents', tabs: ['inventory', 'usage', 'governance', 'integrations'] },
+  { label: 'Copilot', tabs: ['activity'] },
+  { label: 'Spend & platforms', tabs: ['cost', 'foundry'] },
+  { label: 'Security', tabs: ['shadow'] },
+  { tabs: ['setup'] },
+]
+
 export interface Route {
   tab: TabDef
   view: string
+  /** Page state carried in the hash query, such as `#/usage/lifecycle?verdict=Retire`, so a view can be linked and bookmarked. */
+  params: Record<string, string>
 }
 
 /** Old links that moved, so bookmarks keep working. */
 const MOVED: Record<string, [TabId, string]> = { sharepoint: ['inventory', 'sharepoint'] }
 
 export function parse(hash: string): Route {
-  const [t0, v0] = hash.replace(/^#\/?/, '').split('/')
+  const [path, query = ''] = hash.replace(/^#\/?/, '').split('?')
+  const [t0, v0] = path.split('/')
   const [t, v] = MOVED[t0] ?? [t0, v0]
   const tab = TABS.find((x) => x.id === t) ?? TABS[0]
   const view = tab.views.find((x) => x.id === v)?.id ?? tab.views[0]?.id ?? ''
-  return { tab, view }
+  return { tab, view, params: Object.fromEntries(new URLSearchParams(query)) }
 }
 
 export function useRoute(): [Route, (tab: TabId, view?: string) => void] {
@@ -132,9 +145,19 @@ export function useRoute(): [Route, (tab: TabId, view?: string) => void] {
     return () => removeEventListener('hashchange', on)
   }, [])
   const go = (tab: TabId, view?: string) => {
-    location.hash = `/${tab}${view ? `/${view}` : ''}`
+    location.hash = href(tab, view).slice(1)
   }
   return [route, go]
 }
 
-export const href = (tab: TabId, view?: string) => `#/${tab}${view ? `/${view}` : ''}`
+/** One page parameter from the hash query. Setting it replaces the history entry, so filtering does not fill the back button. */
+export function useParam(key: string): [string, (value: string) => void] {
+  const [route] = useRoute()
+  const set = (value: string) => location.replace(href(route.tab.id, route.view, { ...route.params, [key]: value }))
+  return [route.params[key] ?? '', set]
+}
+
+export function href(tab: TabId, view?: string, params?: Record<string, string>) {
+  const q = new URLSearchParams(Object.entries(params ?? {}).filter(([, v]) => v)).toString()
+  return `#/${tab}${view ? `/${view}` : ''}${q ? `?${q}` : ''}`
+}

@@ -1,18 +1,23 @@
 import { useMemo } from 'react'
 import { useData } from '../data/store'
 import type { AzureAIResource } from '../data/types'
+import { laneProblems, unknownFrom } from '../metrics/coverage'
 import { bars, distinct } from '../metrics/measures'
 import { BarList, Distribution } from '../ui/charts'
 import { DataTable } from '../ui/DataTable'
 import { int } from '../ui/format'
 import { Empty, Grid, Kpi, KpiRow, Panel } from '../ui/primitives'
 import { COLOR, PALETTE } from '../ui/theme'
+import { LaneNotice } from './common'
 import { rowsOf, text, toDistribution } from './helpers'
 
 export function Foundry() {
   const { ds } = useData()
   const res = ds.aiResources
   const flows = ds.flows
+  const problems = laneProblems(ds.lanes, ['foundry', 'flows'])
+  const resUnknown = unknownFrom(problems.find((p) => p.lane.id === 'foundry'))
+  const flowsUnknown = unknownFrom(problems.find((p) => p.lane.id === 'flows'))
   const m = useMemo(
     () => ({
       categories: toDistribution(bars(res, (r) => r.category)),
@@ -29,21 +34,23 @@ export function Foundry() {
       <p className="page-intro">
         Azure AI resources and Foundry projects found through Azure Resource Manager, plus Power Platform agent flows. The agent slicers do not apply here.
       </p>
+      <LaneNotice problems={problems} />
       <KpiRow>
-        <Kpi label="Azure AI resources" value={int(res.length)} tone="agent" />
-        <Kpi label="Foundry projects" value={int(res.filter((r) => r.isAgentHost).length)} help="Projects host Foundry agents." />
-        <Kpi label="Resource groups" value={int(distinct(res, (r) => `${r.subscriptionId}/${r.resourceGroup}`))} />
-        <Kpi label="Regions" value={int(distinct(res, (r) => r.region))} />
+        <Kpi label="Azure AI resources" value={int(res.length)} tone="agent" unknown={resUnknown} />
+        <Kpi label="Foundry projects" value={int(res.filter((r) => r.isAgentHost).length)} help="Projects host Foundry agents." unknown={resUnknown} />
+        <Kpi label="Resource groups" value={int(distinct(res, (r) => `${r.subscriptionId}/${r.resourceGroup}`))} unknown={resUnknown} />
+        <Kpi label="Regions" value={int(distinct(res, (r) => r.region))} unknown={resUnknown} />
         <Kpi
           label="Public network open"
           value={int(res.filter((r) => r.publicAccess === 'Enabled').length)}
           tone="unlicensed"
           help="Public network access is enabled. Live listings may omit this property, in which case the resource is not counted."
+          unknown={resUnknown}
         />
-        <Kpi label="Agent flows" value={int(flows.length)} />
+        <Kpi label="Agent flows" value={int(flows.length)} unknown={flowsUnknown} />
       </KpiRow>
       {res.length === 0 && flows.length === 0 ? (
-        <Empty>No Azure AI resources or agent flows were returned. Foundry needs Reader on the subscriptions; see Setup & coverage.</Empty>
+        problems.length ? null : <Empty>No Azure AI resources or agent flows were returned. Foundry needs Reader on the subscriptions; see Setup & coverage.</Empty>
       ) : (
         <Grid cols={3}>
           <Panel title="Resource categories">

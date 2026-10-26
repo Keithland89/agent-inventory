@@ -110,12 +110,16 @@ a {
   margin: 0 auto;
   padding-inline: 28px;
 }
+.band-inner {
+  max-width: none;
+  padding-inline: 20px;
+}
 .band-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding-block: 16px 10px;
+  padding-block: 14px;
 }
 .brand {
   display: flex;
@@ -174,38 +178,89 @@ a {
   font-weight: 600;
 }
 
-.tabs {
-  display: flex;
-  gap: 4px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.tabs a {
-  position: relative;
-  flex: none;
-  padding: 10px 14px 12px;
-  color: var(--band-ink-2);
-  text-decoration: none;
-  font-weight: 500;
-  white-space: nowrap;
-  transition: color 0.15s ease;
-}
-.tabs a:hover {
-  color: var(--band-ink);
-}
-.tabs a[aria-current='page'] {
+.menu-btn {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 4px 12px 4px 10px;
+  border: 1px solid rgb(255 255 255 / 0.22);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 0.06);
   color: var(--band-ink);
   font-weight: 600;
+  cursor: pointer;
 }
-.tabs a[aria-current='page']::after {
-  content: '';
-  position: absolute;
-  left: 14px;
-  right: 14px;
-  bottom: 0;
-  height: 3px;
-  border-radius: 3px 3px 0 0;
-  background: var(--band-accent);
+.menu-btn:hover {
+  background: rgb(255 255 255 / 0.12);
+}
+
+/* Side navigation: sections grouped by job, sticky beside the content. */
+.frame {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 216px minmax(0, 1fr);
+  align-items: start;
+}
+.content {
+  min-width: 0;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.sidenav {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  overflow-y: auto;
+  padding: 14px 10px 24px;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+}
+.nav-group + .nav-group {
+  margin-top: 14px;
+}
+.nav-label {
+  padding: 0 10px 4px;
+  color: var(--ink-3);
+  font-size: 12px;
+  font-weight: 600;
+}
+.sidenav ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sidenav a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 34px;
+  padding: 6px 10px;
+  border-radius: 7px;
+  color: var(--ink-2);
+  text-decoration: none;
+  font-weight: 500;
+}
+.sidenav a:hover {
+  background: var(--hover);
+  color: var(--ink);
+}
+.sidenav a[aria-current='page'] {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+.nav-flag {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--unlicensed);
+}
+.scrim {
+  display: none;
 }
 
 .toolbar {
@@ -235,15 +290,56 @@ a {
 }
 
 .filters {
+  display: grid;
+  gap: 10px;
+  padding-block: 0 12px;
+}
+.filter-fields {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   gap: 10px 12px;
-  padding-block: 0 14px;
 }
-.filters .reset {
-  align-self: center;
-  margin-top: 16px;
+.filter-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  color: var(--ink-2);
+  font-size: 12.5px;
+}
+.filter-summary b {
+  color: var(--ink);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.filter-pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.filter-pills button:not(.link-btn) {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 26px;
+  padding: 2px 9px 2px 10px;
+  border: 1px solid #c9ccf3;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.filter-pills button:not(.link-btn):hover {
+  border-color: var(--accent);
+}
+.filter-pills button b {
+  color: inherit;
 }
 
 .main {
@@ -527,6 +623,91 @@ input[type='search']::placeholder {
 }
 .kpi-sub b.trend-down {
   color: var(--bad);
+}
+
+/* KPI anatomy: label, figure (value + change pill), optional meter, one line of context. */
+.kpi-figure {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+.delta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.delta-good {
+  background: #e6f4ea;
+  color: #1c6434;
+}
+.delta-bad {
+  background: #fdeeec;
+  color: #8f2d1f;
+}
+.delta-flat {
+  background: #eef0f5;
+  color: var(--ink-2);
+}
+.kpi-meter {
+  height: 4px;
+  margin-top: 2px;
+  border-radius: 2px;
+  background: var(--line-2);
+  overflow: hidden;
+}
+.kpi-meter span {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.kpi-unknown .kpi-value {
+  color: var(--ink-3);
+}
+.kpi-reason {
+  color: var(--ink-2);
+}
+.kpi-link {
+  position: relative;
+  transition: border-color 0.15s ease;
+}
+.kpi-link:hover {
+  border-color: #b9bdf0;
+}
+a.kpi-value {
+  color: inherit;
+  text-decoration: none;
+}
+a.kpi-value::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+}
+.kpi-link:hover a.kpi-value {
+  color: var(--accent-ink);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+a.kpi-value:focus-visible {
+  outline: none;
+}
+.kpi-link:has(a.kpi-value:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.kpi-link .info,
+.kpi-link .delta-pill {
+  position: relative;
+  z-index: 1;
 }
 
 /* ---------- Panels and grids ---------- */
@@ -1015,6 +1196,11 @@ input[type='search']::placeholder {
 .table-wrap tbody tr:last-child td {
   border-bottom: 0;
 }
+.table-wrap td.keep,
+.table-wrap td.num {
+  overflow: visible;
+  text-overflow: clip;
+}
 .table-wrap td.num {
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -1303,6 +1489,48 @@ input[type='search']::placeholder {
   color: #8f2d1f;
 }
 
+/* Lane notices: say which data did not arrive, why, and where to fix it. */
+.lane-notices {
+  display: grid;
+  gap: 8px;
+}
+.lane-notice,
+.coverage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 16px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--ink-2);
+}
+.lane-notice p,
+.coverage p {
+  flex: 1 1 40ch;
+}
+.lane-notice b,
+.coverage b {
+  color: var(--ink);
+  font-weight: 600;
+}
+.lane-notice a,
+.coverage a {
+  flex: none;
+  font-weight: 600;
+}
+.lane-notice-failed {
+  border-color: #f3c7c0;
+  background: #fdeeec;
+  color: #8f2d1f;
+}
+.lane-notice-failed b,
+.lane-notice-failed a {
+  color: #8f2d1f;
+}
+
 /* ---------- Guide ---------- */
 
 .gloss-group + .gloss-group {
@@ -1360,6 +1588,66 @@ input[type='search']::placeholder {
   }
 }
 
+/* Below 1000px the side navigation becomes a drawer opened from the band. */
+@media (max-width: 1000px) {
+  .frame {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .menu-btn {
+    display: inline-flex;
+  }
+  .band-top .brand {
+    margin-right: auto;
+  }
+  .sidenav {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 60;
+    width: min(280px, 85vw);
+    height: auto;
+    box-shadow: var(--shadow-pop);
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition:
+      transform 0.2s ease,
+      visibility 0s linear 0.2s;
+  }
+  .sidenav.open {
+    transform: none;
+    visibility: visible;
+    transition: transform 0.2s ease;
+  }
+  .scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    background: rgb(23 23 60 / 0.35);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidenav,
+  .sidenav.open {
+    transition: none;
+  }
+}
+
+/* Narrow phones: the page heading already names the section, so the Menu button keeps only its icon. */
+@media (max-width: 480px) {
+  .menu-btn span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .menu-btn {
+    padding-inline: 9px;
+  }
+}
+
 @media (max-width: 900px) {
   .grid-2,
   .grid-3,
@@ -1382,23 +1670,25 @@ input[type='search']::placeholder {
     padding-inline: 14px;
   }
   .band-top {
-    padding-block: 12px 6px;
+    padding-block: 10px;
+    gap: 10px;
   }
   .brand p,
   .source-dates {
     display: none;
   }
-  .tabs a {
-    padding-inline: 10px;
-  }
-  .tabs a[aria-current='page']::after {
-    left: 10px;
-    right: 10px;
+  .brand h1 {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
   .page-head h2 {
     font-size: 18px;
   }
-  .filters {
+  .filter-fields {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

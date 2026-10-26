@@ -19,6 +19,8 @@ It covers all 16 report pages in nine tabs with sub-views. It adds a **Chat & Co
 
 Slicers (Environment, Platform, Risk band, Agent origin) appear on the tabs whose report pages have them. Selecting an agent anywhere opens the agent drawer from the All agents page. SharePoint agents moved from their own tab to a view under Inventory; old `#/sharepoint` links still open it.
 
+The tabs sit in a side navigation grouped by job (Agents, Copilot, Spend & platforms, Security), which becomes a Menu drawer below 1000px. Headline numbers link to the list behind them: **To retire** opens `#/usage/lifecycle?verdict=Retire`, **High risk** opens `#/governance?band=High`. Lifecycle hides Keep by default and sorts by severity; Governance's review list defaults to High and Medium. A figure whose lane didn't load shows a dash and the reason, never a 0.
+
 ## Data modes
 
 - **Live** is the default inside the player. Each lane loads independently and fails soft: a lane that is denied, not set up or broken shows its state and leaves the rest of the app working.
