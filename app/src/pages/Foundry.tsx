@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { useData } from '../data/store'
 import type { AzureAIResource } from '../data/types'
 import { laneProblems, unknownFrom } from '../metrics/coverage'
-import { bars, distinct } from '../metrics/measures'
+import { bars } from '../metrics/measures'
 import { BarList, Distribution } from '../ui/charts'
 import { DataTable } from '../ui/DataTable'
 import { int, regionLabel } from '../ui/format'
@@ -38,8 +38,6 @@ export function Foundry() {
       <KpiRow>
         <Kpi label="Azure AI resources" value={int(res.length)} tone="agent" unknown={resUnknown} />
         <Kpi label="Foundry projects" value={int(res.filter((r) => r.isAgentHost).length)} help="Projects host Foundry agents." unknown={resUnknown} />
-        <Kpi label="Resource groups" value={int(distinct(res, (r) => `${r.subscriptionId}/${r.resourceGroup}`))} unknown={resUnknown} />
-        <Kpi label="Regions" value={int(distinct(res, (r) => r.region))} unknown={resUnknown} />
         <Kpi
           label="Public network open"
           value={int(res.filter((r) => r.publicAccess === 'Enabled').length)}

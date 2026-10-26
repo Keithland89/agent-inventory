@@ -61,10 +61,9 @@ export function Governance() {
       <KpiRow>
         <Kpi label="High risk" value={int(A.high(agents))} tone="unlicensed" help="Risk score of 5 or more." href={href('governance', undefined, { band: 'High' })} />
         <Kpi label="Medium risk" value={int(A.medium(agents))} help="Risk score of 3 or 4." href={href('governance', undefined, { band: 'Medium' })} />
-        <Kpi label="Avg risk score" value={dec2(A.avgRisk(agents))} />
         <Kpi label="No authentication" value={int(A.unauthenticated(agents))} help="Authentication is None or blank." />
         <Kpi label="Shared tenant-wide" value={int(A.tenantWide(agents))} />
-        <Kpi label="Shared but unused" value={int(A.orphan(agents))} help="Shared with the whole tenant and never used." />
+        <Kpi label="Shared but unused" value={int(A.orphan(agents))} help="Shared with the whole tenant, with no usage in Power Platform or the audit log." href={href('inventory', 'all', { focus: 'shared-unused' })} />
       </KpiRow>
       <Grid cols={3}>
         <Panel title="Risk bands">

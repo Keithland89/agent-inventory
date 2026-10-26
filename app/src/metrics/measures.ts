@@ -108,7 +108,8 @@ export const A = {
   medium: (a: Agent[]) => count(a, (x) => x.riskBand === 'Medium'),
   atRisk: (a: Agent[]) => count(a, (x) => x.riskBand !== 'Low'),
   avgRisk: (a: Agent[]) => div(sum(a, (x) => x.riskScore), a.length),
-  orphan: (a: Agent[]) => count(a, (x) => x.sharedTenantWide && !x.lastUsed),
+  /** Shared tenant-wide with no usage signal from either Power Platform or the audit log. */
+  orphan: (a: Agent[]) => count(a, (x) => x.sharedTenantWide && !x.lastActivityAt),
   noRiskFactors: (a: Agent[]) => count(a, (x) => x.riskFactorCount === 0),
   avgRiskFactors: (a: Agent[]) => div(sum(a, (x) => x.riskFactorCount), a.length),
   topics: (a: Agent[]) => sum(a, (x) => x.topicCount),

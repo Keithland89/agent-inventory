@@ -811,7 +811,7 @@ a.kpi-value:focus-visible {
 
 /* Hero card: the whole estate, split by platform. */
 .kpi-hero {
-  flex: 2.4 1 420px;
+  flex: 2.4 1 360px;
   gap: 6px;
 }
 .kpi-hero .kpi-value {
@@ -891,6 +891,56 @@ a.kpi-value:focus-visible {
   color: var(--ink-3);
 }
 
+/* The Overview briefing: one computed sentence, then the counts worth acting on. */
+.headline {
+  margin: -4px 0 14px;
+  max-width: 72ch;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+.headline b {
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.attention {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.attention li + li {
+  border-top: 1px solid var(--line);
+}
+.attention a {
+  display: grid;
+  grid-template-columns: 4.5ch 1fr auto;
+  align-items: baseline;
+  gap: 12px;
+  padding: 9px 2px;
+  color: inherit;
+  text-decoration: none;
+}
+.attention a:hover .at-label,
+.attention a:focus-visible .at-label {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.at-count {
+  text-align: right;
+  font-weight: 500;
+  font-size: 17px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.at-label {
+  color: var(--ink-2);
+}
+.at-go {
+  color: var(--ink-3);
+}
 /* ---------- Panels and grids ---------- */
 
 .grid {

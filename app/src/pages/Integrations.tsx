@@ -178,7 +178,6 @@ export function KnowledgeGrounding() {
         <Kpi label="Ungrounded agents" value={int(agents.length - grounded)} />
         <Kpi label="Reads tenant data" value={int(K.tenant(knowledge))} help="Bindings to SharePoint, Dataverse, Graph connectors, Teams messages or uploaded files." />
         <Kpi label="Reaches outside tenant" value={int(K.external(knowledge))} tone="unlicensed" help="Bindings to public websites, web search or Bing custom search." />
-        <Kpi label="Source types in use" value={int(K.types(knowledge))} />
       </KpiRow>
       <Grid cols={3}>
         <Panel title="Knowledge sources by type">
