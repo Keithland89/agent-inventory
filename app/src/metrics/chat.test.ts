@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Interaction } from '../data/types'
-import { appGroup, groupSummary, habitMix, habitOf, userActivity, weekOf, weeklyCount, weeklyUsers } from './chat'
+import { appGroup, groupSummary, habitMix, habitOf, hourGrid, userActivity, weekOf, weeklyCount, weeklyUsers } from './chat'
 
 const row = (date: string, user: string, appHost: string, threadId = `${user}-${date}`): Interaction => ({
   date, time: `${date}T10:00:00`, surfaceKey: '', agentKey: '', user, appHost, threadId, resourceCount: 0,
@@ -77,5 +77,18 @@ describe('user activity and group summary', () => {
     expect(w[0].values).toEqual([1, 2, 1])
     expect(w[1].values).toEqual([0, 0, 0])
     expect(weeklyCount([])).toEqual([])
+  })
+})
+
+describe('hourGrid', () => {
+  it('buckets by UTC weekday (Monday first) and hour, skipping bad timestamps', () => {
+    const at = (time: string): Interaction => ({ ...row(time.slice(0, 10), 'a', 'Word'), time })
+    const g = hourGrid([at('2026-06-01T09:15:00'), at('2026-06-01T09:59:59'), at('2026-06-07T23:00:00'), at('2026-06-04T00:00:00'), at(''), at('2026-06-02')])
+    expect(g).toHaveLength(7)
+    expect(g.every((d) => d.length === 24)).toBe(true)
+    expect(g[0][9]).toBe(2)
+    expect(g[6][23]).toBe(1)
+    expect(g[3][0]).toBe(1)
+    expect(g.flat().reduce((a, b) => a + b, 0)).toBe(4)
   })
 })

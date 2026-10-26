@@ -7,7 +7,7 @@ import {
 } from '../metrics/cost'
 import { laneProblems, unknownFrom } from '../metrics/coverage'
 import { div } from '../metrics/measures'
-import { BarList, Distribution, LineChart } from '../ui/charts'
+import { BarList, Donut, Gauge, LineChart, Treemap } from '../ui/charts'
 import { DataTable } from '../ui/DataTable'
 import { dateLabel, dayLabel, int, money, pct } from '../ui/format'
 import { Empty, Grid, Kpi, KpiRow, Panel } from '../ui/primitives'
@@ -102,15 +102,27 @@ export function CopilotCredits() {
             />
           </Panel>
           <Panel title="Credits by feature" help="Each billable event has a rate: classic answers 1, generative answers 2, agent actions 5 and tenant graph grounding 10 credits.">
-            {m.features.length ? <Distribution label="Copilot Credits by feature" items={m.features} fmt={int} /> : <Empty>No credits.</Empty>}
+            {m.features.length ? <Donut label="Copilot Credits by feature" items={m.features} fmt={int} unit="credits" /> : <Empty>No credits.</Empty>}
           </Panel>
           <Panel title="Credits by environment">
-            <BarList label="Copilot Credits by environment" items={m.envs} color={PALETTE[1]} fmt={int} limit={10} />
+            <Treemap label="Copilot Credits by environment" items={m.envs} color={COLOR.agent} fmt={int} limit={8} />
           </Panel>
           <Panel title="Tenant capacity" span={2} note={poolLane?.state === 'ok' ? undefined : 'From the licensing currency report.'}>
             {m.pool.length ? (
+              <div className="split">
+                {copilotPool && (
+                  <Gauge
+                    label="Copilot Credit capacity used"
+                    value={copilotPool.consumed}
+                    total={copilotPool.purchased}
+                    marker={{ value: copilotPool.allocated, label: 'Allocated' }}
+                    color={COLOR.agent}
+                    warnColor={COLOR.unlicensed}
+                  />
+                )}
               <DataTable
                 label="Tenant capacity"
+                minWidth={480}
                 rows={rowsOf(m.pool, (p) => p.currency)}
                 columns={[
                   text('name', 'Currency', (p: (typeof m.pool)[number]) => p.name, '26%'),
@@ -121,6 +133,7 @@ export function CopilotCredits() {
                   text('updated', 'Updated', (p: (typeof m.pool)[number]) => (p.lastUpdated ? dateLabel(p.lastUpdated.slice(0, 10)) : '')),
                 ]}
               />
+              </div>
             ) : (
               <Empty>The capacity report returned nothing.</Empty>
             )}
@@ -202,7 +215,7 @@ export function AzureAiSpend() {
       daily,
       total,
       trend: prior7 ? last7 / prior7 - 1 : NaN,
-      categories: toDistribution(categoryBars(resources)),
+      categories: categoryBars(resources),
       meters: meterBars(ds.aiCostMeters, currency),
       top: resources.map((r) => ({ key: r.id, label: r.name, value: r.cost, hint: r.category })),
     }
@@ -249,7 +262,7 @@ export function AzureAiSpend() {
             <LineChart label="Daily Azure AI spend" data={m.daily} series={[{ name: 'Spend', color: COLOR.agent, fmt: m.fmt }]} xFmt={dayLabel} area />
           </Panel>
           <Panel title="Spend by resource type">
-            <Distribution label="Azure AI spend by resource type" items={m.categories} fmt={m.fmt} />
+            <Treemap label="Azure AI spend by resource type" items={m.categories} color={COLOR.licensed} fmt={m.fmt} limit={8} />
           </Panel>
           <Panel title="Top resources">
             <BarList label="Azure AI resources by spend" items={m.top} color={COLOR.agent} fmt={m.fmt} limit={10} />

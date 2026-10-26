@@ -99,7 +99,13 @@ Flat panels with a 1px line border. Only the agent drawer and dialogs cast a sha
 - **Greeting:** a time-of-day greeting and the as-of date above Overview. It never uses a name.
 - **Stat list:** a label on the left and a right-aligned tabular figure on the right, one row per line. When the rows are parts of one total, a thin accent bar under each row shows the share.
 - **Lane notice:** above a page's figures when a lane it depends on failed, isn't in the sample or returned no rows. It names the lane, says why and links to Live lane status. Failed is a soft red tint; the others are neutral. Overview shows the same as one coverage line for the whole app.
-- **Charts:** hand-written SVG with no chart library. Hover shows the exact value. Single-series columns have rounded tops; month axes label every second or third month ("Jan 26") so the labels never overlap.
+- **Charts:** hand-written SVG with no chart library. Hover shows the exact value. Single-series columns have rounded tops; month axes label every second or third month ("Jan 26") so the labels never overlap. Pick the type by the question, and draw only from data already loaded:
+  - BarList for ranked lists; a stacked Distribution bar for status mixes read left to right.
+  - Donut for parts of one whole with six or fewer parts (the rest fold into "Other"); shares under 1% read "<1%".
+  - Heatmap for weekday-by-hour patterns, on a square-root scale so quiet hours still show.
+  - Funnel only when each step is a subset of the one before (habit stages qualify; agent lifecycle stages don't, as they're exclusive).
+  - Treemap for breakdowns with many parts; slivers under 1.5% join the "n more" tile.
+  - Gauge for one share of a fixed capacity, turning warm at 80%.
 - **DataTable:** sortable and searchable, with a "Show more" button for long tables. Agent rows open the drawer. Numbers, dates and verdicts never truncate; below its minimum width the table scrolls sideways. Its empty state says whether the search or the filters emptied it.
 - **Agent drawer:** identity, risk breakdown by factor, sharing, tools, knowledge and usage for one agent.
 - **Lane status:** one row per lane with its state, row count, time and last run.

@@ -1,6 +1,7 @@
-import { useState, type ReactNode } from 'react'
+import { Fragment, useState, type ReactNode } from 'react'
+import { squarify } from './treemap'
 import { useWidth } from './useWidth'
-import { compact, dec1, int, niceTicks, type Fmt } from './format'
+import { compact, dec1, int, niceTicks, pct0, type Fmt } from './format'
 import { Empty, Legend } from './primitives'
 
 export interface Series {
@@ -475,5 +476,282 @@ export function Distribution(props: { items: { label: string; value: number; col
         ))}
       </ul>
     </div>
+  )
+}
+
+const OTHER = '#a3a7bd'
+/** Share of a whole; tiny non-zero shares read "<1%" rather than a misleading "0%". */
+const shareOf = (n: number) => (n > 0 && n < 0.005 ? '<1%' : pct0(n))
+const sumOf = (items: { value: number }[]) => items.reduce((a, b) => a + fin(b.value), 0)
+
+export interface Slice {
+  label: string
+  value: number
+  color: string
+}
+
+/** Ring chart for parts of a whole: up to `limit` slices, the rest folded into "Other", the total in the centre. */
+export function Donut(props: { items: Slice[]; fmt?: Fmt; label: string; limit?: number; unit?: string; keepOrder?: boolean; empty?: string }) {
+  const [hover, setHover] = useState<number | null>(null)
+  const fmt = props.fmt ?? int
+  const limit = props.limit ?? 5
+  const valid = props.items.filter((i) => fin(i.value) > 0)
+  const sorted = props.keepOrder ? valid : [...valid].sort((a, b) => b.value - a.value)
+  const items = sorted.length > limit + 1 ? [...sorted.slice(0, limit), { label: `Other (${sorted.length - limit})`, value: sumOf(sorted.slice(limit)), color: OTHER }] : sorted
+  const total = sumOf(items)
+  if (!total) return <Empty>{props.empty ?? 'Nothing to show for these filters.'}</Empty>
+  const S = 150
+  const r = 58
+  const sw = 18
+  const C = 2 * Math.PI * r
+  const gap = items.length > 1 ? 2 : 0
+  const lens = items.map((i) => (i.value / total) * C)
+  const starts = lens.map((_, k) => lens.slice(0, k).reduce((a, b) => a + b, 0))
+  const focus = hover === null ? null : items[hover]
+  return (
+    <div className="donut" aria-label={props.label}>
+      <svg viewBox={`0 0 ${S} ${S}`} width={S} height={S} role="img" aria-label={items.map((i) => `${i.label} ${shareOf(i.value / total)}`).join(', ')}>
+        <circle cx={S / 2} cy={S / 2} r={r} fill="none" stroke="var(--line-2)" strokeWidth={sw} />
+        {items.map((i, k) => {
+          const len = lens[k]
+          return (
+            <circle
+              key={i.label}
+              cx={S / 2}
+              cy={S / 2}
+              r={r}
+              fill="none"
+              stroke={i.color}
+              strokeWidth={sw}
+              strokeDasharray={`${Math.max(len - gap, 0.75)} ${C}`}
+              strokeDashoffset={-starts[k]}
+              transform={`rotate(-90 ${S / 2} ${S / 2})`}
+              opacity={hover === null || hover === k ? 1 : 0.35}
+              onMouseEnter={() => setHover(k)}
+              onMouseLeave={() => setHover(null)}
+            >
+              <title>{`${i.label}: ${fmt(i.value)} (${shareOf(i.value / total)})`}</title>
+            </circle>
+          )
+        })}
+        <text x={S / 2} y={S / 2 - 2} textAnchor="middle" className="donut-value">
+          {fmt(focus ? focus.value : total)}
+        </text>
+        <text x={S / 2} y={S / 2 + 16} textAnchor="middle" className="donut-caption">
+          {focus ? shareOf(focus.value / total) : (props.unit ?? 'total')}
+        </text>
+      </svg>
+      <ul className="dist-legend">
+        {items.map((i, k) => (
+          <li key={i.label} className={hover === k ? 'hot' : ''} onMouseEnter={() => setHover(k)} onMouseLeave={() => setHover(null)}>
+            <span className="swatch" style={{ background: i.color }} />
+            <span className="dl-label" title={i.label}>
+              {i.label}
+            </span>
+            <span className="dl-val">{fmt(i.value)}</span>
+            <span className="dl-pct">{shareOf(i.value / total)}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+const hh = (h: number) => String(h).padStart(2, '0')
+
+/** Day-of-week by hour-of-day intensity grid. Shading uses a square-root scale so quieter hours stay visible next to a peak. */
+export function Heatmap(props: { grid: number[][]; rows: readonly string[]; color: string; fmt?: Fmt; unit: string; label: string; zone?: string }) {
+  const fmt = props.fmt ?? int
+  let max = 0
+  let peak = [0, 0]
+  props.grid.forEach((row, d) =>
+    row.forEach((v, h) => {
+      if (v > max) {
+        max = v
+        peak = [d, h]
+      }
+    }),
+  )
+  if (!max) return <Empty>No activity in this period.</Empty>
+  const zone = props.zone ? ` ${props.zone}` : ''
+  const shade = (v: number) => (v > 0 ? `color-mix(in srgb, ${props.color} ${Math.round(10 + 90 * Math.sqrt(v / max))}%, var(--surface))` : undefined)
+  return (
+    <div className="heatmap">
+      <div
+        className="hm-grid"
+        role="img"
+        aria-label={`${props.label}. Busiest: ${props.rows[peak[0]]} ${hh(peak[1])}:00${zone}, ${fmt(max)} ${props.unit}.`}
+      >
+        {props.rows.map((day, d) => (
+          <Fragment key={day}>
+            <span className="hm-day">{day}</span>
+            {props.grid[d].map((v, h) => (
+              <span key={h} className="hm-cell" style={{ background: shade(v) }} title={`${day} ${hh(h)}:00–${hh(h + 1)}:00${zone}: ${fmt(v)} ${props.unit}`} />
+            ))}
+          </Fragment>
+        ))}
+        <span />
+        {Array.from({ length: 24 }, (_, h) => (
+          <span key={h} className="hm-hour">
+            {h % 6 === 0 ? hh(h) : ''}
+          </span>
+        ))}
+      </div>
+      <div className="hm-scale" aria-hidden="true">
+        <span>Fewer</span>
+        {[0.05, 0.25, 0.55, 1].map((s) => (
+          <i key={s} style={{ background: shade(s * max) }} />
+        ))}
+        <span>More</span>
+        <b>
+          Peak {props.rows[peak[0]]} {hh(peak[1])}:00{zone}
+        </b>
+      </div>
+    </div>
+  )
+}
+
+/** Nested steps, each a subset of the one before, with the share of the first step. */
+export function Funnel(props: { steps: { label: string; value: number; color: string; help?: string }[]; fmt?: Fmt; label: string }) {
+  const fmt = props.fmt ?? int
+  const first = fin(props.steps[0]?.value)
+  if (!first) return <Empty>Nothing to show for these filters.</Empty>
+  return (
+    <ol className="funnel" aria-label={props.label}>
+      {props.steps.map((s, i) => {
+        const share = fin(s.value) / first
+        const prev = i ? fin(props.steps[i - 1].value) : 0
+        return (
+          <li key={s.label} title={s.help}>
+            <div className="fn-head">
+              <span className="fn-label">{s.label}</span>
+              <span className="fn-val">{fmt(s.value)}</span>
+              <span className="fn-pct">{pct0(share)}</span>
+            </div>
+            <div className="fn-track">
+              <span className="fn-bar" style={{ width: `${Math.max(share * 100, 1.5)}%`, background: s.color }} />
+            </div>
+            {i > 0 && prev > 0 && <span className="sr-only">{pct0(fin(s.value) / prev)} of the step before</span>}
+          </li>
+        )
+      })}
+    </ol>
+  )
+}
+
+/** Tiles sized by value, for many-part breakdowns where the few biggest matter. Shows `limit` tiles plus one for the rest. */
+export function Treemap(props: { items: BarItem[]; color: string; fmt?: Fmt; label: string; limit?: number; height?: number }) {
+  const [ref, width] = useWidth<HTMLDivElement>()
+  const fmt = props.fmt ?? int
+  const limit = props.limit ?? 10
+  const h = props.height ?? 220
+  const sorted = props.items.filter((i) => fin(i.value) > 0).sort((a, b) => b.value - a.value)
+  const grand = sumOf(sorted)
+  // Slivers under 1.5% can't carry a label or a hover target, so they join the "more" tile.
+  const shown = sorted.slice(0, limit).filter((t, i) => i < 3 || t.value / grand >= 0.015)
+  const rest = sorted.slice(shown.length)
+  const tiles: (BarItem & { other?: boolean })[] =
+    rest.length > 1 ? [...shown, { key: '__other', label: `${rest.length} more`, value: sumOf(rest), other: true }] : sorted
+  if (!tiles.length) return <Empty>Nothing to show for these filters.</Empty>
+  const total = sumOf(tiles)
+  const rects = squarify(
+    tiles.map((t) => t.value),
+    width,
+    h,
+  )
+  return (
+    <div className="treemap" ref={ref} style={{ height: h }}>
+      <ul aria-label={props.label}>
+        {tiles.map((t, i) => {
+          const r = rects[i]
+          // Either strong (white text) or light (ink text), never the mid band where neither reads well.
+          const strength = t.other ? 18 : i < 3 ? 100 - i * 6 : Math.max(26, 62 - (i - 3) * 6)
+          const big = r.w > 64 && r.h > 36
+          return (
+            <li
+              key={t.key}
+              className={strength >= 85 ? 'tm-strong' : ''}
+              style={{ left: r.x, top: r.y, width: r.w, height: r.h, background: `color-mix(in srgb, ${t.color ?? props.color} ${strength}%, var(--surface))` }}
+              title={`${t.label}${t.hint ? ` (${t.hint})` : ''}: ${fmt(t.value)}, ${shareOf(t.value / total)}`}
+            >
+              <span className={big ? 'tm-text' : 'sr-only'}>
+                <span className="tm-label">{t.label}</span>
+                <span className="tm-val">
+                  {fmt(t.value)} · {shareOf(t.value / total)}
+                </span>
+              </span>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
+
+/** Radial gauge over a 240° arc for one share of a fixed capacity, with an optional marker (such as allocated). */
+export function Gauge(props: {
+  value: number
+  total: number
+  label: string
+  color: string
+  fmt?: Fmt
+  marker?: { value: number; label: string }
+  warnAt?: number
+  warnColor?: string
+}) {
+  const fmt = props.fmt ?? int
+  const share = props.total > 0 ? fin(props.value) / props.total : NaN
+  if (!Number.isFinite(share)) return <Empty>No capacity to measure against.</Empty>
+  const W = 180
+  const cx = 90
+  const cy = 88
+  const r = 70
+  const sw = 14
+  const A0 = 150
+  const SWEEP = 240
+  const pt = (deg: number, rr = r) => [cx + rr * Math.cos((deg * Math.PI) / 180), cy + rr * Math.sin((deg * Math.PI) / 180)]
+  const arc = (a0: number, a1: number) => {
+    const [x0, y0] = pt(a0)
+    const [x1, y1] = pt(a1)
+    return `M${x0.toFixed(2)},${y0.toFixed(2)} A${r},${r} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1.toFixed(2)},${y1.toFixed(2)}`
+  }
+  const clamp = (s: number) => Math.min(Math.max(s, 0), 1)
+  const warn = share >= (props.warnAt ?? 0.8)
+  const color = warn ? (props.warnColor ?? '#b45309') : props.color
+  const mk = props.marker && props.total > 0 ? A0 + SWEEP * clamp(props.marker.value / props.total) : null
+  return (
+    <figure className="gauge">
+      <svg viewBox={`0 0 ${W} 136`} width={W} height={136} role="img" aria-label={`${props.label}: ${pct0(share)}, ${fmt(props.value)} of ${fmt(props.total)}`}>
+        <path d={arc(A0, A0 + SWEEP)} fill="none" stroke="var(--line-2)" strokeWidth={sw} strokeLinecap="round" />
+        {share > 0 && <path d={arc(A0, A0 + Math.max(SWEEP * clamp(share), 1))} fill="none" stroke={color} strokeWidth={sw} strokeLinecap="round" />}
+        {mk !== null && (
+          <line
+            x1={pt(mk, r - sw / 2 - 3)[0]}
+            y1={pt(mk, r - sw / 2 - 3)[1]}
+            x2={pt(mk, r + sw / 2 + 3)[0]}
+            y2={pt(mk, r + sw / 2 + 3)[1]}
+            stroke="var(--ink)"
+            strokeWidth={2}
+            strokeLinecap="round"
+          >
+            <title>{`${props.marker!.label}: ${fmt(props.marker!.value)}`}</title>
+          </line>
+        )}
+        <text x={cx} y={cy + 6} textAnchor="middle" className="gauge-value">
+          {pct0(share)}
+        </text>
+        <text x={cx} y={cy + 26} textAnchor="middle" className="gauge-caption">
+          used
+        </text>
+      </svg>
+      <figcaption>
+        <b>{fmt(props.value)}</b> of {fmt(props.total)}
+        {props.marker && (
+          <span>
+            <i aria-hidden="true" /> {props.marker.label} {fmt(props.marker.value)}
+          </span>
+        )}
+      </figcaption>
+    </figure>
   )
 }

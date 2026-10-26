@@ -6,7 +6,7 @@ import { agentTrends, LIFECYCLE, LIFECYCLE_HELP, overallReturnRate, reviewAgents
 import { div } from '../metrics/measures'
 import { dayNum, lastDataDay } from '../metrics/periods'
 import { href, useParam } from '../routes'
-import { BarList, ColumnChart, Distribution, GroupedBars } from '../ui/charts'
+import { BarList, ColumnChart, Distribution, Funnel, GroupedBars } from '../ui/charts'
 import { DataTable } from '../ui/DataTable'
 import { dateLabel, DASH, int, monthLabel, pct } from '../ui/format'
 import { Empty, Grid, Kpi, KpiRow, Panel, Select } from '../ui/primitives'
@@ -96,8 +96,17 @@ export function HabitStages() {
                 <Empty>Needs 8 weeks of audit history.</Empty>
               )}
             </Panel>
-            <Panel title="Users by stage" note={`As of ${dateLabel(m.end)}.`}>
-              <Distribution label="Users by habit stage" items={STAGES.map((s) => ({ label: s, value: m.mix[s], color: STAGE_COLOR[s] }))} fmt={int} />
+            <Panel title="From active to habitual" note={`Each step is a subset of the one above. As of ${dateLabel(m.end)}.`}>
+              <Funnel
+                label="Users from active to habitual"
+                steps={[
+                  { label: 'Active in 90 days', value: m.users, color: '#c7d2fe', help: 'Everyone with Copilot activity in the 90 days to the last audit day.' },
+                  { label: 'Active in the last 4 weeks', value: m.users - m.mix.Lapsed, color: '#a5b4fc', help: 'Everyone except Lapsed.' },
+                  { label: 'Past their first 2 weeks', value: m.mix.Habitual + m.mix.Regular + m.mix.Trying, color: STAGE_COLOR.Trying, help: 'Active recently, and started more than 2 weeks ago: Trying, Regular or Habitual.' },
+                  { label: 'Regular or better', value: m.mix.Habitual + m.mix.Regular, color: STAGE_COLOR.Regular, help: `${STAGE_HELP.Regular} Or Habitual.` },
+                  { label: 'Habitual', value: m.mix.Habitual, color: STAGE_COLOR.Habitual, help: STAGE_HELP.Habitual },
+                ]}
+              />
             </Panel>
             <Panel title="Stages by product" span={2} note="A person can be habitual in one product and trying another.">
               <GroupedBars label="Users per habit stage by product" data={m.byGroup} series={STAGES.map((s) => ({ name: s, color: STAGE_COLOR[s], fmt: int }))} />

@@ -115,6 +115,29 @@ function weekly(rows: Interaction[], measure: (rs: Interaction[]) => number[]) {
   return out
 }
 
+export const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const
+
+/** Interactions by UTC weekday (Monday first) and hour: `grid[day][hour]`. Rows without a valid timestamp are skipped. */
+export function hourGrid(rows: Interaction[]): number[][] {
+  const grid = WEEKDAYS.map(() => new Array<number>(24).fill(0))
+  const dow = new Map<string, number>()
+  for (const r of rows) {
+    const t = r.time
+    if (!t || t.length < 13) continue
+    const hour = Number(t.slice(11, 13))
+    if (!(hour >= 0 && hour < 24)) continue
+    const day = t.slice(0, 10)
+    let d = dow.get(day)
+    if (d === undefined) {
+      const n = new Date(day + 'T00:00:00Z').getUTCDay()
+      d = Number.isNaN(n) ? -1 : (n + 6) % 7
+      dow.set(day, d)
+    }
+    if (d >= 0) grid[d][hour]++
+  }
+  return grid
+}
+
 export function habitMix(users: UserActivity[]): Record<Habit, number> {
   const out = Object.fromEntries(HABITS.map((h) => [h, 0])) as Record<Habit, number>
   for (const u of users) out[u.habit]++
