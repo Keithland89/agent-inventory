@@ -2,25 +2,25 @@
 name: Agent Inventory app
 description: Calm admin workspace for the agent estate, Copilot activity and AI risk, computed in the browser from live connectors or the anonymised sample.
 colors:
-  canvas: "#f3f6f5"
+  canvas: "#f4f5fa"
   surface: "#ffffff"
-  surface-2: "#f7faf9"
-  ink: "#12201e"
-  ink-2: "#445653"
-  ink-3: "#5f716e"
-  line: "#d9e2e0"
-  band: "#0b3d3a"
-  band-accent: "#7fe0cf"
-  accent: "#0f766e"
-  accent-soft: "#e6f3f0"
-  agent: "#6d28d9"
+  surface-2: "#f8f8fc"
+  ink: "#17172f"
+  ink-2: "#474a63"
+  ink-3: "#5f6279"
+  line: "#dcdeeb"
+  band: "#1e1b4b"
+  band-accent: "#c4b5fd"
+  accent: "#4f46e5"
+  accent-soft: "#eef0ff"
+  agent: "#0f766e"
   risk-high: "#b42318"
   risk-medium: "#b45309"
-  risk-low: "#5a9e94"
-  group-chat: "#0f766e"
-  group-in-app: "#2563eb"
+  risk-low: "#8187dc"
+  group-chat: "#4f46e5"
+  group-in-app: "#0284c7"
   group-cowork: "#be185d"
-  group-agents: "#6d28d9"
+  group-agents: "#0f766e"
   group-other: "#7b8794"
 typography:
   page-title:
@@ -62,14 +62,14 @@ components:
 
 ## Overview
 
-The app shares its visual language with the AI in One app: a dark teal header band, a pale canvas and white panels. It is a working tool for admins, so it favours dense tables, plain labels and numbers that line up over decoration.
+The app shares its layout with the AI in One app, a pale canvas and white panels, but has its own indigo palette, close to the Copilot brand: a deep indigo header band with violet highlights. It is a working tool for admins, so it favours dense tables, plain labels and numbers that line up over decoration.
 
 ## Colors
 
-- Teal is the brand and the default series colour. Violet always means agents.
-- Risk uses red (High), amber (Medium) and muted teal (Low) everywhere, including badges, bars and drawer chips.
-- Copilot surface groups have fixed colours: Copilot Chat teal, In-app Copilot blue, Cowork magenta, Agents violet, Other grey.
-- Activity status and habit cohorts use a teal ramp from dark (most active) to pale (least active). Grey means no signal.
+- Indigo is the brand and the default series colour. Teal always means agents.
+- Risk uses red (High), amber (Medium) and soft indigo (Low) everywhere, including badges, bars and drawer chips.
+- Copilot surface groups have fixed colours: Copilot Chat indigo, In-app Copilot sky blue, Cowork magenta, Agents teal, Other grey.
+- Activity status and habit cohorts use an indigo ramp from dark (most active) to pale (least active). Grey means no signal.
 
 ## Typography
 
