@@ -13,7 +13,7 @@ test('the plan lists every step in order', () => {
   assert.deepEqual(plan().steps.map((s) => s.id), [
     'sign-in', 'prereqs', 'environment', 'audit-app', 'sweep-app', 'root-reader', 'connection',
     'solution-interactions', 'solution-sharepoint', 'lane-d-tables', 'solution-appusers', 'appuser-grant', 'solution-sweep',
-    'flows', 'verify', 'app', 'lane-f',
+    'flows', 'verify', 'app', 'lane-f', 'lane-cost',
   ]);
 });
 
@@ -88,6 +88,7 @@ test('pending steps leave out checks, done and skipped steps', () => {
   assert.ok(!ids.includes('sign-in'));
   assert.ok(!ids.includes('verify'));
   assert.ok(!ids.includes('lane-f'));
+  assert.ok(!ids.includes('lane-cost'));
   assert.ok(!ids.includes('root-reader'));
   assert.ok(ids.includes('solution-interactions'));
   assert.ok(ids.includes('appuser-grant'));
@@ -95,12 +96,12 @@ test('pending steps leave out checks, done and skipped steps', () => {
 
 test('the plan saves as Markdown', () => {
   const md = planMarkdown(plan({ scopeMode: 'Dataverse' }), { now: new Date('2024-05-01T10:30:00Z') });
-  assert.match(md, /^# Agent Inventory install: the plan/);
+  assert.match(md, /^# Copilot Inventory install: the plan/);
   assert.match(md, /Made 2024-05-01 10:30 UTC\./);
   assert.match(md, /## 6\. Reader at the tenant root management group \*\(skipped\)\*/);
   assert.match(md, /## 12\. Lane D: grant the knowledge sweep in each environment \*\(asks again before it runs\)\*/);
   assert.match(md, /- \*Role:\* System Administrator in the landing environment/);
-  assert.equal((md.match(/^## /gm) ?? []).length, 17);
+  assert.equal((md.match(/^## /gm) ?? []).length, 18);
 });
 
 test('hand-offs become next steps with a message to send', () => {

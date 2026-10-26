@@ -230,7 +230,49 @@ export interface ShadowDevice {
   lastSeen: string
 }
 
-export type LaneId = 'agents' | 'environments' | 'usage' | 'flows' | 'foundry' | 'users' | 'interactions' | 'knowledge' | 'sharepoint' | 'shadow'
+/** Copilot Credits one agent consumed in the cost window, for one billing feature. */
+export interface AgentCredit {
+  /** `${environmentId}|${botId}`, or "" when the agent is no longer in the inventory. */
+  agentKey: string
+  envId: string
+  resourceId: string
+  feature: string
+  product: string
+  billed: number
+  nonBilled: number
+  lastRefreshed: string
+}
+
+/** One currency in the tenant's Power Platform capacity pool. */
+export interface CreditPool {
+  currency: string
+  purchased: number
+  allocated: number
+  consumed: number
+  lastUpdated: string
+}
+
+/** Azure AI spend for one resource on one day, from Cost Management. */
+export interface AiCostDaily {
+  /** yyyy-mm-dd */
+  date: string
+  /** Lower-case ARM resource id, as Cost Management returns it. */
+  resourceId: string
+  cost: number
+  currency: string
+}
+
+/** Azure AI spend for one resource and meter over the whole cost window. */
+export interface AiCostMeter {
+  resourceId: string
+  meter: string
+  cost: number
+  currency: string
+}
+
+export type LaneId =
+  | 'agents' | 'environments' | 'usage' | 'flows' | 'foundry' | 'users' | 'interactions' | 'knowledge' | 'sharepoint' | 'shadow'
+  | 'credits' | 'creditpool' | 'aicost'
 
 export type LaneState = 'ok' | 'empty' | 'not-set-up' | 'denied' | 'error' | 'sample' | 'loading'
 
@@ -270,6 +312,10 @@ export interface RawData {
   users: UserRecord[]
   shadowSignals: ShadowSignal[]
   shadowDevices: ShadowDevice[]
+  credits: AgentCredit[]
+  creditPool: CreditPool[]
+  aiCostDaily: AiCostDaily[]
+  aiCostMeters: AiCostMeter[]
 }
 
 export interface Dataset {
@@ -292,6 +338,10 @@ export interface Dataset {
   namesResolved: boolean
   shadowSignals: ShadowSignal[]
   shadowDevices: ShadowDevice[]
+  credits: AgentCredit[]
+  creditPool: CreditPool[]
+  aiCostDaily: AiCostDaily[]
+  aiCostMeters: AiCostMeter[]
   lanes: LaneStatus[]
   runs: RunInfo[]
   appEnvironment?: string

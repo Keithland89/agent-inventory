@@ -26,7 +26,7 @@ import { buildPlan, handOffSteps, planMarkdown } from './plan.js';
 import { connectionInstructions, deleteConnection, ensureDataverseConnection, FLOW_BASE, listEnvironments, POWERAPPS_BASE, runFlowNow } from './power-platform.js';
 import { checkPrereqs, prereqApi } from './prereqs.js';
 import { componentParameters, envVarValues, GRANT_FLOW_ID, loadSolutionZip, PLACEHOLDER_SECRET, solution, SOLUTIONS } from './solutions.js';
-import { laneF, verifyLanes } from './verify.js';
+import { laneCost, laneF, verifyLanes } from './verify.js';
 
 /** The repo, or the unpacked release: installer\, solution\ and app\ side by side. */
 export const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -788,6 +788,15 @@ export function createRun(c) {
         else ui.warn(text);
       },
     },
+    'lane-cost': {
+      run: async () => {
+        const r = laneCost(c.prereqs);
+        const text = `${r.name}: ${r.detail}`;
+        if (r.state === 'ok') ui.ok(text);
+        else if (r.state === 'pending') ui.info(text);
+        else ui.warn(text);
+      },
+    },
   };
 
   return {
@@ -948,7 +957,7 @@ export async function status(o, d) {
     ui.info(`No install record at ${path}. Run ${commandLine('install')}, or pass --config.`);
     return 1;
   }
-  ui.heading('Agent Inventory install');
+  ui.heading('Copilot Inventory install');
   ui.info(`Record: ${path}${record.updatedAt ? ` (updated ${record.updatedAt.slice(0, 16).replace('T', ' ')})` : ''}`);
   if (record.uninstalledAt) ui.warn(`Uninstalled ${record.uninstalledAt.slice(0, 10)}; what's below was left behind on purpose.`);
   if (record.environment) ui.info(`Landing environment: ${record.environment.name ?? record.environment.id} (${record.environment.url})`);
@@ -1023,6 +1032,8 @@ export async function check(o, d) {
   const prereqs = await checkPrereqs({ api: prereqApi(apis), user, scopeMode: record.options.scopeMode ?? 'Agents', withApp: false, ...(d.nodeVersion ? { nodeVersion: d.nodeVersion } : {}) });
   const f = laneF(prereqs);
   (f.state === 'ok' ? ui.ok : ui.warn)(`Lane F, ${f.name}: ${f.detail}`);
+  const cost = laneCost(prereqs);
+  (cost.state === 'ok' ? ui.ok : cost.state === 'pending' ? ui.info : ui.warn)(`${cost.name}: ${cost.detail}`);
   if (record.managedApp?.url) ui.ok(`The app: ${record.managedApp.url}`);
   return bad ? 1 : 0;
 }

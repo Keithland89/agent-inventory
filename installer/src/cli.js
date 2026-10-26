@@ -12,7 +12,7 @@ import { c, createUi } from './ui.js';
 
 export const COMMANDS = ['install', 'update', 'status', 'check', 'deploy-app', 'access', 'rotate-secret', 'uninstall', 'prereqs', 'preview'];
 
-export const help = () => `Switches on Agent Inventory: the audit collectors, the knowledge sweep, the app user grants
+export const help = () => `Switches on Copilot Inventory: the audit collectors, the knowledge sweep, the app user grants
 and the app, in one Dataverse environment. It shows a plan and changes nothing until you approve it.
 
 Usage: ${commandLine('[command] [options]')}
@@ -53,7 +53,7 @@ Options:
   --solutions <folder>     Where the solution zips are (default: ..\\solution)
   --app-dist <folder>      The app's build (default: ..\\app\\dist, built if missing)
   --save-plan <file.md>    Also save the plan as Markdown
-  --config <file>          The install record (default: Documents\\Agent Inventory\\agent-inventory-install.json)
+  --config <file>          The install record (default: Documents\\Copilot Inventory\\agent-inventory-install.json)
   --app <audit|sweep>      rotate-secret: only this app registration
   --remove-old             rotate-secret: remove the secret it replaces
   --delete-data            uninstall: also delete the tables that hold collected data, and their rows
@@ -267,7 +267,7 @@ export async function main(argv, io = {}) {
       return 0;
     }
     const ui = io.deps?.ui ?? createUi({ yes: args.options.yes });
-    ui.line(c.bold(`Agent Inventory installer ${version()}`));
+    ui.line(c.bold(`Copilot Inventory installer ${version()}`));
     return await runCommand(args.command, args.options, { ...io.deps, ui });
   } catch (err) {
     return reportError(err, verbose, write);

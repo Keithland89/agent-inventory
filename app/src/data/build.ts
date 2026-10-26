@@ -40,6 +40,9 @@ export function buildDataset(raw: RawData, opt: BuildOptions): Dataset {
   })
 
   const agentByKey = new Map(agents.map((a) => [a.key, a]))
+  const agentKeyLower = new Map(agents.map((a) => [a.key.toLowerCase(), a.key]))
+  // Credits arrive keyed environment|resource; keep the key only when that agent is in the inventory.
+  const credits = raw.credits.map((c) => ({ ...c, agentKey: agentKeyLower.get(`${c.envId}|${c.resourceId}`.toLowerCase()) ?? agentKeyLower.get(c.agentKey.toLowerCase()) ?? '' }))
   const envName = new Map(raw.environments.map((e) => [e.id.toLowerCase(), e.name]))
   const sources = raw.sources.map((s) => {
     const a = agentByKey.get(s.agentKey)
@@ -69,6 +72,10 @@ export function buildDataset(raw: RawData, opt: BuildOptions): Dataset {
     namesResolved: opt.namesResolved,
     shadowSignals: raw.shadowSignals,
     shadowDevices: raw.shadowDevices,
+    credits,
+    creditPool: raw.creditPool,
+    aiCostDaily: raw.aiCostDaily,
+    aiCostMeters: raw.aiCostMeters,
     lanes: opt.lanes,
     runs: opt.runs,
     appEnvironment: opt.appEnvironment,
@@ -78,4 +85,5 @@ export function buildDataset(raw: RawData, opt: BuildOptions): Dataset {
 export const emptyRaw = (): RawData => ({
   agents: [], environments: [], flows: [], connectors: [], knowledge: [], sources: [], spAgents: [],
   aiResources: [], interactions: [], users: [], shadowSignals: [], shadowDevices: [],
+  credits: [], creditPool: [], aiCostDaily: [], aiCostMeters: [],
 })

@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react'
-import type { Agent, AgentConnector, AgentKnowledge, DataMode, Dataset, Interaction, KnowledgeSource, LaneStatus, RiskDetail } from './types'
+import type { Agent, AgentConnector, AgentCredit, AgentKnowledge, DataMode, Dataset, Interaction, KnowledgeSource, LaneStatus, RiskDetail } from './types'
 
 export interface Filters {
   env: string
@@ -21,6 +21,8 @@ export interface Scope {
   sources: KnowledgeSource[]
   /** As in the report, an active agent slicer keeps only interactions joined to the agents in view. */
   interactions: Interaction[]
+  /** Copilot Credits; an active slicer drops credits for agents that are not in the inventory. */
+  credits: AgentCredit[]
 }
 
 export function scopeOf(ds: Dataset, f: Filters): Scope {
@@ -41,6 +43,7 @@ export function scopeOf(ds: Dataset, f: Filters): Scope {
     knowledge: keep(ds.knowledge),
     sources: keep(ds.sources),
     interactions: keep(ds.interactions),
+    credits: keep(ds.credits),
   }
 }
 

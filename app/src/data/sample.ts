@@ -1,14 +1,16 @@
 import Papa from 'papaparse'
 import { buildDataset } from './build'
+import { usageDate } from './cost'
 import { toBool, toInt, toTime } from './transforms'
 import type {
-  AgentBase, AgentConnector, AgentFlow, AgentKnowledge, AzureAIResource, CopilotSurface, Dataset, Environment, Interaction,
-  KnowledgeSource, LaneStatus, RawData, SharePointAgent, ShadowDevice, ShadowSignal, UserRecord,
+  AgentBase, AgentConnector, AgentCredit, AgentFlow, AgentKnowledge, AiCostDaily, AiCostMeter, AzureAIResource, CopilotSurface, CreditPool, Dataset,
+  Environment, Interaction, KnowledgeSource, LaneStatus, RawData, SharePointAgent, ShadowDevice, ShadowSignal, UserRecord,
 } from './types'
 
 export const SAMPLE_FILES = [
   'agents', 'environments', 'flows', 'ai-resources', 'sharepoint-agents', 'users', 'shadow-signals', 'shadow-devices',
   'connectors', 'knowledge', 'knowledge-sources', 'surfaces', 'interaction-users', 'interactions',
+  'credits', 'credit-pool', 'ai-cost-daily', 'ai-cost-meters',
 ] as const
 
 export type SampleFile = (typeof SAMPLE_FILES)[number]
@@ -132,9 +134,24 @@ export function sampleRaw(t: SampleTexts): RawData {
       resourceCount: toInt(r.ResourceCount),
     }
   })
+  const num = (v: string) => (Number.isFinite(Number(v)) ? Number(v) : 0)
+  const credits: AgentCredit[] = parse(t.credits).map((r) => ({
+    agentKey: r.AgentKey, envId: r.EnvironmentId, resourceId: r.ResourceId, feature: r.Feature, product: r.ProductName,
+    billed: num(r.BilledCredits), nonBilled: num(r.NonBilledCredits), lastRefreshed: toTime(r.LastRefreshed),
+  }))
+  const creditPool: CreditPool[] = parse(t['credit-pool']).map((r) => ({
+    currency: r.CurrencyType, purchased: num(r.Purchased), allocated: num(r.Allocated), consumed: num(r.Consumed), lastUpdated: toTime(r.LastUpdated),
+  }))
+  const aiCostDaily: AiCostDaily[] = parse(t['ai-cost-daily']).map((r) => ({
+    date: usageDate(r.UsageDate), resourceId: r.ResourceId.toLowerCase(), cost: num(r.Cost), currency: r.Currency,
+  }))
+  const aiCostMeters: AiCostMeter[] = parse(t['ai-cost-meters']).map((r) => ({
+    resourceId: r.ResourceId.toLowerCase(), meter: r.Meter, cost: num(r.Cost), currency: r.Currency,
+  }))
   return {
     agents: parse(t.agents).map(sampleAgent),
     environments, flows, connectors, knowledge, sources, spAgents, aiResources, interactions, surfaces, users, shadowSignals, shadowDevices,
+    credits, creditPool, aiCostDaily, aiCostMeters,
   }
 }
 
@@ -148,7 +165,12 @@ const SAMPLE_LANES: Omit<LaneStatus, 'state' | 'rows'>[] = [
   { id: 'knowledge', label: 'Named knowledge sources', connector: 'commondataserviceforapps' },
   { id: 'sharepoint', label: 'SharePoint agents', connector: 'commondataserviceforapps' },
   { id: 'shadow', label: 'Shadow AI (Defender)', connector: 'wdatp' },
+  { id: 'credits', label: 'Copilot Credits per agent', connector: 'powerplatformadminv2' },
+  { id: 'creditpool', label: 'Tenant capacity (credit pool)', connector: 'powerplatformadminv2' },
+  { id: 'aicost', label: 'Azure AI spend (Cost Management)', connector: 'arm' },
 ]
+
+const SYNTHETIC_COST = 'Synthetic: the anonymised source has no cost data, so these rows are generated from the sample agents and resources.'
 
 export function sampleDataset(t: SampleTexts): Dataset {
   const raw = sampleRaw(t)
@@ -156,13 +178,18 @@ export function sampleDataset(t: SampleTexts): Dataset {
   const rows: Record<string, number> = {
     agents: raw.agents.length, environments: raw.environments.length, flows: raw.flows.length, foundry: raw.aiResources.length,
     users: raw.users.length, interactions: raw.interactions.length, knowledge: raw.sources.length, sharepoint: raw.spAgents.length,
-    shadow: raw.shadowSignals.length,
+    shadow: raw.shadowSignals.length, credits: raw.credits.length, creditpool: raw.creditPool.length, aicost: raw.aiCostDaily.length,
   }
   const lanes: LaneStatus[] = SAMPLE_LANES.map((l) => ({
     ...l,
     state: 'sample',
     rows: rows[l.id] ?? 0,
-    detail: l.id === 'shadow' && rows.shadow === 0 ? 'The sample ships no Defender rows: the source tenant returned 403 for advanced hunting.' : undefined,
+    detail:
+      l.id === 'shadow' && rows.shadow === 0
+        ? 'The sample ships no Defender rows: the source tenant returned 403 for advanced hunting.'
+        : l.id === 'credits' || l.id === 'creditpool' || l.id === 'aicost'
+          ? SYNTHETIC_COST
+          : undefined,
   }))
   return buildDataset(raw, {
     mode: 'sample',

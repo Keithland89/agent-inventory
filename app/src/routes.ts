@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-export type TabId = 'overview' | 'inventory' | 'usage' | 'activity' | 'sharepoint' | 'governance' | 'integrations' | 'foundry' | 'shadow' | 'setup'
+export type TabId = 'overview' | 'inventory' | 'usage' | 'activity' | 'sharepoint' | 'governance' | 'integrations' | 'foundry' | 'cost' | 'shadow' | 'setup'
 
 export interface TabDef {
   id: TabId
@@ -82,6 +82,16 @@ export const TABS: TabDef[] = [
     intro: 'Foundry accounts, projects and model deployments across your subscriptions.',
     views: [],
     agentFilters: false,
+  },
+  {
+    id: 'cost',
+    label: 'Cost & consumption',
+    intro: 'Copilot Credits that agents consume, the tenant capacity behind them, and Azure AI spend.',
+    views: [
+      { id: 'credits', label: 'Copilot Studio credits' },
+      { id: 'azure', label: 'Azure AI spend' },
+    ],
+    agentFilters: true,
   },
   {
     id: 'shadow',

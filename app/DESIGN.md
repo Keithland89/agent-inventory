@@ -1,5 +1,5 @@
 ---
-name: Agent Inventory app
+name: Copilot Inventory app
 description: Calm admin workspace for the agent estate, Copilot activity and AI risk, computed in the browser from live connectors or the anonymised sample.
 colors:
   canvas: "#f4f5fa"

@@ -1,8 +1,8 @@
-# Agent Inventory: the app
+# Copilot Inventory: the app
 
-A Copilot Managed App version of the Agent Inventory Power BI report. It runs entirely in the browser inside the Managed Apps player, reads the same sources as the report through four connectors, and computes every column and measure in TypeScript. Nothing is sent anywhere else.
+A Copilot Managed App version of the Copilot Inventory Power BI report. It runs entirely in the browser inside the Managed Apps player, reads the same sources as the report through four connectors, and computes every column and measure in TypeScript. Nothing is sent anywhere else.
 
-It covers all 16 report pages in ten tabs with sub-views, and adds a **Chat & Cowork** view built from the same audit-log lane.
+It covers all 16 report pages in ten tabs with sub-views. It adds a **Chat & Cowork** view built from the same audit-log lane, and a **Cost & consumption** tab that the report doesn't have.
 
 | Tab | Sub-views | Report pages |
 |---|---|---|
@@ -14,6 +14,7 @@ It covers all 16 report pages in ten tabs with sub-views, and adds a **Chat & Co
 | Governance & risk | | Governance & Risk |
 | Integrations | Tools · Knowledge & grounding · Knowledge sources | Tools, Knowledge & Grounding, Knowledge Sources |
 | Azure AI Foundry | | Azure AI Foundry |
+| **Cost & consumption** (new) | Copilot Credits · Azure AI spend | none |
 | Shadow AI | | Shadow AI |
 | Setup & coverage | Data sources & gaps · Live lane status | Data Sources & Gaps |
 
@@ -22,7 +23,7 @@ Slicers (Environment, Platform, Risk band, Agent origin) appear on the tabs whos
 ## Data modes
 
 - **Live** is the default inside the player. Each lane loads independently and fails soft: a lane that is denied, not set up or broken shows its state and leaves the rest of the app working.
-- **Sample** is the anonymised sample in `public/sample` (about 3.9 MB: 1,488 agents, 48,474 interactions and their related rows). It loads automatically when the app runs outside the player (for example under `npm run dev`). In the player you can switch to it from the data-source dialog at any time.
+- **Sample** is the anonymised sample in `public/sample` (about 4.5 MB: 1,488 agents, 48,474 interactions and their related rows, plus 30 days of synthetic cost data, because the source has none). It loads automatically when the app runs outside the player (for example under `npm run dev`). In the player you can switch to it from the data-source dialog at any time.
 - The header always shows which mode is active. The **Setup & coverage → Live lane status** view lists every lane with its state, row count, load time and the last run recorded in each landing table's run log.
 - `?mode=sample` or `?mode=live` forces a mode. The choice is remembered for the browser session.
 
@@ -32,12 +33,30 @@ The app registers four connector data sources by name. Every user signs in to th
 
 | Data source | Connector | Lanes | What the signed-in user needs |
 |---|---|---|---|
-| `powerplatformadminv2` | Power Platform for Admins V2 | A: agents, environments, usage records, agent flows | Power Platform Administrator (or another role that can query Power Platform inventory) |
-| `arm` | Azure Resource Manager | Azure AI Foundry accounts, projects and hubs | Reader on the subscriptions to include. Subscriptions that return 403 are skipped. |
+| `powerplatformadminv2` | Power Platform for Admins V2 | A: agents, environments, usage records, agent flows · Copilot Credits per agent and the tenant credit pool | Power Platform Administrator (or another role that can query Power Platform inventory and licensing) |
+| `arm` | Azure Resource Manager | Azure AI Foundry accounts, projects and hubs · Azure AI spend from Cost Management | Reader on the subscriptions to include, and Cost Management Reader (or Reader) for spend. Subscriptions that return 403 are skipped. |
 | `wdatp` | Microsoft Defender ATP | F: Shadow AI (advanced hunting) | Security Reader with the `AdvancedQuery.Read` permission |
 | `commondataserviceforapps` | Microsoft Dataverse (current environment) | C: Copilot interactions · D: named knowledge sources · E: SharePoint agents · run logs · user names | Read on the landing tables and on `systemusers` in the landing environment |
 
 Lane A uses `QueryResources` against `PowerPlatformResources` with skip-token paging, ordered by id, and projects the full property bag in TypeScript (`src/data/transforms.ts` ports the report's KQL projections). Foundry lists subscriptions and then `Resources_List` per subscription. Lane F runs the report's advanced hunting queries (`src/data/shadow.ts`).
+
+### Cost & consumption
+
+Two views, each over the last 30 days. No connector, flow or table is added: both read through connectors the app already has, with each viewer's own sign-in.
+
+- **Copilot Credits**: credits billed and not billed per agent, by feature and by environment, joined to the inventory by agent id (case-insensitive). Credits whose agent isn't in the inventory are counted as orphaned. Below them is the tenant capacity table from the credit pool: purchased, allocated and consumed per currency.
+  - Per agent: `GetTenantResourcesAcrossEnvironments` with the `MCSMessages` entitlement, paged by continuation token.
+  - Pool: `ListCurrencyReports`.
+- **Azure AI spend**: daily spend, spend by resource type, top resources and top meters, for Azure OpenAI, AI Services and Foundry (`Microsoft.CognitiveServices/accounts`) and Azure Machine Learning workspaces (`Microsoft.MachineLearningServices/workspaces`).
+  - Only subscriptions that hold an AI resource from the Foundry lane are queried, three at a time.
+  - Each gets two Cost Management queries through `Provider_Resources_Invoke`: daily cost by resource, and the window total by resource and meter. Amounts are actual cost in the billing currency.
+
+Caveats, not yet checked against a live tenant:
+
+- `GetTenantResourcesAcrossEnvironments` is documented as deprecated. The `MCSMessages` entitlement id and the `nonBillableConsumed` metadata key are assumptions; if they're wrong, the lane loads but shows nothing or no non-billed credits.
+- Cost Management data lags by about a day, and some offers (free trials, sponsorships) have none. A query that returns a `nextLink` is counted as truncated and the lane status says so.
+
+The cost lanes are in **Setup & coverage → Live lane status** like every other lane: denied, not set up and empty each explain which role is missing.
 
 ### Landing tables
 
@@ -62,7 +81,7 @@ To deploy by hand with the `ms` CLI (`@microsoft/managed-apps-cli` 0.29.0, Node 
 cd app
 npm ci
 npm run build
-ms app init --repo none --display-name "Agent Inventory" --build-type none --build-path ./dist --environment-id <landing environment id>
+ms app init --repo none --display-name "Copilot Inventory" --build-type none --build-path ./dist --environment-id <landing environment id>
 foreach ($c in 'powerplatformadminv2', 'arm', 'wdatp', 'commondataserviceforapps') {
   ms app add data-source --connector $c --as action --use-sso --skip-codegen --non-interactive --json
 }
@@ -107,6 +126,7 @@ The script keeps about 1,500 agents and every row related to them, keeps all Cop
 | `src/pages/` | One file per tab. |
 | `src/ui/` | Shared components: tables, charts, drawer, dialogs. |
 | `scripts/prepare-sample.mjs` | Builds `public/sample`. |
+| `scripts/sample-cost.mjs` | Adds the synthetic cost CSVs to `public/sample`, seeded so they're the same every run. `npm run sample` runs both. |
 
 ## Faithfulness to the report
 
@@ -125,6 +145,5 @@ The script keeps about 1,500 agents and every row related to them, keeps all Cop
 
 ## Next
 
-- **Copilot Credits consumption** through the Power Platform for Admins V2 licensing, currency and capacity actions.
 - **Admin actions** from the agent drawer: quarantine an agent (`Set Bot as Quarantined`) and reassign its owner (`Reassign the owner of the bot`), both in Power Platform for Admins V2.
 - **Graph name resolution** for owners and creators through an Office 365 Users or Microsoft Graph connector, to match the report.

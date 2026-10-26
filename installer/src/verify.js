@@ -92,3 +92,22 @@ export function laneF(prereqs) {
 
 /** @param {LaneState} s */
 export const laneOk = (s) => s === 'ok' || s === 'pending';
+
+/**
+ * The cost lanes have nothing to install either: the app reads the Power Platform licensing API and
+ * Azure Cost Management with each viewer's own connections when it's opened.
+ * @param {import('./prereqs.js').Prereq[]} prereqs
+ * @returns {LaneResult}
+ */
+export function laneCost(prereqs) {
+  const name = 'Cost & consumption';
+  const cost = prereqs.find((p) => p.id === 'cost-reader');
+  const admin = prereqs.find((p) => p.id === 'pp-admin');
+  const gaps = [
+    admin && admin.status !== 'met' && admin.status !== 'unknown' ? 'you have no Power Platform Administrator active, so Copilot Credits may be empty for you' : '',
+    cost && cost.status === 'missing' ? 'Cost Management refused you, so Azure AI spend will be empty for you until you have Cost Management Reader' : '',
+  ].filter(Boolean);
+  if (gaps.length) return { lane: 'Cost', name, state: 'warn', detail: `Nothing to install, but ${gaps.join('; and ')}. Each viewer needs the same.` };
+  if (cost?.status === 'unknown' || admin?.status === 'unknown') return { lane: 'Cost', name, state: 'pending', detail: `Nothing to install. Couldn't confirm all your access from here.${cost?.status === 'unknown' ? ` ${cost.detail}` : ''}` };
+  return { lane: 'Cost', name, state: 'ok', detail: 'Nothing to install. You can read Copilot Credits and Azure Cost Management.' };
+}

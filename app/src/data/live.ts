@@ -4,13 +4,18 @@ import {
 } from '../generated'
 import type { ResourceQueryRequest } from '../generated/models/PowerPlatformforAdminsV2Model'
 import { buildDataset, emptyRaw } from './build'
+import {
+  COST_WINDOW_DAYS, CREDIT_ENTITLEMENT, costQueryBody, costWindow, mapCredit, mapCreditPool, mapLimit, parseCostQuery, toCostDaily, toCostMeters,
+  type CostQueryResult, type CreditSnapshot, type CurrencyReport,
+} from './cost'
 import { KQL, mapDevices, mapExecuted, mapInstalled, mapNetwork } from './shadow'
 import {
   isFoundryProject, joinAgents, projectAgent, projectAzureAIResource, projectConnectors, projectEnvironment, projectFlow,
   projectFoundryAgent, projectKnowledge, projectUsage, str, toBool, toInt, toTime, type ArgItem,
 } from './transforms'
 import type {
-  Dataset, Interaction, KnowledgeSource, LaneId, LaneState, LaneStatus, RawData, RunInfo, SharePointAgent, UserRecord,
+  AgentCredit, AiCostDaily, AiCostMeter, CreditPool, Dataset, Interaction, KnowledgeSource, LaneId, LaneState, LaneStatus, RawData, RunInfo,
+  SharePointAgent, UserRecord,
 } from './types'
 
 /* ---------- result handling ---------- */
@@ -246,6 +251,67 @@ export async function advancedHunting(query: string): Promise<Record<string, unk
   return Array.isArray(rows) ? (rows as Record<string, unknown>[]) : []
 }
 
+/* ---------- Cost: Copilot Credits (Power Platform licensing) and Azure AI spend (Cost Management) ---------- */
+
+const paramFrom = (url: string | undefined, name: string) => {
+  const m = url ? new RegExp(`[?&]${name}=([^&]+)`, 'i').exec(url) : null
+  return m ? decodeURIComponent(m[1]) : undefined
+}
+
+type CreditPage = { value?: CreditSnapshot[]; continuationtoken?: string; '@odata.nextLink'?: string }
+
+export async function loadCredits(getPage: (token?: string) => Promise<CreditPage | undefined>): Promise<AgentCredit[]> {
+  const rows: AgentCredit[] = []
+  let token: string | undefined
+  for (let page = 0; page < MAX_PAGES; page++) {
+    const res = await getPage(token)
+    rows.push(...(res?.value ?? []).map(mapCredit).filter((c) => c.resourceId && (c.billed || c.nonBilled)))
+    const next = res?.continuationtoken || paramFrom(res?.['@odata.nextLink'], 'continuationToken')
+    if (!next || next === token) break
+    token = next
+  }
+  return rows
+}
+
+const creditPage = (window: { from: string; to: string }) => async (token?: string) =>
+  unwrap(await PowerPlatformforAdminsV2Service.GetTenantResourcesAcrossEnvironments(CREDIT_ENTITLEMENT, window.from, window.to, '2024-10-01', undefined, token) as OpResult<CreditPage>)
+
+async function loadCreditPool(): Promise<CreditPool[]> {
+  const res = unwrap(await PowerPlatformforAdminsV2Service.ListCurrencyReports('2024-10-01', true, true) as OpResult<CurrencyReport[] | { value?: CurrencyReport[] }>)
+  const list = Array.isArray(res) ? res : (res?.value ?? [])
+  return list.map(mapCreditPool).filter((p) => p.purchased || p.allocated || p.consumed)
+}
+
+export type AiCostResult = { daily: AiCostDaily[]; meters: AiCostMeter[]; skipped: number; truncated: number; firstError?: unknown }
+
+/** Two Cost Management queries per subscription that holds Azure AI resources: daily by resource, and the window total by meter. */
+export async function loadAiCost(subscriptionIds: string[], query: (subscriptionId: string, daily: boolean) => Promise<CostQueryResult | undefined>): Promise<AiCostResult> {
+  const out: AiCostResult = { daily: [], meters: [], skipped: 0, truncated: 0 }
+  await mapLimit(subscriptionIds, 3, async (id) => {
+    try {
+      const [d, m] = await Promise.all([query(id, true), query(id, false)])
+      if (d?.properties?.nextLink || m?.properties?.nextLink) out.truncated++
+      out.daily.push(...toCostDaily(parseCostQuery(d)))
+      out.meters.push(...toCostMeters(parseCostQuery(m)))
+    } catch (e) {
+      out.skipped++
+      out.firstError ??= e
+    }
+  })
+  return out
+}
+
+export function aiCostDetail(r: Pick<AiCostResult, 'skipped' | 'truncated'>, subscriptions: number): string | undefined {
+  const parts = [
+    r.skipped ? `${r.skipped} of ${subscriptions} subscription(s) could not be queried. Cost Management needs Cost Management Reader (or Reader) on each one.` : '',
+    r.truncated ? `${r.truncated} subscription(s) returned more than one page; spend may be understated.` : '',
+  ].filter(Boolean)
+  return parts.length ? parts.join(' ') : undefined
+}
+
+const costQuery = (window: { from: string; to: string }) => async (subscriptionId: string, daily: boolean) =>
+  unwrap(await AzureResourceManagerService.Provider_Resources_Invoke(subscriptionId, 'Microsoft.CostManagement', 'query', '2023-03-01', costQueryBody(window, daily)) as OpResult<CostQueryResult>)
+
 /* ---------- orchestration ---------- */
 
 const LANES: Record<LaneId, { label: string; connector: string }> = {
@@ -259,6 +325,9 @@ const LANES: Record<LaneId, { label: string; connector: string }> = {
   knowledge: { label: 'Named knowledge sources', connector: 'commondataserviceforapps' },
   sharepoint: { label: 'SharePoint agents', connector: 'commondataserviceforapps' },
   shadow: { label: 'Shadow AI (Defender)', connector: 'wdatp' },
+  credits: { label: 'Copilot Credits per agent', connector: 'powerplatformadminv2' },
+  creditpool: { label: 'Tenant capacity (credit pool)', connector: 'powerplatformadminv2' },
+  aicost: { label: 'Azure AI spend (Cost Management)', connector: 'arm' },
 }
 
 async function lane<T>(id: LaneId, run: () => Promise<{ rows: T[]; detail?: string }>, dataverse = false): Promise<{ rows: T[]; status: LaneStatus }> {
@@ -284,13 +353,17 @@ export type LaneProgress = (status: LaneStatus) => void
 
 export async function loadLive(onLane?: LaneProgress, now = new Date()): Promise<Dataset> {
   const report = <T,>(p: Promise<{ rows: T[]; status: LaneStatus }>) => p.then((r) => (onLane?.(r.status), r))
-  const [agentItems, envs, usage, flowItems, foundry, users, interactions, sources, spAgents, shadow, runs, appEnv] = await Promise.all([
+  const window = costWindow(now)
+  // Azure AI spend is only queried in subscriptions that hold Azure AI resources, so it waits for the Foundry listing.
+  const foundryP = loadFoundry()
+  foundryP.catch(() => undefined)
+  const [agentItems, envs, usage, flowItems, foundry, users, interactions, sources, spAgents, shadow, credits, creditPool, aiCost, runs, appEnv] = await Promise.all([
     report(lane('agents', async () => ({ rows: await queryPowerPlatform('microsoft.copilotstudio/agents') }))),
     report(lane('environments', async () => ({ rows: (await queryPowerPlatform('microsoft.powerplatform/environments')).map(projectEnvironment) }))),
     report(lane('usage', async () => ({ rows: await queryPowerPlatform('microsoft.powerplatformusage/usagerecords') }))),
     report(lane('flows', async () => ({ rows: await queryPowerPlatform(['microsoft.powerautomate/agentflows', 'microsoft.powerautomate/m365agentflows']) }))),
     report(lane('foundry', async () => {
-      const r = await loadFoundry()
+      const r = await foundryP
       return { rows: r.resources, detail: foundryDetail(r) }
     })),
     report(lane('users', async () => ({
@@ -320,6 +393,19 @@ export async function loadLive(onLane?: LaneProgress, now = new Date()): Promise
         detail: failed.length ? `${failed.length} of ${all.length} hunting queries failed.` : undefined,
       }
     })),
+    report(lane('credits', async () => {
+      const rows = await loadCredits(creditPage(window))
+      return { rows, detail: `Last ${COST_WINDOW_DAYS} days from the licensing API (entitlement ${CREDIT_ENTITLEMENT}). Microsoft marks this endpoint deprecated.` }
+    })),
+    report(lane('creditpool', async () => ({ rows: await loadCreditPool() }))),
+    report(lane('aicost', async () => {
+      const f = await foundryP
+      const subs = [...new Set(f.resources.map((r) => str(r.subscriptionId)).filter(Boolean))]
+      if (!subs.length) return { rows: [], detail: 'No Azure AI resources were found, so there is no AI spend to read.' }
+      const r = await loadAiCost(subs, costQuery(window))
+      if (r.skipped === subs.length && r.firstError) throw r.firstError
+      return { rows: [r].filter((x) => x.daily.length + x.meters.length > 0), detail: aiCostDetail(r, subs.length) }
+    })),
     Promise.all([
       lastRun('interactions', 'Copilot interaction flow runs', TABLES.interactionRuns),
       lastRun('sharepoint', 'SharePoint agent logging runs', TABLES.sharepointRuns),
@@ -348,13 +434,21 @@ export async function loadLive(onLane?: LaneProgress, now = new Date()): Promise
     users: users.rows,
     shadowSignals: shadow.rows[0]?.signals ?? [],
     shadowDevices: shadow.rows[0]?.devices ?? [],
+    credits: credits.rows,
+    creditPool: creditPool.rows,
+    aiCostDaily: aiCost.rows[0]?.daily ?? [],
+    aiCostMeters: aiCost.rows[0]?.meters ?? [],
   }
   const shadowStatus: LaneStatus = { ...shadow.status, rows: raw.shadowSignals.length }
+  const aiCostStatus: LaneStatus = { ...aiCost.status, rows: raw.aiCostDaily.length }
 
   return buildDataset(raw, {
     mode: 'live',
     asOf: now.toISOString().slice(0, 19),
-    lanes: [agentItems.status, envs.status, usage.status, flowItems.status, foundry.status, users.status, interactions.status, sources.status, spAgents.status, shadowStatus],
+    lanes: [
+      agentItems.status, envs.status, usage.status, flowItems.status, foundry.status, users.status, interactions.status, sources.status, spAgents.status,
+      shadowStatus, credits.status, creditPool.status, aiCostStatus,
+    ],
     runs,
     namesResolved: users.rows.length > 0,
     appEnvironment: appEnv,

@@ -77,6 +77,7 @@ const why = (err) => {
  * @property {() => Promise<{ allowedToCreateApps?: boolean }>} userRolePermissions
  * @property {() => Promise<'on' | 'off' | 'unknown'>} auditLog
  * @property {() => Promise<{ subscriptionId: string, displayName?: string, state?: string }[]>} subscriptions
+ * @property {(subscriptionId: string) => Promise<unknown>} costQuery  A one-row Cost Management query, to see whether it answers.
  */
 
 /**
@@ -93,7 +94,32 @@ export function prereqApi({ graph, arm }) {
     userRolePermissions: async () => (await graph.get('/policies/authorizationPolicy'))?.defaultUserRolePermissions ?? {},
     auditLog: () => auditLogState(graph),
     subscriptions: () => arm.list('/subscriptions?api-version=2020-01-01'),
+    costQuery: (id) => arm.post(`/subscriptions/${id}/providers/Microsoft.CostManagement/query?api-version=2023-03-01`, COST_PROBE, { maxRetries: 1 }),
   };
+}
+
+/** The smallest Cost Management query: this month's total, no grouping. */
+const COST_PROBE = { type: 'ActualCost', timeframe: 'MonthToDate', dataset: { granularity: 'None', aggregation: { totalCost: { name: 'Cost', function: 'Sum' } } } };
+/** Subscriptions the Cost Management check tries; one that answers is enough to show the role works. */
+export const COST_PROBE_LIMIT = 3;
+
+/**
+ * Whether Cost Management answers for the signed-in user, trying a few enabled subscriptions.
+ * @param {PrereqApi} api
+ * @returns {Promise<{ status: PrereqStatus, detail: string }>}
+ */
+export async function costAccess(api) {
+  const subs = (await api.subscriptions()).filter((s) => !s.state || s.state === 'Enabled');
+  if (!subs.length) return { status: 'missing', detail: 'You can\'t read any Azure subscription.' };
+  const tried = subs.slice(0, COST_PROBE_LIMIT);
+  const results = await Promise.allSettled(tried.map((s) => api.costQuery(s.subscriptionId)));
+  const ok = results.filter((r) => r.status === 'fulfilled').length;
+  const failed = /** @type {PromiseRejectedResult[]} */ (results.filter((r) => r.status === 'rejected'));
+  const denied = failed.filter((r) => r.reason?.status === 401 || r.reason?.status === 403).length;
+  const of = `${tried.length} of your ${subs.length} ${subs.length === 1 ? 'subscription' : 'subscriptions'}`;
+  if (ok) return { status: 'met', detail: `Cost Management answered for ${ok} of the ${of} checked.` };
+  if (denied === tried.length) return { status: 'missing', detail: `Cost Management refused all ${of} checked.` };
+  return { status: 'unknown', detail: `Cost Management didn't answer for the ${of} checked: ${why(failed[0]?.reason)}` };
 }
 
 /**
@@ -220,6 +246,13 @@ export async function checkPrereqs(ctx) {
       if (!subs.length) return { status: 'missing', detail: 'You can\'t read any Azure subscription.' };
       return { status: 'met', detail: `You can read ${subs.length} ${subs.length === 1 ? 'subscription' : 'subscriptions'}.` };
     }),
+    guard({
+      id: 'cost-reader',
+      label: 'Cost Management Reader (or Reader) on the Azure subscriptions',
+      neededFor: 'The Cost & consumption tab\'s Azure AI spend: the app queries Cost Management in each subscription that holds Azure AI resources.',
+      howTo: 'Ask a subscription owner for Cost Management Reader on each subscription with Azure AI resources. Each viewer needs it too. Some offers, such as free trials and sponsorships, have no Cost Management data.',
+      optional: true,
+    }, () => costAccess(api)),
     guard({
       id: 'audit-log',
       label: 'Unified audit logging',
