@@ -4,7 +4,7 @@ import type { Agent } from '../data/types'
 import { A, ACTIVITY_ORDER, I, bars, div, groupBy, perAgentUsage } from '../metrics/measures'
 import { BarList, ColumnChart, Treemap } from '../ui/charts'
 import { DataTable } from '../ui/DataTable'
-import { dec1, int } from '../ui/format'
+import { dec1, int, regionLabel } from '../ui/format'
 import { Grid, Kpi, KpiRow, Panel, Select } from '../ui/primitives'
 import { ACTIVITY_COLOR, COLOR, PALETTE } from '../ui/theme'
 import { NamesNote } from './common'
@@ -108,7 +108,7 @@ export function AllAgents() {
               agentCol(nameOf),
               text('env', 'Environment', (a: Agent) => a.envName),
               text('envType', 'Type', (a: Agent) => a.envType),
-              text('region', 'Region', (a: Agent) => a.region),
+              text('region', 'Region', (a: Agent) => regionLabel(a.region)),
               text('owner', 'Owner', (a: Agent) => a.ownerName),
               text('ownerUpn', 'Owner UPN', (a: Agent) => a.ownerUpn),
               text('creator', 'Created by', (a: Agent) => a.createdByName),
@@ -130,8 +130,9 @@ export function AgentInventory() {
   const m = useMemo(
     () => ({
       models: bars(agents, (a) => a.model),
-      creators: bars(agents, (a) => a.createdByName),
-      regions: bars(agents, (a) => a.region),
+      creators: bars(agents.filter((a) => a.createdByName), (a) => a.createdByName),
+      noCreator: agents.filter((a) => !a.createdByName).length,
+      regions: bars(agents, (a) => regionLabel(a.region)),
       rows: rowsOf(agents, (a) => a.key),
     }),
     [agents],
@@ -148,14 +149,14 @@ export function AgentInventory() {
       </KpiRow>
       <NamesNote />
       <Grid cols={3}>
-        <Panel title="Top agent creators">
+        <Panel title="Top agent creators" note={m.noCreator ? `${int(m.noCreator)} agents have no recorded creator, mostly ones the platform made.` : undefined}>
           <BarList label="Agents by creator" items={m.creators} color={COLOR.licensed} fmt={int} limit={10} />
         </Panel>
         <Panel title="Models in use">
           <Treemap label="Agents by model" items={m.models} color={COLOR.licensed} fmt={int} limit={9} height={240} />
         </Panel>
         <Panel title="Regions">
-          <BarList label="Agents by region" items={m.regions} color={PALETTE[3]} fmt={int} limit={10} />
+          <BarList label="Agents by region" items={m.regions} color={COLOR.licensed} fmt={int} limit={10} />
         </Panel>
         <Panel title="Agent register" note="Who built each agent, where it lives, and its component footprint." span={3}>
           <DataTable
@@ -213,14 +214,16 @@ export function Creators() {
       tenant: A.tenantWide(rs),
       avgRisk: A.avgRisk(rs),
     }))
-    const topCreators = bars(human, (a) => a.createdByName).slice(0, 8)
+    const named = human.filter((a) => a.createdByName)
+    const topCreators = bars(named, (a) => a.createdByName).slice(0, 8)
     const platforms = [...new Set(human.map((a) => a.platform))].sort()
     const byPlatform = topCreators.map((c) => ({ key: c.key, values: platforms.map((p) => human.filter((a) => a.createdByName === c.key && a.platform === p).length) }))
     return {
       human,
       byCreator,
-      topCreators: bars(human, (a) => a.createdByName),
-      owners: bars(agents, (a) => a.ownerName),
+      topCreators: bars(named, (a) => a.createdByName),
+      owners: bars(agents.filter((a) => a.ownerName), (a) => a.ownerName),
+      noOwner: agents.filter((a) => !a.ownerName).length,
       resolution: bars(agents, (a) => a.ownerPrincipalType),
       platforms,
       byPlatform,
@@ -242,11 +245,11 @@ export function Creators() {
         <Panel title="Top creators">
           <BarList label="Human-built agents by creator" items={m.topCreators} color={COLOR.licensed} fmt={int} limit={10} />
         </Panel>
-        <Panel title="Top owners">
-          <BarList label="Agents by owner" items={m.owners} color={PALETTE[1]} fmt={int} limit={10} />
+        <Panel title="Top owners" note={m.noOwner ? ` agents have no recorded owner.` : undefined}>
+          <BarList label="Agents by owner" items={m.owners} color={COLOR.licensed} fmt={int} limit={10} />
         </Panel>
         <Panel title="Owner identity resolution">
-          <BarList label="Agents by owner identity type" items={m.resolution} color={PALETTE[6]} fmt={int} />
+          <BarList label="Agents by owner identity type" items={m.resolution} color={COLOR.licensed} fmt={int} />
         </Panel>
         <Panel title="Creator activity by platform" span={3}>
           <ColumnChart

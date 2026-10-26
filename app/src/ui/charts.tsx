@@ -730,7 +730,7 @@ export function Gauge(props: {
   }
   const clamp = (s: number) => Math.min(Math.max(s, 0), 1)
   const warn = share >= (props.warnAt ?? 0.8)
-  const color = warn ? (props.warnColor ?? '#b45309') : props.color
+  const color = warn ? (props.warnColor ?? '#a8682b') : props.color
   const mk = props.marker && props.total > 0 ? A0 + SWEEP * clamp(props.marker.value / props.total) : null
   return (
     <figure className="gauge">

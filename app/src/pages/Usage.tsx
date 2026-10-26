@@ -8,7 +8,7 @@ import { BarList, ColumnChart, Distribution, LineChart, Scatter } from '../ui/ch
 import { DataTable } from '../ui/DataTable'
 import { dec1, int, monthLabel, pct } from '../ui/format'
 import { Grid, Kpi, KpiRow, Panel, Select } from '../ui/primitives'
-import { ACTIVITY_COLOR, COLOR, PALETTE } from '../ui/theme'
+import { ACTIVITY_COLOR, COLOR } from '../ui/theme'
 import { agentCol, date, num, ordered, rowsOf, text, toDistribution } from './helpers'
 
 const nameOf = (a: Agent) => ({ key: a.key, name: a.name })
@@ -59,7 +59,7 @@ export function AgentAnalytics() {
           <BarList label="Agents by active users" items={m.trending} color={COLOR.agent} fmt={int} limit={12} onSelect={openAgent} />
         </Panel>
         <Panel title="Top platforms used to build agents">
-          <BarList label="Agents by platform" items={m.platforms} color={PALETTE[3]} fmt={int} />
+          <BarList label="Agents by platform" items={m.platforms} color={COLOR.licensed} fmt={int} />
         </Panel>
       </Grid>
     </>
@@ -224,7 +224,7 @@ export function Adoption() {
           />
         </Panel>
         <Panel title="Environments by adoption band">
-          <BarList label="Environments by adoption band" items={m.bands} color={PALETTE[3]} fmt={int} keepOrder />
+          <BarList label="Environments by adoption band" items={m.bands} color={COLOR.licensed} fmt={int} keepOrder />
         </Panel>
         <Panel title="Biggest clean-up targets" note="Environments with the most never-used agents.">
           <BarList label="Never-used agents by environment" items={m.cleanup} color={COLOR.unlicensed} fmt={int} limit={10} />

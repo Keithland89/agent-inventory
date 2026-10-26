@@ -5,7 +5,7 @@ import { agentTrends, LIFECYCLE_HELP, lifecycleOf, verdictOf } from '../metrics/
 import { I } from '../metrics/measures'
 import { lastDataDay } from '../metrics/periods'
 import { LineChart } from './charts'
-import { dateLabel, dec1, int, DASH } from './format'
+import { dateLabel, dec1, int, DASH, regionLabel } from './format'
 import { Sheet } from './Sheet'
 import { COLOR, LIFECYCLE_COLOR, RISK_COLOR, VERDICT_COLOR } from './theme'
 
@@ -103,7 +103,7 @@ export function AgentDrawer({ agentKey, onClose }: { agentKey: string | null; on
               {agent.envType ? <small> · {agent.envType}</small> : null}
             </dd>
             <dt>Region</dt>
-            <dd>{agent.region || DASH}</dd>
+            <dd>{regionLabel(agent.region) || DASH}</dd>
             <dt>Created</dt>
             <dd>{day(agent.createdAt)}</dd>
             <dt>Last used</dt>

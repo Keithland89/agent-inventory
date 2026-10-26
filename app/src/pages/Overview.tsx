@@ -6,7 +6,7 @@ import { href } from '../routes'
 import { BarList, ColumnChart, Distribution, Donut, LineChart, Sparkline } from '../ui/charts'
 import { dateLabel, dec1, int, monthLabel, monthTick, pct, pct0 } from '../ui/format'
 import { DeltaPill, Grid, InfoTip, Kpi, KpiRow, Panel, Segmented } from '../ui/primitives'
-import { ACTIVITY_COLOR, COLOR, PALETTE, RISK_COLOR } from '../ui/theme'
+import { ACTIVITY_COLOR, COLOR, RISK_COLOR } from '../ui/theme'
 import { CoverageBanner, StatList } from './common'
 import { toDistribution } from './helpers'
 
@@ -168,7 +168,7 @@ export function Overview() {
           <Distribution label="Agents by activity status" items={toDistribution(m.activity, ACTIVITY_COLOR, ACTIVITY_ORDER)} fmt={int} />
         </Panel>
         <Panel title="Orchestration">
-          <BarList label="Agents by orchestration" items={m.orchestration} color={PALETTE[1]} fmt={int} limit={8} />
+          <BarList label="Agents by orchestration" items={m.orchestration} color={COLOR.licensed} fmt={int} limit={8} />
         </Panel>
         <Panel title="Authentication">
           <Donut label="Agents by authentication" items={toDistribution(m.auth)} unit="agents" />

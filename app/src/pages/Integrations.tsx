@@ -6,7 +6,7 @@ import { BarList, ColumnChart } from '../ui/charts'
 import { DataTable, type Column } from '../ui/DataTable'
 import { int, pct } from '../ui/format'
 import { Empty, Grid, Kpi, KpiRow, Panel } from '../ui/primitives'
-import { COLOR, PALETTE } from '../ui/theme'
+import { COLOR } from '../ui/theme'
 import { StatList } from './common'
 import { agentCol, bool, num, rowsOf, text } from './helpers'
 
@@ -81,7 +81,7 @@ export function Tools() {
           <BarList label="Connector links by connector" items={m.top} color={COLOR.agent} fmt={int} limit={12} />
         </Panel>
         <Panel title="Channels">
-          <BarList label="Agents by channel" items={m.channels} color={PALETTE[3]} fmt={int} limit={12} />
+          <BarList label="Agents by channel" items={m.channels} color={COLOR.licensed} fmt={int} limit={12} />
         </Panel>
         <StatList
           title="Component footprint"
@@ -290,7 +290,7 @@ export function KnowledgeSources() {
           <BarList label="Named sources by type" items={m.byType} color={COLOR.agent} fmt={int} />
         </Panel>
         <Panel title="Hosts grounded in">
-          <BarList label="Named sources by host" items={m.hosts} color={PALETTE[3]} fmt={int} limit={10} />
+          <BarList label="Named sources by host" items={m.hosts} color={COLOR.licensed} fmt={int} limit={10} />
         </Panel>
         <Panel title="Reaching outside the tenant">
           <BarList label="External named sources by environment" items={m.outside} color={COLOR.unlicensed} fmt={int} limit={10} />

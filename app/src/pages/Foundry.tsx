@@ -5,9 +5,9 @@ import { laneProblems, unknownFrom } from '../metrics/coverage'
 import { bars, distinct } from '../metrics/measures'
 import { BarList, Distribution } from '../ui/charts'
 import { DataTable } from '../ui/DataTable'
-import { int } from '../ui/format'
+import { int, regionLabel } from '../ui/format'
 import { Empty, Grid, Kpi, KpiRow, Panel } from '../ui/primitives'
-import { COLOR, PALETTE } from '../ui/theme'
+import { COLOR } from '../ui/theme'
 import { LaneNotice } from './common'
 import { rowsOf, text, toDistribution } from './helpers'
 
@@ -22,7 +22,7 @@ export function Foundry() {
     () => ({
       categories: toDistribution(bars(res, (r) => r.category)),
       skus: bars(res, (r) => r.sku),
-      regions: bars(res, (r) => r.region),
+      regions: bars(res, (r) => regionLabel(r.region)),
       flowStates: bars(flows, (f) => f.state),
       flowTypes: bars(flows, (f) => f.type),
     }),
@@ -60,13 +60,13 @@ export function Foundry() {
             <BarList label="Azure AI resources by SKU" items={m.skus} color={COLOR.agent} fmt={int} limit={10} />
           </Panel>
           <Panel title="Regions">
-            <BarList label="Azure AI resources by region" items={m.regions} color={PALETTE[3]} fmt={int} limit={10} />
+            <BarList label="Azure AI resources by region" items={m.regions} color={COLOR.licensed} fmt={int} limit={10} />
           </Panel>
           <Panel title="Agent flows by state">
-            <BarList label="Agent flows by state" items={m.flowStates} color={PALETTE[1]} fmt={int} />
+            <BarList label="Agent flows by state" items={m.flowStates} color={COLOR.licensed} fmt={int} />
           </Panel>
           <Panel title="Agent flows by type">
-            <BarList label="Agent flows by type" items={m.flowTypes} color={PALETTE[2]} fmt={int} />
+            <BarList label="Agent flows by type" items={m.flowTypes} color={COLOR.licensed} fmt={int} />
           </Panel>
           <Panel title="Azure AI estate" span={3}>
             <DataTable
@@ -79,7 +79,7 @@ export function Foundry() {
                 text('category', 'Category', (r: AzureAIResource) => r.category),
                 text('kind', 'Kind', (r: AzureAIResource) => r.kind),
                 text('parent', 'Parent account', (r: AzureAIResource) => r.parentAccount),
-                text('region', 'Region', (r: AzureAIResource) => r.region),
+                text('region', 'Region', (r: AzureAIResource) => regionLabel(r.region)),
                 text('rg', 'Resource group', (r: AzureAIResource) => r.resourceGroup),
                 text('sku', 'SKU', (r: AzureAIResource) => r.sku),
                 text('public', 'Public access', (r: AzureAIResource) => r.publicAccess),

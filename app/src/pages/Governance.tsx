@@ -8,7 +8,7 @@ import { BarList, Donut } from '../ui/charts'
 import { DataTable } from '../ui/DataTable'
 import { dec2, int, pct } from '../ui/format'
 import { Empty, Grid, Kpi, KpiRow, Panel, Select } from '../ui/primitives'
-import { PALETTE, RISK_COLOR } from '../ui/theme'
+import { COLOR, RISK_COLOR } from '../ui/theme'
 import { StatList } from './common'
 import { useScrollOnParam } from '../ui/scroll'
 import { agentCol, num, rowsOf, text, toDistribution } from './helpers'
@@ -84,7 +84,7 @@ export function Governance() {
           ]}
         />
         <Panel title="Authentication modes">
-          <BarList label="Agents by authentication mode" items={m.auth} color={PALETTE[1]} fmt={int} />
+          <BarList label="Agents by authentication mode" items={m.auth} color={COLOR.licensed} fmt={int} />
         </Panel>
         <Panel title="Risk factor breakdown" span={2} help="A heuristic, not a Microsoft score. An agent's score is the sum of the points of its factors: High is 5 points or more, Medium 3 or 4.">
           <DataTable

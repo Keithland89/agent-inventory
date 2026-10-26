@@ -7,7 +7,7 @@ import { BarList, ColumnChart, Distribution, Donut, GroupedBars, Heatmap, LineCh
 import { DataTable } from '../ui/DataTable'
 import { dateLabel, dayLabel, dec1, int, monthLabel, pct } from '../ui/format'
 import { Grid, Kpi, KpiRow, Panel, Segmented, Select } from '../ui/primitives'
-import { COLOR, GROUP_COLOR, HABIT_COLOR, PALETTE } from '../ui/theme'
+import { COLOR, GROUP_COLOR, HABIT_COLOR } from '../ui/theme'
 import { date, num, rowsOf, text, toDistribution } from './helpers'
 
 const uniq = (v: string[]) => [...new Set(v.filter(Boolean))].sort()
@@ -151,7 +151,7 @@ export function Interactions() {
           <Heatmap label="Interactions by weekday and hour" grid={m.hours} rows={WEEKDAYS} color={COLOR.licensed} unit="interactions" zone="UTC" />
         </Panel>
         <Panel title="Client surfaces">
-          <BarList label="Interactions by client app" items={m.hosts} color={PALETTE[3]} fmt={int} limit={7} />
+          <BarList label="Interactions by client app" items={m.hosts} color={COLOR.licensed} fmt={int} limit={7} />
         </Panel>
         <Panel title="Busiest agents" span={2}>
           <DataTable

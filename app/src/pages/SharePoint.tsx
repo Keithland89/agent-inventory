@@ -6,7 +6,7 @@ import { BarList } from '../ui/charts'
 import { DataTable } from '../ui/DataTable'
 import { int } from '../ui/format'
 import { Empty, Grid, Kpi, KpiRow, Panel, Select } from '../ui/primitives'
-import { COLOR, PALETTE } from '../ui/theme'
+import { COLOR } from '../ui/theme'
 import { bool, date, num, rowsOf, shortHost, text } from './helpers'
 
 const uniq = (v: string[]) => [...new Set(v.filter(Boolean))].sort()
@@ -102,10 +102,10 @@ export function SharePointAgents() {
               <BarList label="Current SharePoint agents by site" items={m.bySite} color={COLOR.licensed} fmt={int} limit={10} />
             </Panel>
             <Panel title="Latest observed operation">
-              <BarList label="SharePoint agents by last operation" items={m.ops} color={PALETTE[1]} fmt={int} />
+              <BarList label="SharePoint agents by last operation" items={m.ops} color={COLOR.licensed} fmt={int} />
             </Panel>
             <Panel title="Source application">
-              <BarList label="SharePoint agents by source application" items={m.apps} color={PALETTE[3]} fmt={int} />
+              <BarList label="SharePoint agents by source application" items={m.apps} color={COLOR.licensed} fmt={int} />
             </Panel>
             <Panel title="Inventory and usage by site" span={3}>
               <DataTable
