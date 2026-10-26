@@ -58,18 +58,26 @@ type FilterKey = keyof typeof FILTER_LABELS
 
 function FilterBar({ route }: { route: Route }) {
   const { ds, scope, filters, setFilter, resetFilters } = useData()
+  const [open, setOpen] = useState(false)
   if (!route.tab.agentFilters || UNFILTERED_VIEWS.has(`${route.tab.id}/${route.view}`)) return null
   const set = (Object.keys(FILTER_LABELS) as FilterKey[]).filter((k) => filters[k])
   const through = lastDataDay(ds.interactions)
   return (
     <div className="filters" role="group" aria-label="Agent filters">
-      <div className="filter-fields">
+      <div id="agent-filter-fields" className={`filter-fields ${open ? 'open' : ''}`}>
         <Select label="Environment" value={filters.env} onChange={(v) => setFilter('env', v)} options={opts(uniq(ds.agents.map((a) => a.envName)))} allLabel="All" />
         <Select label="Platform" value={filters.platform} onChange={(v) => setFilter('platform', v)} options={opts(uniq(ds.agents.map((a) => a.platform)))} allLabel="All" />
         <Select label="Risk band" value={filters.riskBand} onChange={(v) => setFilter('riskBand', v)} options={opts(RISK_ORDER)} allLabel="All" />
         <Select label="Agent origin" value={filters.origin} onChange={(v) => setFilter('origin', v)} options={opts(uniq(ds.agents.map((a) => a.agentOrigin)))} allLabel="All" />
       </div>
       <div className="filter-summary">
+        <button type="button" className="filter-toggle" aria-expanded={open} aria-controls="agent-filter-fields" onClick={() => setOpen((o) => !o)}>
+          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+            <path d="M2 3.5h10M4 7h6M6 10.5h2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          </svg>
+          {open ? 'Hide filters' : 'Filters'}
+          {set.length > 0 && <span className="filter-count">{set.length}</span>}
+        </button>
         <p aria-live="polite">
           Showing <b>{int(scope.agents.length)}</b> of {int(ds.agents.length)} agents
           {through && <> · Audit data through {dateLabel(through)}</>}
@@ -192,7 +200,7 @@ export default function App() {
             </button>
             <div className="brand">
               <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">
-                <rect width="28" height="28" rx="7" fill="#ffffff" fillOpacity="0.1" />
+                <rect width="28" height="28" rx="7" fill="var(--band)" />
                 <path d="M7 9h14M7 14h14M7 19h9" stroke="#c4b5fd" strokeWidth="2.6" strokeLinecap="round" />
               </svg>
               <div>

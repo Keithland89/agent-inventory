@@ -16,6 +16,8 @@ export const signedPct: Fmt = (n) => (ok(n) ? `${n > 0 ? '+' : n < 0 ? '−' : '
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 export const monthLabel = (iso: string) => (iso ? `${MONTHS[Number(iso.slice(5, 7)) - 1]} ${iso.slice(0, 4)}` : DASH)
+/** Axis tick for a month: "Jan 26". */
+export const monthTick = (iso: string) => (iso ? `${MONTHS[Number(iso.slice(5, 7)) - 1]} ${iso.slice(2, 4)}` : DASH)
 export const monthShort = (iso: string) => (iso ? MONTHS[Number(iso.slice(5, 7)) - 1] : DASH)
 export const dayLabel = (iso: string) => (iso ? `${Number(iso.slice(8, 10))} ${MONTHS[Number(iso.slice(5, 7)) - 1]}` : DASH)
 export const dateLabel = (iso: string) => (iso ? `${dayLabel(iso)} ${iso.slice(0, 4)}` : DASH)
