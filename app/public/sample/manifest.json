@@ -1,0 +1,63 @@
+{
+  "asOf": "2026-09-05T20:47:21",
+  "sourceAgents": 20765,
+  "sourceInteractions": 48510,
+  "files": [
+    {
+      "name": "agents.csv",
+      "rows": 1488
+    },
+    {
+      "name": "environments.csv",
+      "rows": 769
+    },
+    {
+      "name": "flows.csv",
+      "rows": 565
+    },
+    {
+      "name": "ai-resources.csv",
+      "rows": 298
+    },
+    {
+      "name": "sharepoint-agents.csv",
+      "rows": 64
+    },
+    {
+      "name": "users.csv",
+      "rows": 110
+    },
+    {
+      "name": "shadow-signals.csv",
+      "rows": 0
+    },
+    {
+      "name": "shadow-devices.csv",
+      "rows": 0
+    },
+    {
+      "name": "connectors.csv",
+      "rows": 656
+    },
+    {
+      "name": "knowledge.csv",
+      "rows": 1044
+    },
+    {
+      "name": "knowledge-sources.csv",
+      "rows": 791
+    },
+    {
+      "name": "surfaces.csv",
+      "rows": 742
+    },
+    {
+      "name": "interaction-users.csv",
+      "rows": 97
+    },
+    {
+      "name": "interactions.csv",
+      "rows": 48474
+    }
+  ]
+}

@@ -1,0 +1,280 @@
+import { useMemo, useState } from 'react'
+import { useData } from '../data/store'
+import type { Agent } from '../data/types'
+import { A, ACTIVITY_ORDER, I, bars, div, groupBy, perAgentUsage } from '../metrics/measures'
+import { BarList, ColumnChart } from '../ui/charts'
+import { DataTable } from '../ui/DataTable'
+import { dec1, int } from '../ui/format'
+import { Grid, Kpi, KpiRow, Panel, Select } from '../ui/primitives'
+import { ACTIVITY_COLOR, COLOR, PALETTE } from '../ui/theme'
+import { NamesNote } from './common'
+import { agentCol, bool, date, num, rowsOf, text } from './helpers'
+
+const nameOf = (a: Agent) => ({ key: a.key, name: a.name })
+const search = (a: Agent) => `${a.name} ${a.envName} ${a.platform} ${a.createdByName} ${a.ownerName}`
+
+/** "Activity mix by platform": agent counts per platform, stacked by activity status. */
+function activityMix(agents: Agent[]) {
+  return [...groupBy(agents, (a) => a.platform)]
+    .map(([key, rs]) => ({ key, values: ACTIVITY_ORDER.map((s) => rs.filter((a) => a.activityStatus === s).length) }))
+    .sort((a, b) => b.values.reduce((x, y) => x + y, 0) - a.values.reduce((x, y) => x + y, 0))
+}
+
+export function AllAgents() {
+  const { scope, openAgent } = useData()
+  const [status, setStatus] = useState('')
+  const agents = useMemo(() => (status ? scope.agents.filter((a) => a.activityStatus === status) : scope.agents), [scope.agents, status])
+  const interactions = useMemo(() => {
+    if (!status) return scope.interactions
+    const keys = new Set(agents.map((a) => a.key))
+    return scope.interactions.filter((i) => keys.has(i.agentKey))
+  }, [scope.interactions, agents, status])
+  const usage = useMemo(() => perAgentUsage(interactions), [interactions])
+  const mix = useMemo(() => activityMix(agents), [agents])
+  const rows = useMemo(() => rowsOf(agents, (a) => a.key), [agents])
+
+  return (
+    <>
+      <div className="filters page-filters" role="group" aria-label="Page filters">
+        <Select label="Activity status" value={status} onChange={setStatus} options={ACTIVITY_ORDER.map((s) => ({ value: s, label: s }))} allLabel="All" />
+      </div>
+      <KpiRow>
+        <Kpi label="Total agents" value={int(agents.length)} tone="agent" />
+        <Kpi label="Agents at risk" value={int(A.atRisk(agents))} tone="unlicensed" help="Agents in the Medium or High risk band." />
+        <Kpi label="Agents without owners" value={int(A.withoutOwners(agents))} />
+        <Kpi label="Graph connector agents" value={int(A.graphConnector(agents))} help="Agents grounded on at least one Microsoft Graph connector." />
+        <Kpi label="Active users" value={int(I.activeUsers(interactions))} />
+        <Kpi label="Connected platforms" value={int(A.connectedPlatforms(agents))} />
+      </KpiRow>
+      <Grid cols={3}>
+        <Panel title="Agent registry" note="Every agent, the way the registry lists them. Select an agent to see its details." span={3}>
+          <DataTable
+            label="Agent registry"
+            rows={rows}
+            search={search}
+            onRowClick={(a) => openAgent(a.key)}
+            initialSort={{ key: 'users', desc: true }}
+            columns={[
+              agentCol(nameOf),
+              text('status', 'Activity', (a: Agent) => a.activityStatus),
+              date('quarantined', 'Quarantined', (a: Agent) => a.quarantinedAt),
+              text('platform', 'Platform', (a: Agent) => a.platform),
+              text('risk', 'Risk', (a: Agent) => a.riskBand),
+              num('users', 'Active users', (a: Agent) => usage.get(a.key)?.users ?? 0, { bar: COLOR.agent }),
+              num('sessions', 'Sessions', (a: Agent) => usage.get(a.key)?.sessions ?? 0),
+              num('shared', 'Shared users', (a: Agent) => a.sharedUserCount),
+              date('published', 'Last published', (a: Agent) => a.lastPublishedAt),
+            ]}
+          />
+        </Panel>
+        <Panel title="Activity mix by platform" span={3}>
+          <ColumnChart
+            label="Agents by platform and activity status"
+            data={mix}
+            series={ACTIVITY_ORDER.map((s) => ({ name: s, color: ACTIVITY_COLOR[s], fmt: int }))}
+            xFmt={(k) => k}
+            stacked
+          />
+        </Panel>
+        <Panel title="Data and tools" span={3}>
+          <DataTable
+            label="Data and tools per agent"
+            rows={rows}
+            search={search}
+            initialSort={{ key: 'ktypes', desc: true }}
+            columns={[
+              agentCol(nameOf),
+              text('kinds', 'Knowledge types', (a: Agent) => a.knowledgeTypes, '20%'),
+              num('ktypes', 'Types', (a: Agent) => a.knowledgeTypeCount),
+              num('graph', 'Graph conn.', (a: Agent) => a.graphConnectorCount),
+              num('sp', 'SharePoint sites', (a: Agent) => a.sharePointSiteCount),
+              num('public', 'Public sites', (a: Agent) => a.publicSiteCount),
+              num('files', 'Files', (a: Agent) => a.fileKnowledgeCount),
+              num('dv', 'Dataverse', (a: Agent) => a.dataverseSourceCount),
+              num('tools', 'Tools', (a: Agent) => a.toolCount),
+              num('conn', 'Connectors', (a: Agent) => a.connectorCount),
+              bool('web', 'Web search', (a: Agent) => a.webSearch),
+            ]}
+          />
+        </Panel>
+        <Panel title="Environment, ownership and sharing" span={3}>
+          <NamesNote />
+          <DataTable
+            label="Environment, ownership and sharing per agent"
+            rows={rows}
+            search={search}
+            initialSort={{ key: 'shared', desc: true }}
+            columns={[
+              agentCol(nameOf),
+              text('env', 'Environment', (a: Agent) => a.envName),
+              text('envType', 'Type', (a: Agent) => a.envType),
+              text('region', 'Region', (a: Agent) => a.region),
+              text('owner', 'Owner', (a: Agent) => a.ownerName),
+              text('ownerUpn', 'Owner UPN', (a: Agent) => a.ownerUpn),
+              text('creator', 'Created by', (a: Agent) => a.createdByName),
+              num('editors', 'Editors', (a: Agent) => a.editorUserCount),
+              num('shared', 'Shared users', (a: Agent) => a.sharedUserCount),
+              num('groups', 'Shared groups', (a: Agent) => a.sharedGroupCount),
+              bool('tenant', 'Tenant-wide', (a: Agent) => a.sharedTenantWide),
+            ]}
+          />
+        </Panel>
+      </Grid>
+    </>
+  )
+}
+
+export function AgentInventory() {
+  const { scope, openAgent } = useData()
+  const { agents } = scope
+  const m = useMemo(
+    () => ({
+      models: bars(agents, (a) => a.model),
+      creators: bars(agents, (a) => a.createdByName),
+      regions: bars(agents, (a) => a.region),
+      rows: rowsOf(agents, (a) => a.key),
+    }),
+    [agents],
+  )
+  return (
+    <>
+      <KpiRow>
+        <Kpi label="Agents in view" value={int(agents.length)} tone="agent" />
+        <Kpi label="Distinct creators" value={int(A.distinctCreators(agents))} />
+        <Kpi label="Human-built" value={int(A.humanBuilt(agents))} />
+        <Kpi label="Environments" value={int(A.envsWithAgents(agents))} help="Environments that contain at least one agent." />
+        <Kpi label="Total tools" value={int(A.tools(agents))} />
+        <Kpi label="Distinct models" value={int(A.distinctModels(agents))} />
+      </KpiRow>
+      <NamesNote />
+      <Grid cols={3}>
+        <Panel title="Top agent creators">
+          <BarList label="Agents by creator" items={m.creators} color={COLOR.licensed} fmt={int} limit={10} />
+        </Panel>
+        <Panel title="Models in use">
+          <BarList label="Agents by model" items={m.models} color={PALETTE[1]} fmt={int} limit={10} />
+        </Panel>
+        <Panel title="Regions">
+          <BarList label="Agents by region" items={m.regions} color={PALETTE[3]} fmt={int} limit={10} />
+        </Panel>
+        <Panel title="Agent register" note="Who built each agent, where it lives, and its component footprint." span={3}>
+          <DataTable
+            label="Agent register"
+            rows={m.rows}
+            search={search}
+            onRowClick={(a) => openAgent(a.key)}
+            initialSort={{ key: 'score', desc: true }}
+            columns={[
+              agentCol(nameOf),
+              text('creator', 'Created by', (a: Agent) => a.createdByName),
+              text('owner', 'Owner', (a: Agent) => a.ownerName),
+              text('platform', 'Platform', (a: Agent) => a.platform),
+              text('env', 'Environment', (a: Agent) => a.envName),
+              text('orch', 'Orchestration', (a: Agent) => a.orchestration),
+              text('model', 'Model', (a: Agent) => a.model),
+              text('auth', 'Authentication', (a: Agent) => a.authentication),
+              text('status', 'Activity', (a: Agent) => a.activityStatus),
+              text('band', 'Risk', (a: Agent) => a.riskBand),
+              num('score', 'Score', (a: Agent) => a.riskScore),
+              num('topics', 'Topics', (a: Agent) => a.topicCount),
+              num('tools', 'Tools', (a: Agent) => a.toolCount),
+              num('knowledge', 'Knowledge', (a: Agent) => a.knowledgeCount),
+              date('created', 'Created', (a: Agent) => a.createdAt),
+              date('used', 'Last used', (a: Agent) => a.lastUsed),
+            ]}
+          />
+        </Panel>
+      </Grid>
+    </>
+  )
+}
+
+interface CreatorRow {
+  creator: string
+  agents: number
+  active: number
+  never: number
+  high: number
+  tenant: number
+  avgRisk: number
+}
+
+export function Creators() {
+  const { scope } = useData()
+  const { agents } = scope
+  const m = useMemo(() => {
+    const human = agents.filter((a) => a.agentOrigin === 'Human-built')
+    const byCreator: CreatorRow[] = [...groupBy(agents, (a) => a.createdByName || '(Blank)')].map(([creator, rs]) => ({
+      creator,
+      agents: rs.length,
+      active: A.active30(rs),
+      never: A.neverUsed(rs),
+      high: A.high(rs),
+      tenant: A.tenantWide(rs),
+      avgRisk: A.avgRisk(rs),
+    }))
+    const topCreators = bars(human, (a) => a.createdByName).slice(0, 8)
+    const platforms = [...new Set(human.map((a) => a.platform))].sort()
+    const byPlatform = topCreators.map((c) => ({ key: c.key, values: platforms.map((p) => human.filter((a) => a.createdByName === c.key && a.platform === p).length) }))
+    return {
+      human,
+      byCreator,
+      topCreators: bars(human, (a) => a.createdByName),
+      owners: bars(agents, (a) => a.ownerName),
+      resolution: bars(agents, (a) => a.ownerPrincipalType),
+      platforms,
+      byPlatform,
+    }
+  }, [agents])
+
+  return (
+    <>
+      <KpiRow>
+        <Kpi label="Distinct creators" value={int(A.distinctCreators(agents))} />
+        <Kpi label="Distinct owners" value={int(A.distinctOwners(agents))} />
+        <Kpi label="Human-built agents" value={int(m.human.length)} tone="licensed" />
+        <Kpi label="Platform-built" value={int(A.platformBuilt(agents))} help="Agents the platform created on a user's behalf, such as system and default agents." />
+        <Kpi label="Agents per creator" value={dec1(div(m.human.length, A.distinctCreators(agents)))} />
+        <Kpi label="Owner not resolved" value={int(A.ownersNotResolved(agents))} tone="unlicensed" help="Owners that could not be matched to a user record, often because the account was deleted." />
+      </KpiRow>
+      <NamesNote />
+      <Grid cols={3}>
+        <Panel title="Top creators">
+          <BarList label="Human-built agents by creator" items={m.topCreators} color={COLOR.licensed} fmt={int} limit={10} />
+        </Panel>
+        <Panel title="Top owners">
+          <BarList label="Agents by owner" items={m.owners} color={PALETTE[1]} fmt={int} limit={10} />
+        </Panel>
+        <Panel title="Owner identity resolution">
+          <BarList label="Agents by owner identity type" items={m.resolution} color={PALETTE[6]} fmt={int} />
+        </Panel>
+        <Panel title="Creator activity by platform" span={3}>
+          <ColumnChart
+            label="Human-built agents per top creator, by platform"
+            data={m.byPlatform}
+            series={m.platforms.map((p, i) => ({ name: p, color: PALETTE[i % PALETTE.length], fmt: int }))}
+            xFmt={(k) => (k.length > 18 ? k.slice(0, 17) + '…' : k)}
+            stacked
+          />
+        </Panel>
+        <Panel title="Creator league table" span={3}>
+          <DataTable
+            label="Creator league table"
+            rows={rowsOf(m.byCreator, (r) => r.creator)}
+            search={(r) => r.creator}
+            initialSort={{ key: 'agents', desc: true }}
+            columns={[
+              text('creator', 'Creator', (r: CreatorRow) => r.creator, '28%'),
+              num('agents', 'Agents', (r: CreatorRow) => r.agents, { bar: COLOR.agent }),
+              num('active', 'Active (30d)', (r: CreatorRow) => r.active),
+              num('never', 'Never used', (r: CreatorRow) => r.never),
+              num('high', 'High risk', (r: CreatorRow) => r.high),
+              num('tenant', 'Tenant-wide', (r: CreatorRow) => r.tenant),
+              num('avg', 'Avg risk score', (r: CreatorRow) => r.avgRisk, { fmt: dec1 }),
+            ]}
+          />
+        </Panel>
+      </Grid>
+    </>
+  )
+}
