@@ -4,7 +4,7 @@ import { useData } from '../data/store'
 import type { Agent } from '../data/types'
 import { A, R, RISK_ORDER, bars, div, groupBy } from '../metrics/measures'
 import { href, useParam } from '../routes'
-import { BarList, Distribution } from '../ui/charts'
+import { BarList, Donut } from '../ui/charts'
 import { DataTable } from '../ui/DataTable'
 import { dec2, int, pct } from '../ui/format'
 import { Empty, Grid, Kpi, KpiRow, Panel, Select } from '../ui/primitives'
@@ -68,7 +68,7 @@ export function Governance() {
       </KpiRow>
       <Grid cols={3}>
         <Panel title="Risk bands">
-          <Distribution label="Agents by risk band" items={toDistribution(m.bands, RISK_COLOR, RISK_ORDER)} fmt={int} />
+          <Donut label="Agents by risk band" items={toDistribution(m.bands, RISK_COLOR, RISK_ORDER)} unit="agents" keepOrder />
         </Panel>
         <Panel title="Why agents are risky">
           <BarList label="Risk factor instances" items={m.why} color={RISK_COLOR.High} fmt={int} />

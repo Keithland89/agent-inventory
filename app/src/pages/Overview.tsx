@@ -3,7 +3,7 @@ import { useData } from '../data/store'
 import { A, ACTIVITY_ORDER, I, PLATFORM, bars, cumulative, div, monthly } from '../metrics/measures'
 import { lastDataDay, periodChange, weeklySeries } from '../metrics/periods'
 import { href } from '../routes'
-import { BarList, ColumnChart, Distribution, LineChart, Sparkline } from '../ui/charts'
+import { BarList, ColumnChart, Distribution, Donut, LineChart, Sparkline } from '../ui/charts'
 import { dateLabel, dec1, int, monthLabel, monthTick, pct, pct0 } from '../ui/format'
 import { DeltaPill, Grid, InfoTip, Kpi, KpiRow, Panel, Segmented } from '../ui/primitives'
 import { ACTIVITY_COLOR, COLOR, PALETTE, RISK_COLOR } from '../ui/theme'
@@ -171,7 +171,7 @@ export function Overview() {
           <BarList label="Agents by orchestration" items={m.orchestration} color={PALETTE[1]} fmt={int} limit={8} />
         </Panel>
         <Panel title="Authentication">
-          <BarList label="Agents by authentication" items={m.auth} color={PALETTE[2]} fmt={int} limit={8} />
+          <Donut label="Agents by authentication" items={toDistribution(m.auth)} unit="agents" />
         </Panel>
         <Panel title="Top environments" span={3}>
           <BarList label="Agents by environment" items={m.envs} color={COLOR.licensed} fmt={int} limit={12} />

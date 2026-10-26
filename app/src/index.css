@@ -196,12 +196,12 @@ a {
   background: var(--hover);
 }
 
-/* Side navigation: sections grouped by job, sticky beside the content. */
+/* Side navigation: sections grouped by job, each with an icon and a one-line description.
+   The column stretches to the full page height so its surface never stops short; the list inside stays in view. */
 .frame {
   flex: 1;
   display: grid;
-  grid-template-columns: 216px minmax(0, 1fr);
-  align-items: start;
+  grid-template-columns: 272px minmax(0, 1fr);
 }
 .content {
   min-width: 0;
@@ -210,19 +210,22 @@ a {
   flex-direction: column;
 }
 .sidenav {
-  position: sticky;
-  top: 0;
-  height: 100dvh;
-  overflow-y: auto;
-  padding: 14px 10px 24px;
   background: var(--surface);
   border-right: 1px solid var(--line);
 }
+.sidenav-inner {
+  position: sticky;
+  top: 0;
+  max-height: 100dvh;
+  overflow-y: auto;
+  padding: 16px 12px 28px;
+  scrollbar-width: thin;
+}
 .nav-group + .nav-group {
-  margin-top: 14px;
+  margin-top: 16px;
 }
 .nav-label {
-  padding: 0 10px 4px;
+  padding: 0 10px 6px;
   color: var(--ink-3);
   font-size: 12px;
   font-weight: 600;
@@ -232,29 +235,76 @@ a {
   padding: 0;
   list-style: none;
 }
-.sidenav a {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  min-height: 34px;
-  padding: 6px 10px;
-  border-radius: 7px;
-  color: var(--ink-2);
-  text-decoration: none;
-  font-weight: 500;
+.nav-item + .nav-item {
+  margin-top: 2px;
 }
-.sidenav a:hover {
-  background: var(--hover);
+.nav-link {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  align-items: start;
+  column-gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
   color: var(--ink);
+  text-decoration: none;
+  transition: background-color 0.15s ease;
 }
-.sidenav a[aria-current='page'] {
+.nav-link:hover {
+  background: var(--hover);
+}
+.nav-icon {
+  margin-top: 1px;
+  color: var(--ink-3);
+}
+.nav-text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.nav-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.nav-blurb {
+  color: var(--ink-3);
+  font-size: 12px;
+  line-height: 1.35;
+}
+.nav-item.is-current > .nav-link {
   background: var(--accent-soft);
+}
+.nav-item.is-current > .nav-link .nav-title,
+.nav-item.is-current > .nav-link .nav-icon {
+  color: var(--accent-ink);
+}
+.sidenav .nav-views {
+  margin: 4px 0 6px 20px;
+  padding-left: 0;
+  border-left: 1px solid var(--line);
+}
+.nav-views a {
+  display: block;
+  margin-left: -1px;
+  padding: 5px 10px 5px 18px;
+  border-left: 2px solid transparent;
+  color: var(--ink-2);
+  font-size: 12.5px;
+  line-height: 1.35;
+  text-decoration: none;
+}
+.nav-views a:hover {
+  color: var(--ink);
+  background: var(--hover);
+}
+.nav-views a[aria-current='page'] {
+  border-left-color: var(--accent);
   color: var(--accent-ink);
   font-weight: 600;
 }
 .nav-flag {
   flex: none;
+  align-self: center;
   width: 7px;
   height: 7px;
   border-radius: 50%;
@@ -843,7 +893,7 @@ a.kpi-value:focus-visible {
 .grid {
   display: grid;
   gap: 16px;
-  align-items: start;
+  align-items: stretch;
 }
 .grid-2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -856,10 +906,12 @@ a.kpi-value:focus-visible {
 }
 .grid-1-2 {
   grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-  align-items: start;
 }
 
+/* Panels in a row share one height; a lone donut, gauge or funnel sits centred in the spare room rather than leaving a gap under it. */
 .panel {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   padding: 16px 18px 18px;
   border: 1px solid var(--line);
@@ -879,6 +931,14 @@ a.kpi-value:focus-visible {
   align-items: center;
   font-size: 15px;
   font-weight: 600;
+}
+.panel-body {
+  flex: 1;
+  min-width: 0;
+}
+.panel-body:has(> .donut:only-child, > .funnel:only-child, > .gauge:only-child) {
+  display: grid;
+  align-content: center;
 }
 .panel-note {
   margin-top: 2px;
@@ -1281,6 +1341,231 @@ a.kpi-value:focus-visible {
 }
 .dl-pct {
   color: var(--ink-3);
+}
+
+/* Donut */
+.donut {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+}
+.donut svg {
+  flex: none;
+  margin: 0 auto;
+}
+.donut svg circle {
+  transition: opacity 0.15s ease;
+}
+.donut .dist-legend {
+  flex: 1 1 180px;
+  margin: 0;
+}
+.dist-legend li.hot {
+  background: var(--hover);
+}
+.donut-value {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 650;
+  fill: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.donut-caption,
+.gauge-caption {
+  font-size: 11.5px;
+  fill: var(--ink-3);
+}
+
+/* Heatmap */
+.hm-grid {
+  display: grid;
+  grid-template-columns: 30px repeat(24, minmax(0, 1fr));
+  gap: 3px;
+}
+.hm-day,
+.hm-hour {
+  font-size: 11px;
+  color: var(--ink-3);
+  line-height: 1;
+}
+.hm-day {
+  align-self: center;
+}
+.hm-hour {
+  padding-top: 3px;
+  white-space: nowrap;
+}
+.hm-cell {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1.35;
+  min-height: 12px;
+  max-height: 26px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--line-2);
+  color: var(--ink-2);
+  font-size: 10px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.hm-nums .hm-cell {
+  aspect-ratio: auto;
+  height: 24px;
+  max-height: none;
+}
+.hm-cell.hm-strong {
+  color: #fff;
+}
+.hm-scale {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 12px;
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+.hm-scale i {
+  width: 14px;
+  height: 10px;
+  border-radius: 2px;
+}
+.hm-scale b {
+  margin-left: auto;
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+/* Funnel */
+.funnel {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.fn-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 4.5ch;
+  gap: 10px;
+  align-items: baseline;
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+.fn-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fn-val {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.fn-pct {
+  color: var(--ink-3);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.fn-track {
+  display: flex;
+  justify-content: center;
+  height: 14px;
+  border-radius: 4px;
+  background: var(--surface-2);
+}
+.fn-bar {
+  border-radius: 4px;
+}
+
+/* Treemap */
+.treemap {
+  position: relative;
+}
+.treemap ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.treemap li {
+  position: absolute;
+  overflow: hidden;
+  padding: 7px 9px;
+  border: 2px solid var(--surface);
+  border-radius: 8px;
+  color: var(--ink);
+}
+.treemap li.tm-strong {
+  color: #fff;
+}
+.tm-text {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.tm-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.tm-val {
+  font-size: 11.5px;
+  opacity: 0.85;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Gauge */
+.split {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+}
+.split > :last-child {
+  flex: 1 1 420px;
+  min-width: 0;
+}
+.gauge {
+  flex: none;
+  margin: 0 auto;
+  text-align: center;
+}
+.gauge-value {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 650;
+  fill: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.gauge figcaption {
+  display: grid;
+  gap: 2px;
+  margin-top: -6px;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+.gauge figcaption b {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.gauge figcaption i {
+  display: inline-block;
+  width: 2px;
+  height: 10px;
+  margin-right: 2px;
+  background: var(--ink);
+  vertical-align: -1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .donut svg circle {
+    transition: none;
+  }
 }
 
 /* ---------- Tables ---------- */
@@ -1765,8 +2050,8 @@ a.kpi-value:focus-visible {
     position: fixed;
     inset: 0 auto 0 0;
     z-index: 60;
-    width: min(280px, 85vw);
-    height: auto;
+    width: min(300px, 85vw);
+    overflow-y: auto;
     box-shadow: var(--shadow-pop);
     transform: translateX(-100%);
     visibility: hidden;
@@ -1778,6 +2063,11 @@ a.kpi-value:focus-visible {
     transform: none;
     visibility: visible;
     transition: transform 0.2s ease;
+  }
+  .sidenav-inner {
+    position: static;
+    max-height: none;
+    overflow: visible;
   }
   .scrim {
     display: block;
@@ -1917,6 +2207,10 @@ a.kpi-value:focus-visible {
   font-size: 12.5px;
 }
 .page-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 10px 12px;
   margin-bottom: 14px;
   padding-inline: 0;
 }

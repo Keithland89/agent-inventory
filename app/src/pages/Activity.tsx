@@ -1,17 +1,23 @@
 import { useMemo, useState } from 'react'
 import { useData } from '../data/store'
 import type { CopilotSurface, Interaction } from '../data/types'
-import { APP_GROUPS, HABITS, appGroup, groupSummary, habitMix, userActivity, weeklyUsers, type AppGroup, type GroupSummary, type UserActivity } from '../metrics/chat'
+import { APP_GROUPS, HABITS, WEEKDAYS, appGroup, groupSummary, habitMix, hourGrid, userActivity, weeklyUsers, type AppGroup, type GroupSummary, type UserActivity } from '../metrics/chat'
 import { I, bars, groupBy, monthRange, telemetryUplift } from '../metrics/measures'
-import { BarList, ColumnChart, Distribution, GroupedBars, LineChart } from '../ui/charts'
+import { BarList, ColumnChart, Distribution, Donut, GroupedBars, Heatmap, LineChart } from '../ui/charts'
 import { DataTable } from '../ui/DataTable'
 import { dateLabel, dayLabel, dec1, int, monthLabel, pct } from '../ui/format'
-import { Grid, Kpi, KpiRow, Panel, Select } from '../ui/primitives'
+import { Grid, Kpi, KpiRow, Panel, Segmented, Select } from '../ui/primitives'
 import { COLOR, GROUP_COLOR, HABIT_COLOR, PALETTE } from '../ui/theme'
 import { date, num, rowsOf, text, toDistribution } from './helpers'
 
 const uniq = (v: string[]) => [...new Set(v.filter(Boolean))].sort()
 const options = (v: string[]) => v.map((x) => ({ value: x, label: x }))
+
+type TrendView = 'day' | 'month'
+const TREND_VIEWS: { id: TrendView; label: string }[] = [
+  { id: 'day', label: 'Per day' },
+  { id: 'month', label: 'By month' },
+]
 
 interface UserRow {
   user: string
@@ -34,6 +40,7 @@ export function Interactions() {
   const [type, setType] = useState('')
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
+  const [trendView, setTrendView] = useState<TrendView>('day')
   const surfaces = ds.surfaces
   const all = scope.interactions
   const dates = useMemo(() => {
@@ -80,6 +87,7 @@ export function Interactions() {
     return {
       trend,
       monthly,
+      hours: hourGrid(rows),
       types: bars(rows, (i) => surfaces.get(i.surfaceKey)?.type ?? 'Unknown'),
       hosts: bars(rows, (i) => i.appHost),
       surfaceRows,
@@ -116,25 +124,34 @@ export function Interactions() {
         />
       </KpiRow>
       <Grid cols={3}>
-        <Panel title="Interaction trend" note="Per-agent usage from the Purview unified audit log." span={2}>
-          <LineChart label="Interactions per day" data={m.trend} series={[{ name: 'Interactions', color: COLOR.agent, fmt: int }]} xFmt={dayLabel} area />
+        <Panel
+          title={trendView === 'day' ? 'Interaction trend' : 'Sessions and turns by month'}
+          note="Per-agent usage from the Purview unified audit log."
+          span={2}
+          actions={<Segmented label="Trend view" value={trendView} options={TREND_VIEWS} onChange={setTrendView} />}
+        >
+          {trendView === 'day' ? (
+            <LineChart label="Interactions per day" data={m.trend} series={[{ name: 'Interactions', color: COLOR.agent, fmt: int }]} xFmt={dayLabel} area />
+          ) : (
+            <ColumnChart
+              label="Sessions and interactions by month"
+              data={m.monthly}
+              series={[
+                { name: 'Sessions', color: COLOR.licensed, fmt: int },
+                { name: 'Interactions', color: COLOR.agent, fmt: int },
+              ]}
+              xFmt={monthLabel}
+            />
+          )}
         </Panel>
         <Panel title="Where the traffic goes">
-          <Distribution label="Interactions by surface type" items={toDistribution(m.types)} fmt={int} />
+          <Donut label="Interactions by surface type" items={toDistribution(m.types)} unit="interactions" />
         </Panel>
-        <Panel title="Sessions and turns by month" span={2}>
-          <ColumnChart
-            label="Sessions and interactions by month"
-            data={m.monthly}
-            series={[
-              { name: 'Sessions', color: COLOR.licensed, fmt: int },
-              { name: 'Interactions', color: COLOR.agent, fmt: int },
-            ]}
-            xFmt={monthLabel}
-          />
+        <Panel title="When people use Copilot" span={2} note="Interactions by weekday and hour, in UTC.">
+          <Heatmap label="Interactions by weekday and hour" grid={m.hours} rows={WEEKDAYS} color={COLOR.licensed} unit="interactions" zone="UTC" />
         </Panel>
         <Panel title="Client surfaces">
-          <BarList label="Interactions by client app" items={m.hosts} color={PALETTE[3]} fmt={int} limit={12} />
+          <BarList label="Interactions by client app" items={m.hosts} color={PALETTE[3]} fmt={int} limit={7} />
         </Panel>
         <Panel title="Busiest agents" span={2}>
           <DataTable

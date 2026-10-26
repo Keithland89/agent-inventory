@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useData } from '../data/store'
 import type { Agent } from '../data/types'
 import { A, ACTIVITY_ORDER, I, bars, div, groupBy, perAgentUsage } from '../metrics/measures'
-import { BarList, ColumnChart } from '../ui/charts'
+import { BarList, ColumnChart, Treemap } from '../ui/charts'
 import { DataTable } from '../ui/DataTable'
 import { dec1, int } from '../ui/format'
 import { Grid, Kpi, KpiRow, Panel, Select } from '../ui/primitives'
@@ -152,7 +152,7 @@ export function AgentInventory() {
           <BarList label="Agents by creator" items={m.creators} color={COLOR.licensed} fmt={int} limit={10} />
         </Panel>
         <Panel title="Models in use">
-          <BarList label="Agents by model" items={m.models} color={PALETTE[1]} fmt={int} limit={10} />
+          <Treemap label="Agents by model" items={m.models} color={COLOR.licensed} fmt={int} limit={9} height={240} />
         </Panel>
         <Panel title="Regions">
           <BarList label="Agents by region" items={m.regions} color={PALETTE[3]} fmt={int} limit={10} />

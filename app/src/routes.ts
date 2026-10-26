@@ -5,6 +5,8 @@ export type TabId = 'overview' | 'inventory' | 'usage' | 'activity' | 'governanc
 export interface TabDef {
   id: TabId
   label: string
+  /** The one-line description under the label in the side navigation. */
+  blurb: string
   intro: string
   views: { id: string; label: string }[]
   /** Whether the agent slicers (Environment, Platform, Risk band, Agent origin) apply here. */
@@ -15,6 +17,7 @@ export const TABS: TabDef[] = [
   {
     id: 'overview',
     label: 'Overview',
+    blurb: 'The agent estate at a glance',
     intro: 'How many agents exist, how many are used, and how many need attention.',
     views: [],
     agentFilters: true,
@@ -22,6 +25,7 @@ export const TABS: TabDef[] = [
   {
     id: 'inventory',
     label: 'Inventory',
+    blurb: 'Every agent and who owns it',
     intro: 'Every agent across Copilot Studio, Agent Builder, Azure AI Foundry and SharePoint, and who builds and owns them.',
     views: [
       { id: 'all', label: 'All agents' },
@@ -34,6 +38,7 @@ export const TABS: TabDef[] = [
   {
     id: 'usage',
     label: 'Usage',
+    blurb: 'Which agents people use',
     intro: 'Which agents people use, how recently, how adoption grows, and which agents to promote or retire.',
     views: [
       { id: 'analytics', label: 'Agent analytics' },
@@ -46,6 +51,7 @@ export const TABS: TabDef[] = [
   {
     id: 'activity',
     label: 'Copilot activity',
+    blurb: 'Chat, Cowork and habit stages',
     intro: 'Audit-log interactions with agents, Copilot Chat, in-app Copilot and Cowork.',
     views: [
       { id: 'interactions', label: 'Interactions' },
@@ -57,6 +63,7 @@ export const TABS: TabDef[] = [
   {
     id: 'governance',
     label: 'Governance & risk',
+    blurb: 'Risk scores and agents to review',
     intro: 'Risk scores, the factors behind them, and the agents to review first.',
     views: [],
     agentFilters: true,
@@ -64,6 +71,7 @@ export const TABS: TabDef[] = [
   {
     id: 'integrations',
     label: 'Integrations',
+    blurb: 'Connectors, tools and knowledge',
     intro: 'The connectors, MCP servers and knowledge that agents reach.',
     views: [
       { id: 'tools', label: 'Tools' },
@@ -75,6 +83,7 @@ export const TABS: TabDef[] = [
   {
     id: 'foundry',
     label: 'Azure AI Foundry',
+    blurb: 'Projects and model deployments',
     intro: 'Foundry accounts, projects and model deployments across your subscriptions.',
     views: [],
     agentFilters: false,
@@ -82,6 +91,7 @@ export const TABS: TabDef[] = [
   {
     id: 'cost',
     label: 'Cost & consumption',
+    blurb: 'Credits, capacity and Azure spend',
     intro: 'Copilot Credits that agents consume, the tenant capacity behind them, and Azure AI spend.',
     views: [
       { id: 'credits', label: 'Copilot Studio credits' },
@@ -92,6 +102,7 @@ export const TABS: TabDef[] = [
   {
     id: 'shadow',
     label: 'Shadow AI',
+    blurb: 'Unsanctioned AI tools in use',
     intro: 'Unsanctioned AI tooling that Microsoft Defender sees on devices and the network.',
     views: [],
     agentFilters: false,
@@ -99,6 +110,7 @@ export const TABS: TabDef[] = [
   {
     id: 'setup',
     label: 'Setup & coverage',
+    blurb: 'Data sources and lane status',
     intro: 'Where each number comes from, what the APIs cannot see, and how each data lane loaded.',
     views: [
       { id: 'sources', label: 'Data sources & gaps' },

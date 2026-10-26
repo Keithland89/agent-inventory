@@ -77,7 +77,8 @@ Segoe UI Variable throughout. KPI values use tabular numerals so columns of figu
 ## Layout
 
 - The header band holds the title, the Ask button, the data-mode badge (Live or Sample), the as-of time and the data-source button.
-- A white side navigation sits left of the content, with sections grouped by job: Overview; Agents; Copilot; Spend & platforms; Security; Setup & coverage. Group labels are plain sentence case, not eyebrows. The current section has the soft-indigo fill. A small amber dot marks a section whose data lane failed or isn't in the sample.
+- A white side navigation sits left of the content and runs the full page height, with sections grouped by job: Overview; Agents; Copilot; Spend & platforms; Security; Setup & coverage. Group labels are plain sentence case, not eyebrows. Each section shows a line icon, its name and a one-line description (`blurb` in routes.ts). The current section has the soft-indigo fill, and its views are listed beneath it on a thin rule, the current view in indigo with an accent stroke. A small amber dot marks a section whose data lane failed or isn't in the sample.
+- Panels in a row stretch to the same height. Pair panels whose content is roughly as tall (cap a list with `limit` rather than leave a blank panel bottom); a lone donut, funnel or gauge centres in its panel.
 - Below 1000px (the player's canvas width) the side navigation becomes a drawer opened from a Menu button in the band, which names the current section. It closes on navigation, Escape or a click on the scrim.
 - Tabs with several report pages show sub-view pills in the toolbar.
 - Slicers sit in one row above the content and apply to every view on the tab. Under them, one line says "Showing N of M agents · Audit data through <date>", and each slicer that's set shows as a removable pill, with "Clear all" when two or more are set. Below 1000px the slicers fold behind a Filters button, with a count of those set, so the figures start higher; the pills still show what's applied.- Content flows as KPI cards, then charts, then tables, matching the order of the report page.
@@ -99,7 +100,13 @@ Flat panels with a 1px line border. Only the agent drawer and dialogs cast a sha
 - **Greeting:** a time-of-day greeting and the as-of date above Overview. It never uses a name.
 - **Stat list:** a label on the left and a right-aligned tabular figure on the right, one row per line. When the rows are parts of one total, a thin accent bar under each row shows the share.
 - **Lane notice:** above a page's figures when a lane it depends on failed, isn't in the sample or returned no rows. It names the lane, says why and links to Live lane status. Failed is a soft red tint; the others are neutral. Overview shows the same as one coverage line for the whole app.
-- **Charts:** hand-written SVG with no chart library. Hover shows the exact value. Single-series columns have rounded tops; month axes label every second or third month ("Jan 26") so the labels never overlap.
+- **Charts:** hand-written SVG with no chart library. Hover shows the exact value. Single-series columns have rounded tops; month axes label every second or third month ("Jan 26") so the labels never overlap. Pick the type by the question, and draw only from data already loaded:
+  - BarList for ranked lists; a stacked Distribution bar for status mixes read left to right.
+  - Donut for parts of one whole with six or fewer parts (the rest fold into "Other"); shares under 1% read "<1%".
+  - Heatmap for weekday-by-hour patterns, on a square-root scale so quiet hours still show. Counts print inside the cells once cells are at least 22px wide.
+  - Funnel only when each step is a subset of the one before (habit stages qualify; agent lifecycle stages don't, as they're exclusive).
+  - Treemap for breakdowns with many parts; slivers under 1.5% join the "n more" tile.
+  - Gauge for one share of a fixed capacity, turning warm at 80%.
 - **DataTable:** sortable and searchable, with a "Show more" button for long tables. Agent rows open the drawer. Numbers, dates and verdicts never truncate; below its minimum width the table scrolls sideways. Its empty state says whether the search or the filters emptied it.
 - **Agent drawer:** identity, risk breakdown by factor, sharing, tools, knowledge and usage for one agent.
 - **Lane status:** one row per lane with its state, row count, time and last run.

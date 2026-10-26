@@ -43,6 +43,8 @@ export function DataTable<T>(props: {
   childNoun?: string
   /** What to say when the table has no rows at all, before any search. */
   empty?: ReactNode
+  /** Width below which the table scrolls sideways; defaults to 110px a column, at least 640px. */
+  minWidth?: number
 }) {
   const [sort, setSort] = useState(props.initialSort ?? { key: props.columns[0].key, desc: false })
   const [open, setOpen] = useState<Set<string>>(new Set())
@@ -181,7 +183,7 @@ export function DataTable<T>(props: {
         <Empty>{props.rows.length ? 'No rows match your search.' : (props.empty ?? 'Nothing to list for these filters.')}</Empty>
       ) : (
         <div className="table-scroll">
-          <table aria-label={props.label} style={{ minWidth: Math.max(640, props.columns.length * 110) }}>
+          <table aria-label={props.label} style={{ minWidth: props.minWidth ?? Math.max(640, props.columns.length * 110) }}>
             <colgroup>
               {props.columns.map((c) => (
                 <col key={c.key} style={c.width ? { width: c.width } : undefined} />
