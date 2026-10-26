@@ -151,7 +151,7 @@ export function Interactions() {
           <Heatmap label="Interactions by weekday and hour" grid={m.hours} rows={WEEKDAYS} color={COLOR.licensed} unit="interactions" zone="UTC" />
         </Panel>
         <Panel title="Client surfaces">
-          <BarList label="Interactions by client app" items={m.hosts} color={PALETTE[3]} fmt={int} limit={12} />
+          <BarList label="Interactions by client app" items={m.hosts} color={PALETTE[3]} fmt={int} limit={7} />
         </Panel>
         <Panel title="Busiest agents" span={2}>
           <DataTable

@@ -558,10 +558,15 @@ export function Donut(props: { items: Slice[]; fmt?: Fmt; label: string; limit?:
 }
 
 const hh = (h: number) => String(h).padStart(2, '0')
+/** At most four characters, so a count fits inside a heatmap cell. */
+const cellNum = (n: number) => (n >= 9950 ? `${Math.round(n / 1000)}k` : n >= 1000 ? compact(n) : String(Math.round(n)))
 
 /** Day-of-week by hour-of-day intensity grid. Shading uses a square-root scale so quieter hours stay visible next to a peak. */
 export function Heatmap(props: { grid: number[][]; rows: readonly string[]; color: string; fmt?: Fmt; unit: string; label: string; zone?: string }) {
+  const [ref, width] = useWidth<HTMLDivElement>()
   const fmt = props.fmt ?? int
+  // Counts go inside the cells once each cell is wide enough to hold four narrow characters.
+  const showNums = (width - 30 - 24 * 3) / 24 >= 22
   let max = 0
   let peak = [0, 0]
   props.grid.forEach((row, d) =>
@@ -574,9 +579,10 @@ export function Heatmap(props: { grid: number[][]; rows: readonly string[]; colo
   )
   if (!max) return <Empty>No activity in this period.</Empty>
   const zone = props.zone ? ` ${props.zone}` : ''
-  const shade = (v: number) => (v > 0 ? `color-mix(in srgb, ${props.color} ${Math.round(10 + 90 * Math.sqrt(v / max))}%, var(--surface))` : undefined)
+  const strength = (v: number) => Math.round(10 + 90 * Math.sqrt(v / max))
+  const shade = (v: number) => (v > 0 ? `color-mix(in srgb, ${props.color} ${strength(v)}%, var(--surface))` : undefined)
   return (
-    <div className="heatmap">
+    <div className={`heatmap${showNums ? ' hm-nums' : ''}`} ref={ref}>
       <div
         className="hm-grid"
         role="img"
@@ -586,7 +592,14 @@ export function Heatmap(props: { grid: number[][]; rows: readonly string[]; colo
           <Fragment key={day}>
             <span className="hm-day">{day}</span>
             {props.grid[d].map((v, h) => (
-              <span key={h} className="hm-cell" style={{ background: shade(v) }} title={`${day} ${hh(h)}:00–${hh(h + 1)}:00${zone}: ${fmt(v)} ${props.unit}`} />
+              <span
+                key={h}
+                className={`hm-cell${v > 0 && strength(v) >= 60 ? ' hm-strong' : ''}`}
+                style={{ background: shade(v) }}
+                title={`${day} ${hh(h)}:00–${hh(h + 1)}:00${zone}: ${fmt(v)} ${props.unit}`}
+              >
+                {showNums && v > 0 ? cellNum(v) : null}
+              </span>
             ))}
           </Fragment>
         ))}

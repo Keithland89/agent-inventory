@@ -110,7 +110,21 @@ function FilterBar({ route }: { route: Route }) {
   )
 }
 
-/** Sections grouped by job. Marks a section whose data lane failed, so a missing number is never a surprise. */
+/** One 18px line icon per section, drawn in currentColor so it follows the link state. */
+const NAV_ICONS: Record<TabId, string> = {
+  overview: 'M3 3h5v6H3zM10 3h5v3h-5zM10 8h5v7h-5zM3 11h5v4H3z',
+  inventory: 'M3 4.5h12M3 9h12M3 13.5h12M6 3v3M6 7.5v3M6 12v3',
+  usage: 'M3 15V9M7.5 15V5M12 15v-4M3 15h12.5',
+  activity: 'M4 4h10a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H9l-3.5 3v-3H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z',
+  governance: 'M9 2.5 14.5 4.5v4c0 3.3-2.3 5.8-5.5 7-3.2-1.2-5.5-3.7-5.5-7v-4ZM6.5 9l1.8 1.8L11.8 7.3',
+  integrations: 'M7 3v3M11 3v3M5 6h8v3a4 4 0 0 1-8 0ZM9 13v2.5',
+  foundry: 'M9 2.5 15 6v6l-6 3.5L3 12V6ZM3 6l6 3.5L15 6M9 9.5v6',
+  cost: 'M9 2.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM11 6.5H8.2a1.3 1.3 0 0 0 0 2.6h1.6a1.3 1.3 0 0 1 0 2.6H7M9 5v1.5M9 11.7v1.3',
+  shadow: 'M2 9s2.5-4.5 7-4.5S16 9 16 9s-2.5 4.5-7 4.5S2 9 2 9ZM9 7a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM3 3l12 12',
+  setup: 'M9 6.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5ZM9 2v2M9 14v2M2 9h2M14 9h2M4 4l1.4 1.4M12.6 12.6 14 14M4 14l1.4-1.4M12.6 5.4 14 4',
+}
+
+/** Sections grouped by job, each with a one-line description. The current section lists its views underneath, and a section whose data lane failed carries a dot, so a missing number is never a surprise. */
 function SideNav({ route, open, onClose }: { route: Route; open: boolean; onClose: () => void }) {
   const { ds } = useData()
   const ref = useRef<HTMLElement>(null)
@@ -131,29 +145,54 @@ function SideNav({ route, open, onClose }: { route: Route; open: boolean; onClos
         if (e.key === 'Escape' && open) onClose()
       }}
     >
-      {NAV_GROUPS.map((g, gi) => (
-        <div key={g.label ?? gi} className="nav-group">
-          {g.label && <h2 className="nav-label">{g.label}</h2>}
-          <ul>
-            {g.tabs.map((id) => {
-              const t = TABS.find((x) => x.id === id)!
-              const warn = flagged(id)
-              return (
-                <li key={id}>
-                  <a href={href(id)} aria-current={id === route.tab.id ? 'page' : undefined} onClick={onClose}>
-                    <span>{t.label}</span>
-                    {warn && (
-                      <span className="nav-flag" title="Some data for this section did not load">
-                        <span className="sr-only">(some data missing)</span>
+      <div className="sidenav-inner">
+        {NAV_GROUPS.map((g, gi) => (
+          <div key={g.label ?? gi} className="nav-group">
+            {g.label && <h2 className="nav-label">{g.label}</h2>}
+            <ul>
+              {g.tabs.map((id) => {
+                const t = TABS.find((x) => x.id === id)!
+                const warn = flagged(id)
+                const current = id === route.tab.id
+                return (
+                  <li key={id} className={current ? 'nav-item is-current' : 'nav-item'}>
+                    <a
+                      className="nav-link"
+                      href={href(id)}
+                      aria-current={current ? (t.views.length > 1 ? 'true' : 'page') : undefined}
+                      onClick={onClose}
+                    >
+                      <svg className="nav-icon" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+                        <path d={NAV_ICONS[id]} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      <span className="nav-text">
+                        <span className="nav-title">{t.label}</span>
+                        <span className="nav-blurb">{t.blurb}</span>
                       </span>
+                      {warn && (
+                        <span className="nav-flag" title="Some data for this section did not load">
+                          <span className="sr-only">(some data missing)</span>
+                        </span>
+                      )}
+                    </a>
+                    {current && t.views.length > 1 && (
+                      <ul className="nav-views">
+                        {t.views.map((v) => (
+                          <li key={v.id}>
+                            <a href={href(id, v.id)} aria-current={v.id === route.view ? 'page' : undefined} onClick={onClose}>
+                              {v.label}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
                     )}
-                  </a>
-                </li>
-              )
-            })}
-          </ul>
-        </div>
-      ))}
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+        ))}
+      </div>
     </nav>
   )
 }
