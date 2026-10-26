@@ -126,6 +126,61 @@ test('lane D provisioning leaves tables that are already there', async () => {
   assert.ok(!f.calls.some((c) => c.method === 'POST' && /\/EntityDefinitions$/.test(c.url)));
 });
 
+/**
+ * A Dataverse where every table create loses its connection. `madeAnyway` says whether the server finished the table regardless.
+ * @param {boolean} madeAnyway
+ */
+function droppedCreates(madeAnyway) {
+  /** @type {Set<string>} */
+  const made = new Set();
+  /** @type {Set<string>} */
+  const pending = new Set();
+  const f = fakeFetch([
+    { method: 'GET', match: /\/Keys\?/, reply: () => ({ value: [{ SchemaName: 'poc_UniqueKey', EntityKeyIndexStatus: 'Active' }, { SchemaName: 'poc_EnvironmentId' }] }) },
+    {
+      method: 'GET',
+      match: /EntityDefinitions\(LogicalName='[^']+'\)\?/,
+      reply: (_, url) => {
+        const name = /LogicalName='([^']+)'/.exec(url)?.[1] ?? '';
+        if (pending.has(name) && madeAnyway) made.add(name);
+        return made.has(name) ? { LogicalName: name } : { status: 404, body: { error: { message: 'Not found' } } };
+      },
+    },
+    { method: 'GET', match: /EntityDefinitions/, reply: () => ({ LogicalName: 'x' }) },
+    {
+      method: 'POST',
+      match: /\/EntityDefinitions$/,
+      reply: (body) => {
+        const name = String(body.SchemaName).toLowerCase();
+        if (!pending.has(name)) {
+          pending.add(name);
+          throw new TypeError('fetch failed');
+        }
+        made.add(name);
+        return { status: 204 };
+      },
+    },
+    { method: 'GET', match: /\/poc_\w+\?/, reply: () => ({ value: [] }) },
+  ]);
+  return f;
+}
+
+test('a table create that loses its connection is not posted again once Dataverse has made it', async () => {
+  const f = droppedCreates(true);
+  const log = { ok: () => {}, warn: () => {}, info: () => {} };
+  await provisionLaneD(client(f), { log, sleep: noSleep });
+  const posts = f.calls.filter((c) => c.method === 'POST' && /\/EntityDefinitions$/.test(c.url));
+  assert.equal(posts.length, LANE_D_TABLES.length, 'one post per table');
+});
+
+test('a table create that loses its connection is posted once more if Dataverse never made it', async () => {
+  const f = droppedCreates(false);
+  const log = { ok: () => {}, warn: () => {}, info: () => {} };
+  await provisionLaneD(client(f), { log, sleep: noSleep });
+  const posts = f.calls.filter((c) => c.method === 'POST' && /\/EntityDefinitions$/.test(c.url));
+  assert.equal(posts.length, LANE_D_TABLES.length * 2, 'two posts per table');
+});
+
 test('the upsert key joins the environment and the source', () => {
   assert.equal(uniqueKeyFor({ poc_agentkey: 'env-1|bot-1', poc_sourceid: 'src-1' }), 'env-1_src-1');
 });
