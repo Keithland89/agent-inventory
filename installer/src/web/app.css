@@ -1,0 +1,87 @@
+/* Agent Inventory installer page. Fluent 2 tokens, like the AI in One installer. */
+:root {
+  --bg: #fafafa; --fg: #242424; --card: #ffffff; --muted: #f5f5f5; --muted-fg: #616161;
+  --primary: #0f6cbd; --primary-hover: #115ea3; --primary-fg: #ffffff; --accent: #ebf3fc; --accent-fg: #115ea3;
+  --border: #e0e0e0; --ring: #0f6cbd;
+  --ok: #07766a; --ok-tint: #e4f6f2; --warn: #8f5207; --warn-tint: #fdf1e3; --fail: #b23e25; --fail-tint: #fdeeea;
+  --shadow: 0 0 2px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.14);
+  --font: 'Segoe UI Variable', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
+  --mono: Consolas, 'Cascadia Mono', 'Courier New', monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1f1f1f; --fg: #ffffff; --card: #292929; --muted: #333333; --muted-fg: #adadad;
+    --primary: #479ef5; --primary-hover: #62abf5; --primary-fg: #1f1f1f; --accent: #10375c; --accent-fg: #9bcaff;
+    --border: #3d3d3d; --ring: #479ef5;
+    --ok: #6fd9c8; --ok-tint: #15332e; --warn: #f6bc82; --warn-tint: #3a2a17; --fail: #f7a392; --fail-tint: #3d1f19;
+  }
+}
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; font: 400 14px/20px var(--font); background: var(--bg); color: var(--fg); }
+h1, h2, h3, p { margin: 0; }
+h1 { font-size: 20px; line-height: 28px; font-weight: 600; }
+h2 { font-size: 16px; line-height: 22px; font-weight: 600; margin-bottom: 12px; }
+h3 { font-size: 14px; font-weight: 600; margin: 12px 0 6px; }
+a { color: var(--accent-fg); }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.noscript { margin: 48px; font-size: 16px; }
+.muted { color: var(--muted-fg); }
+
+.top { display: flex; align-items: center; gap: 12px; padding: 16px 24px; border-bottom: 1px solid var(--border); background: var(--card); }
+.top > div { flex: 1; }
+main { max-width: 960px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 20px; box-shadow: var(--shadow); }
+.question { border-color: var(--primary); }
+
+.commands { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.command { display: flex; flex-direction: column; gap: 4px; text-align: left; padding: 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); cursor: pointer; }
+.command:hover { border-color: var(--primary); background: var(--accent); }
+.command strong { font-weight: 600; }
+.command:disabled { opacity: 0.5; cursor: default; }
+
+button.primary { background: var(--primary); color: var(--primary-fg); border: 0; border-radius: 4px; padding: 6px 16px; font-weight: 600; cursor: pointer; }
+button.primary:hover { background: var(--primary-hover); }
+button.secondary { background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 5px 16px; cursor: pointer; }
+button.quiet { background: none; border: 1px solid var(--border); border-radius: 4px; padding: 5px 12px; cursor: pointer; }
+.actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+.choice { display: flex; gap: 8px; align-items: flex-start; padding: 8px; border-radius: 4px; cursor: pointer; }
+.choice:hover { background: var(--muted); }
+.choice small { display: block; color: var(--muted-fg); }
+input[type='text'], input[type='password'] { width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--card); margin-top: 8px; }
+.error { color: var(--fail); margin-top: 8px; }
+
+.feed { display: flex; flex-direction: column; gap: 2px; }
+.feed .heading { font-weight: 600; font-size: 16px; margin-top: 16px; }
+.feed .step { font-weight: 600; margin-top: 12px; }
+.feed .line { padding-left: 20px; position: relative; overflow-wrap: anywhere; }
+.feed .line::before { position: absolute; left: 2px; }
+.feed .ok::before { content: '✓'; color: var(--ok); }
+.feed .warn::before { content: '!'; color: var(--warn); font-weight: 700; }
+.feed .fail::before { content: '✗'; color: var(--fail); }
+.feed .note { color: var(--muted-fg); }
+.feed .answered { color: var(--muted-fg); padding-left: 20px; }
+.feed .progress { color: var(--accent-fg); padding-left: 20px; }
+.feed .command-state { margin-top: 16px; padding: 8px 12px; border-radius: 4px; background: var(--muted); font-weight: 600; }
+.feed .command-state.done { background: var(--ok-tint); color: var(--ok); }
+.feed .command-state.failed { background: var(--fail-tint); color: var(--fail); }
+
+.plan, .prereqs, .next { margin-top: 8px; }
+.plan ol { padding-left: 20px; margin: 8px 0 0; }
+.plan li { margin-bottom: 10px; }
+.plan li ul { margin: 4px 0 0; padding-left: 18px; color: var(--muted-fg); }
+.tag { display: inline-block; font-size: 12px; line-height: 16px; padding: 0 6px; border-radius: 8px; margin-left: 6px; }
+.tag.done { background: var(--ok-tint); color: var(--ok); }
+.tag.skip { background: var(--muted); color: var(--muted-fg); }
+.tag.approval { background: var(--warn-tint); color: var(--warn); }
+.facts { display: grid; grid-template-columns: max-content 1fr; gap: 2px 16px; }
+.facts dt { color: var(--muted-fg); }
+.facts dd { margin: 0; overflow-wrap: anywhere; }
+table { border-collapse: collapse; width: 100%; }
+td, th { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.status-met { color: var(--ok); }
+.status-missing { color: var(--fail); }
+.status-eligible, .status-unknown { color: var(--warn); }
+code { font-family: var(--mono); }

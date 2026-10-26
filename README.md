@@ -13,6 +13,8 @@ Two Power BI builds of one semantic model — **21 tables, 166 measures, 16 page
 | **Power BI template** | `template\Agent Inventory.pbit` | A single-file template of the report. Open it in Power BI Desktop, enter the parameters when prompted, and it loads against your own tenant. |
 | **Power Platform solutions** | `solution\*.zip` | Importable Dataverse solutions for interaction telemetry, named knowledge sources and SharePoint agent inventory, plus the flow that provisions the application users lane D depends on. |
 | **Anonymised sample data** | `sample-data\agent365-sample-data.zip` | A full demo-tenant extract, every identifying value replaced, so the CSV build opens with real-shaped data and no tenant access. |
+| **The app** | `app\` | A Copilot Managed App version of the report: the same 16 pages in ten tabs, plus a **Chat & Cowork** view. It reads live data through four connectors, and falls back to an anonymised sample. See [`app\README.md`](app/README.md). |
+| **Installer** | `installer\` | A guided installer (browser or terminal) that switches every lane on and deploys the app, after you approve a plan. See [`installer\README.md`](installer/README.md). |
 
 Verified end-to-end against a live Microsoft 365 test tenant.
 
@@ -23,6 +25,16 @@ Verified end-to-end against a live Microsoft 365 test tenant.
 ---
 
 ## Quick start
+
+**To switch everything on with the installer**: run the installer from a clone (`cd installer`,
+`npm ci`, `node bin/agent-inventory-install.js --ui`), or with the one-line launcher in
+[`installer\README.md`](installer/README.md). It signs you in and checks your roles. It then shows a
+plan covering the app registrations, the solution imports, the lane D grants, the flows and the app.
+It changes nothing until you approve the plan.
+
+**To use the app**: the installer deploys it to the landing environment. To build and deploy it by
+hand, see [`app\README.md`](app/README.md). Outside the Managed Apps player it opens on the
+anonymised sample (`cd app`, `npm ci`, `npm run dev`).
 
 **To report on your own tenant** — open `pbip-cloud\AgentInventory.pbip` in Power BI Desktop, publish
 it to a workspace, set the three data-source credentials to *Organizational account*, and set a
@@ -911,6 +923,8 @@ Worth stating plainly when proposing this to a security reviewer:
 pbip-cloud\                    Power BI project, cloud sources - the maintained, published deliverable
 pbip\                          Power BI project, CSV sources - same 16 pages, offline or air-gapped
 solution\                      Lane C, lane D, lane E and app-user provisioning Dataverse solutions (.zip)
+app\                           The app (Copilot Managed App): React + TypeScript, live connectors, sample fallback
+installer\                     Guided installer: plan, approve, then set up every lane and deploy the app
 docs\                          Deployment guide + architecture diagram + report screenshots
 sample-data\                   Anonymised extract so colleagues can run the report without the tenant
 data\                          Local CSV folder the local build reads

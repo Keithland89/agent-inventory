@@ -1,0 +1,13 @@
+{
+  "name": "agent-inventory-managed-cli",
+  "version": "1.0.0",
+  "description": "Pins the Copilot managed apps CLI that deploys the app. The installer runs it with Node.js 24.11 or later.",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "node": ">=24.11.0"
+  },
+  "dependencies": {
+    "@microsoft/managed-apps-cli": "0.29.0"
+  }
+}

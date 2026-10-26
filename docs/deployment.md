@@ -2,6 +2,8 @@
 
 Step-by-step setup for all six collection lanes. The [README](../README.md) explains *why* the architecture looks like this; this file is the *how*.
 
+> **Prefer a guided setup?** The [installer](../installer/README.md) automates every step on this page and deploys [the app](../app/README.md). It shows a plan, and changes nothing until you approve it. Deploy the app to the same environment as the landing tables: its Dataverse connector reads only the environment the app runs in.
+
 Lanes A, B and F need nothing installed. Lanes C, D and E use scheduled collectors; lanes C and E can reuse the same audit app registration. **Skip a collector and every other page still works** — you lose only that lane's data.
 
 ---
