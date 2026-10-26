@@ -1,30 +1,30 @@
 /* AI in One app design system. Light canvas, dark-teal header band, white panels. */
 
 :root {
-  --canvas: #f3f6f5;
+  --canvas: #f4f5fa;
   --surface: #ffffff;
-  --surface-2: #f7faf9;
-  --ink: #12201e;
-  --ink-2: #445653;
-  --ink-3: #5f716e;
-  --line: #d9e2e0;
-  --line-2: #e9efed;
-  --band: #0b3d3a;
+  --surface-2: #f8f8fc;
+  --ink: #17172f;
+  --ink-2: #474a63;
+  --ink-3: #5f6279;
+  --line: #dcdeeb;
+  --line-2: #eceef6;
+  --band: #1e1b4b;
   --band-ink: #ffffff;
-  --band-ink-2: #b9d3cf;
-  --band-accent: #7fe0cf;
-  --accent: #0f766e;
-  --accent-ink: #0b5a52;
-  --accent-soft: #e6f3f0;
-  --hover: #eef5f3;
-  --good: #0f766e;
+  --band-ink-2: #c7c9ec;
+  --band-accent: #c4b5fd;
+  --accent: #4f46e5;
+  --accent-ink: #3730a3;
+  --accent-soft: #eef0ff;
+  --hover: #f1f2fb;
+  --good: #4f46e5;
   --bad: #b42318;
-  --licensed: #0f766e;
+  --licensed: #4f46e5;
   --unlicensed: #b45309;
-  --agent: #6d28d9;
+  --agent: #0f766e;
   --radius: 10px;
-  --shadow: 0 1px 2px rgb(16 40 37 / 0.06);
-  --shadow-pop: 0 8px 28px rgb(16 40 37 / 0.18);
+  --shadow: 0 1px 2px rgb(23 23 60 / 0.06);
+  --shadow-pop: 0 8px 28px rgb(23 23 60 / 0.18);
   --font: 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, sans-serif;
   --font-display: 'Segoe UI Variable Display', 'Segoe UI', system-ui, -apple-system, sans-serif;
 
@@ -289,7 +289,7 @@ a {
   text-overflow: ellipsis;
 }
 .field select:hover {
-  border-color: #b8c7c4;
+  border-color: #c3c6dc;
 }
 .field-set select {
   border-color: var(--accent);
@@ -304,7 +304,7 @@ a {
   padding: 3px;
   gap: 2px;
   border-radius: 9px;
-  background: #e8eeec;
+  background: #eaecf5;
   max-width: 100%;
   overflow-x: auto;
   scrollbar-width: none;
@@ -328,7 +328,7 @@ a {
   background: var(--surface);
   color: var(--ink);
   font-weight: 600;
-  box-shadow: 0 1px 2px rgb(16 40 37 / 0.14);
+  box-shadow: 0 1px 2px rgb(23 23 60 / 0.14);
 }
 
 .btn {
@@ -408,7 +408,7 @@ input[type='search']::placeholder {
   width: 17px;
   height: 17px;
   padding: 0;
-  border: 1px solid #b3c2bf;
+  border: 1px solid #bfc2d9;
   border-radius: 50%;
   background: var(--surface);
   color: var(--ink-3);
@@ -479,7 +479,7 @@ input[type='search']::placeholder {
   height: 8px;
   margin-right: 8px;
   border-radius: 50%;
-  background: #9fb3af;
+  background: #a9acc9;
   vertical-align: 1px;
 }
 .tone-licensed .kpi-label > span:first-child::before {
@@ -704,11 +704,11 @@ input[type='search']::placeholder {
   pointer-events: none;
 }
 .grid-line {
-  stroke: #e7edeb;
+  stroke: #e9ebf4;
   stroke-width: 1;
 }
 .guide {
-  stroke: #8fa5a1;
+  stroke: #9a9dbd;
   stroke-dasharray: 3 3;
 }
 .col-hover {
@@ -833,7 +833,7 @@ input[type='search']::placeholder {
 .bl-track {
   height: 12px;
   border-radius: 3px;
-  background: #eef2f1;
+  background: #eff0f7;
   overflow: hidden;
 }
 .bl-bar {
@@ -1014,7 +1014,7 @@ input[type='search']::placeholder {
   font-variant-numeric: tabular-nums;
 }
 .table-wrap tr.child td {
-  background: #fbfcfc;
+  background: #fbfbfe;
   color: var(--ink-2);
   font-size: 13px;
 }
@@ -1057,14 +1057,14 @@ input[type='search']::placeholder {
   cursor: pointer;
 }
 .twisty:hover {
-  background: #e3ecea;
+  background: #e6e8f4;
   color: var(--ink);
 }
 .kid-count {
   flex: none;
   padding: 0 6px;
   border-radius: 999px;
-  background: #e8eeec;
+  background: #eaecf5;
   color: var(--ink-3);
   font-size: 11px;
   font-variant-numeric: tabular-nums;
@@ -1109,7 +1109,7 @@ input[type='search']::placeholder {
   display: block;
   height: 8px;
   border-radius: 2px;
-  background: #eef2f1;
+  background: #eff0f7;
   overflow: hidden;
 }
 .cell-bar > i > span {
@@ -1129,7 +1129,7 @@ input[type='search']::placeholder {
   display: inline-block;
   padding: 2px 8px;
   border-radius: 999px;
-  background: #eef2f1;
+  background: #eff0f7;
   font-size: 12px;
   white-space: nowrap;
 }
@@ -1159,7 +1159,7 @@ input[type='search']::placeholder {
   box-shadow: var(--shadow-pop);
 }
 .sheet::backdrop {
-  background: rgb(8 30 28 / 0.45);
+  background: rgb(15 14 40 / 0.45);
 }
 .sheet-side {
   width: min(460px, 100vw);
@@ -1269,7 +1269,7 @@ input[type='search']::placeholder {
   justify-items: start;
   gap: 8px;
   padding: 18px;
-  border: 1px dashed #b3c2bf;
+  border: 1px dashed #bfc2d9;
   border-radius: 10px;
   background: var(--surface-2);
 }
@@ -1330,7 +1330,7 @@ input[type='search']::placeholder {
 .spinner {
   width: 26px;
   height: 26px;
-  border: 3px solid #d5e3e0;
+  border: 3px solid #d9dcf0;
   border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -1469,8 +1469,8 @@ input[type='search']::placeholder {
   background-color: var(--accent-soft);
 }
 .source-chip .tag.mode-live {
-  background: #bfe8df;
-  color: #08332f;
+  background: #e0e7ff;
+  color: #312e81;
 }
 .source-chip .tag.mode-sample {
   background: #f5c26b;
@@ -1489,7 +1489,7 @@ input[type='search']::placeholder {
   display: inline-block;
   padding: 2px 8px;
   border-radius: 999px;
-  background: #eef2f1;
+  background: #eff0f7;
   color: var(--ink-2);
   font-size: 12px;
   font-weight: 600;
