@@ -11,19 +11,20 @@ Power Platform, Microsoft 365 and security admins who need to know which agents 
 
 ## Purpose
 
-To bring the Agent Inventory Power BI report into an app that needs no Power BI workspace, gateway or refresh schedule. The app answers the report's questions with live data on open:
+To bring the Copilot Inventory Power BI report into an app that needs no Power BI workspace, gateway or refresh schedule. The app answers the report's questions with live data on open:
 
 - What agents exist across Copilot Studio, SharePoint, agent flows and Azure AI Foundry?
 - Who owns them, and how widely are they shared?
 - Which are used, idle or dormant?
 - Which carry risk, and why?
 - How do people use Copilot Chat, in-app Copilot and Cowork?
+- What do agents cost in Copilot Credits, and what does Azure AI cost?
 - What can't we see yet, and what has to be set up to see it?
 
 ## Data
 
-- **Live:** Power Platform inventory, Azure Resource Manager, Defender advanced hunting, and the Dataverse landing tables in the environment the app is deployed to.
-- **Sample:** the repo's anonymised sample, trimmed to about 1,500 agents.
+- **Live:** Power Platform inventory and licensing, Azure Resource Manager and Cost Management, Defender advanced hunting, and the Dataverse landing tables in the environment the app is deployed to.
+- **Sample:** the repo's anonymised sample, trimmed to about 1,500 agents. Its cost rows are synthetic, because the source has no cost data.
 
 All computation happens in the browser. Every lane fails on its own and says why.
 

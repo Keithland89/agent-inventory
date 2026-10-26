@@ -37,3 +37,26 @@ export const compact: Fmt = (n) => {
   if (Math.abs(n) >= 1000) return `${nf1.format(n / 1000)}k`
   return Number.isInteger(n) ? nf0.format(n) : nf1.format(n)
 }
+
+const moneyFormats = new Map<string, { whole: Intl.NumberFormat; cents: Intl.NumberFormat } | null>()
+const moneyFormat = (currency: string) => {
+  if (!moneyFormats.has(currency)) {
+    try {
+      moneyFormats.set(currency, {
+        whole: new Intl.NumberFormat('en-GB', { style: 'currency', currency, maximumFractionDigits: 0 }),
+        cents: new Intl.NumberFormat('en-GB', { style: 'currency', currency, minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      })
+    } catch {
+      moneyFormats.set(currency, null)
+    }
+  }
+  return moneyFormats.get(currency)
+}
+
+/** Currency amounts: whole units from 100 up, cents below. Unknown currency codes fall back to "1,234 XYZ". */
+export const money = (currency: string): Fmt => (n) => {
+  if (!ok(n)) return DASH
+  const f = currency ? moneyFormat(currency) : null
+  if (!f) return `${(Math.abs(n) >= 100 ? nf0 : nf2).format(n)}${currency ? ` ${currency}` : ''}`
+  return (Math.abs(n) >= 100 ? f.whole : f.cents).format(n)
+}

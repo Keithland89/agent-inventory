@@ -10,7 +10,7 @@ import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 
 export const RECORD_FILE = 'agent-inventory-install.json';
-export const RECORD_FOLDER = 'Agent Inventory';
+export const RECORD_FOLDER = 'Copilot Inventory';
 export const RECORD_VERSION = 1;
 
 /**
@@ -69,7 +69,7 @@ export const RECORD_VERSION = 1;
 export const emptyRecord = () => ({ version: RECORD_VERSION, options: {}, solutions: {}, flows: {}, handoffs: [] });
 
 /**
- * Documents\Agent Inventory\agent-inventory-install.json.
+ * Documents\Copilot Inventory\agent-inventory-install.json.
  * @param {NodeJS.ProcessEnv} [env]
  */
 export function defaultRecordPath(env = process.env) {

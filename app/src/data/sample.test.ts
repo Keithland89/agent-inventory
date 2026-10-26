@@ -71,4 +71,30 @@ describe('sample', () => {
     expect(ds.mode).toBe('sample')
     expect(ds.lanes.every((l) => l.state === 'sample')).toBe(true)
   })
+
+  it('ships synthetic cost data that joins to the inventory and the Azure AI listing', () => {
+    const counts = Object.fromEntries(manifest.files.map((f) => [f.name, f.rows]))
+    expect(ds.credits).toHaveLength(counts['credits.csv'])
+    expect(ds.creditPool).toHaveLength(counts['credit-pool.csv'])
+    expect(ds.aiCostDaily).toHaveLength(counts['ai-cost-daily.csv'])
+    expect(ds.aiCostMeters).toHaveLength(counts['ai-cost-meters.csv'])
+    const agentKeys = new Set(ds.agents.map((a) => a.key))
+    const joined = ds.credits.filter((c) => c.agentKey)
+    expect(joined.length).toBeGreaterThan(ds.credits.length * 0.9)
+    for (const c of joined) expect(agentKeys.has(c.agentKey), c.agentKey).toBe(true)
+    expect(ds.credits.some((c) => !c.agentKey)).toBe(true)
+    const billed = ds.credits.reduce((s, c) => s + c.billed, 0)
+    expect(ds.creditPool.find((p) => p.currency === 'MCSMessages')?.consumed).toBe(billed)
+    const resources = new Set(ds.aiResources.map((r) => r.id.toLowerCase()))
+    for (const d of ds.aiCostDaily) {
+      expect(resources.has(d.resourceId), d.resourceId).toBe(true)
+      expect(d.date >= '2026-08-07' && d.date <= manifest.asOf.slice(0, 10), d.date).toBe(true)
+    }
+    // Meter totals add up to each resource's daily spend, to the cent.
+    const byRes = new Map<string, number>()
+    for (const d of ds.aiCostDaily) byRes.set(d.resourceId, (byRes.get(d.resourceId) ?? 0) + d.cost)
+    const byMeter = new Map<string, number>()
+    for (const m of ds.aiCostMeters) byMeter.set(m.resourceId, (byMeter.get(m.resourceId) ?? 0) + m.cost)
+    for (const [id, total] of byRes) expect(Math.abs((byMeter.get(id) ?? 0) - total), id).toBeLessThan(0.05)
+  })
 })

@@ -14,7 +14,7 @@ import { installedVersion, MIN_NODE, nodeOk } from './cli.js';
 import { ADMIN_STEPS, deployAgain, notReady } from './errors.js';
 import { addDataSource, authStatus, createApp, DATA_SOURCES, deleteApp, deployApp, isGuid, login, playUrl, readAppConfig, shareApp, switchAccount, verifyShare } from './steps.js';
 
-export const APP_NAME = 'Agent Inventory';
+export const APP_NAME = 'Copilot Inventory';
 
 /** The admin settings that keep the app from going live, as people know them. */
 export const NOT_READY_NAMES = {

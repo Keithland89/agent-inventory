@@ -23,8 +23,11 @@ export function AgentDrawer({ agentKey, onClose }: { agentKey: string | null; on
       knowledge: ds.knowledge.filter((k) => k.agentKey === agent.key),
       sources: ds.sources.filter((s) => s.agentKey === agent.key),
       connectors: ds.connectors.filter((c) => c.agentKey === agent.key),
+      credits: ds.credits.filter((c) => c.agentKey === agent.key),
     }
   }, [agent, ds])
+  const billed = d ? d.credits.reduce((s, c) => s + c.billed, 0) : 0
+  const nonBilled = d ? d.credits.reduce((s, c) => s + c.nonBilled, 0) : 0
 
   return (
     <Sheet open={!!agent} onClose={onClose} title={agent?.name || 'Agent'} side>
@@ -61,6 +64,12 @@ export function AgentDrawer({ agentKey, onClose }: { agentKey: string | null; on
               <dt>Run-time hours</dt>
               <dd>{dec1(I.runTimeHours(d.rows))}</dd>
             </div>
+            {d.credits.length > 0 && (
+              <div>
+                <dt>Credits billed (30d)</dt>
+                <dd title={`${int(nonBilled)} non-billed`}>{int(billed)}</dd>
+              </div>
+            )}
           </dl>
           {d.weekly.length > 1 && (
             <>

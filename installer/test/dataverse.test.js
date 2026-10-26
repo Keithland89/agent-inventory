@@ -5,7 +5,8 @@ import { createDataverse } from '../src/dataverse.js';
 import { createClient, HttpError } from '../src/http.js';
 import { adminConsentUrl, BAP_API_VERSION, grantAuditConsent, registerAdminApp } from '../src/identity.js';
 import { LANE_D_TABLES, logicalName, provisionLaneD, uniqueKeyFor } from '../src/lane-d-tables.js';
-import { laneF, laneOk, verifyLanes } from '../src/verify.js';
+import { COST_PROBE_LIMIT, costAccess } from '../src/prereqs.js';
+import { laneCost, laneF, laneOk, verifyLanes } from '../src/verify.js';
 import { fakeFetch, noSleep } from './helpers.js';
 
 const BASE = 'https://org.example.test/api/data/v9.2';
@@ -159,6 +160,46 @@ test('lane F is a check only', () => {
   assert.equal(laneF(/** @type {any} */ ([p('defender', 'unknown'), p('security-reader', 'met')])).state, 'pending');
 });
 
+test('the cost lanes are a check only', () => {
+  /** @param {string} id @param {any} status @param {string} [detail] */
+  const p = (id, status, detail = '') => ({ id, label: id, status, detail });
+  assert.equal(laneCost(/** @type {any} */ ([p('pp-admin', 'met'), p('cost-reader', 'met')])).state, 'ok');
+  const noCost = laneCost(/** @type {any} */ ([p('pp-admin', 'met'), p('cost-reader', 'missing')]));
+  assert.equal(noCost.state, 'warn');
+  assert.match(noCost.detail, /Cost Management Reader/);
+  assert.doesNotMatch(noCost.detail, /Power Platform Administrator/);
+  const noAdmin = laneCost(/** @type {any} */ ([p('pp-admin', 'eligible'), p('cost-reader', 'met')]));
+  assert.equal(noAdmin.state, 'warn');
+  assert.match(noAdmin.detail, /Power Platform Administrator/);
+  const unsure = laneCost(/** @type {any} */ ([p('pp-admin', 'met'), p('cost-reader', 'unknown', 'Timed out.')]));
+  assert.equal(unsure.state, 'pending');
+  assert.match(unsure.detail, /Timed out/);
+});
+
+test('Cost Management access is probed on a few enabled subscriptions', async () => {
+  /** @param {{ subscriptionId: string, state?: string }[]} subs @param {(id: string) => Promise<unknown>} costQuery */
+  const api = (subs, costQuery) => /** @type {any} */ ({ subscriptions: async () => subs, costQuery });
+  const deny = () => Promise.reject(Object.assign(new Error('Forbidden'), { status: 403 }));
+  const subs = Array.from({ length: 5 }, (_, i) => ({ subscriptionId: `s${i}`, state: 'Enabled' }));
+
+  assert.equal((await costAccess(api([], deny))).status, 'missing');
+  assert.equal((await costAccess(api([{ subscriptionId: 'x', state: 'Disabled' }], deny))).status, 'missing');
+
+  /** @type {string[]} */
+  const asked = [];
+  const one = await costAccess(api(subs, (id) => { asked.push(id); return id === 's1' ? Promise.resolve({}) : deny(); }));
+  assert.equal(one.status, 'met');
+  assert.equal(asked.length, COST_PROBE_LIMIT);
+
+  const refused = await costAccess(api(subs, deny));
+  assert.equal(refused.status, 'missing');
+  assert.match(refused.detail, /refused/);
+
+  const flaky = await costAccess(api(subs, () => Promise.reject(Object.assign(new Error('Service unavailable'), { status: 503 }))));
+  assert.equal(flaky.status, 'unknown');
+  assert.match(flaky.detail, /503 Service unavailable/);
+});
+
 test('the knowledge sweep is registered as an admin management application, or handed off', async () => {
   const ok = fakeFetch([{ method: 'PUT', match: /adminApplications/, reply: () => ({ status: 200, body: {} }) }]);
   assert.deepEqual(await registerAdminApp(client(ok, 'https://api.bap.microsoft.com'), 'client-1'), { registered: true });
@@ -176,7 +217,7 @@ test('admin consent without the rights becomes a consent link for an admin', asy
     { method: 'GET', match: /appRoleAssignments/, reply: () => ({ value: [] }) },
     { method: 'POST', match: /appRoleAssignedTo/, reply: () => ({ status: 403, body: { error: { code: 'Authorization_RequestDenied', message: 'Insufficient privileges' } } }) },
   ]);
-  const app = { appId: 'app-1', objectId: 'obj-1', spId: 'sp-1', displayName: 'Agent Inventory - audit collector' };
+  const app = { appId: 'app-1', objectId: 'obj-1', spId: 'sp-1', displayName: 'Copilot Inventory - audit collector' };
   const r = await grantAuditConsent(client(f, 'https://graph.microsoft.com/v1.0'), { tenantId: 'tenant-1', app, graphSpId: 'graph-sp', roleId: 'role-1' });
   assert.equal(r.consented, false);
   if (!r.consented) {

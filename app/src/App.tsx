@@ -9,6 +9,7 @@ import { SharePointAgents } from './pages/SharePoint'
 import { Governance } from './pages/Governance'
 import { KnowledgeGrounding, KnowledgeSources, Tools } from './pages/Integrations'
 import { Foundry } from './pages/Foundry'
+import { AzureAiSpend, CopilotCredits } from './pages/Cost'
 import { ShadowAI } from './pages/Shadow'
 import { DataSourcesGaps, LaneStatusView } from './pages/Setup'
 import { TABS, useRoute, type Route } from './routes'
@@ -35,6 +36,8 @@ function Page({ route }: { route: Route }) {
       return view === 'knowledge' ? <KnowledgeGrounding /> : view === 'sources' ? <KnowledgeSources /> : <Tools />
     case 'foundry':
       return <Foundry />
+    case 'cost':
+      return view === 'azure' ? <AzureAiSpend /> : <CopilotCredits />
     case 'shadow':
       return <ShadowAI />
     default:
@@ -45,9 +48,12 @@ function Page({ route }: { route: Route }) {
 const opts = (values: string[]) => values.map((v) => ({ value: v, label: v }))
 const uniq = (values: string[]) => [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b))
 
+/** Views inside an agent-filtered tab that are not about individual agents, so the slicers would mislead. */
+const UNFILTERED_VIEWS = new Set(['activity/chat', 'cost/azure'])
+
 function FilterBar({ route }: { route: Route }) {
   const { ds, filters, setFilter, resetFilters } = useData()
-  if (!route.tab.agentFilters || (route.tab.id === 'activity' && route.view === 'chat')) return null
+  if (!route.tab.agentFilters || UNFILTERED_VIEWS.has(`${route.tab.id}/${route.view}`)) return null
   const anySet = Object.values(filters).some(Boolean)
   return (
     <div className="filters" role="group" aria-label="Agent filters">
@@ -85,7 +91,7 @@ export default function App() {
                 <path d="M7 9h14M7 14h14M7 19h9" stroke="#c4b5fd" strokeWidth="2.6" strokeLinecap="round" />
               </svg>
               <div>
-                <h1>Agent Inventory</h1>
+                <h1>Copilot Inventory</h1>
                 <p>Agents, Copilot activity and governance across the tenant</p>
               </div>
             </div>

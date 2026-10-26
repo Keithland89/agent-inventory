@@ -20,11 +20,11 @@ export const READER_ROLE_ID = 'acdd72a7-3385-48ef-bd42-f606fba81ae7';
 export const BAP_BASE = 'https://api.bap.microsoft.com';
 export const BAP_API_VERSION = '2020-10-01';
 /** Written into each app registration's notes, so a re-run without the record can find its own. */
-export const NOTES = 'Created by the Agent Inventory installer.';
+export const NOTES = 'Created by the Copilot Inventory installer.';
 
 export const APPS = /** @type {const} */ ({
-  audit: { displayName: 'Agent Inventory - audit collector', purpose: 'Reads the unified audit log for lanes C and E (Copilot interactions and SharePoint agents).' },
-  sweep: { displayName: 'Agent Inventory - knowledge sweep', purpose: 'Reads each environment\'s Dataverse for lane D (agent knowledge sources).' },
+  audit: { displayName: 'Copilot Inventory - audit collector', purpose: 'Reads the unified audit log for lanes C and E (Copilot interactions and SharePoint agents).' },
+  sweep: { displayName: 'Copilot Inventory - knowledge sweep', purpose: 'Reads each environment\'s Dataverse for lane D (agent knowledge sources).' },
 });
 
 /** @typedef {import('./http.js').HttpClient} Client */
@@ -154,7 +154,7 @@ export async function addSecret(graph, app, { months = 12, now = () => new Date(
   const end = now();
   end.setMonth(end.getMonth() + months);
   const res = await graph.post(`/applications/${app.objectId}/addPassword`, {
-    passwordCredential: { displayName: `Agent Inventory installer ${now().toISOString().slice(0, 10)}`, endDateTime: end.toISOString() },
+    passwordCredential: { displayName: `Copilot Inventory installer ${now().toISOString().slice(0, 10)}`, endDateTime: end.toISOString() },
   }, { once: true });
   return { secret: res.secretText, keyId: res.keyId, expires: res.endDateTime };
 }

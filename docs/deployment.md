@@ -18,6 +18,7 @@ Lanes A, B and F need nothing installed. Lanes C, D and E use scheduled collecto
 | Identity | **Global Administrator** — to consent to the audit app registration | Lanes C and E |
 | Identity | **Power Platform Administrator** — to run the lane D grant | Lane D |
 | Identity | **Security Reader** (or any role granting advanced hunting), and Defender for Endpoint with devices onboarded | Lane F — shadow AI |
+| Identity | **Cost Management Reader** (or Reader) on subscriptions with Azure AI resources | The app's Cost & consumption tab only (not in the report) |
 | Licence | **Power BI Pro** (or PPU / Fabric capacity) and a workspace you can publish to | Publishing |
 | Tenant | **Unified audit logging switched on** in Purview | Lanes C and E |
 | Tooling | Power BI Desktop (free), Node.js 18+, Azure CLI, .NET 8 SDK (only to rebuild the PBIP) | Building locally |
