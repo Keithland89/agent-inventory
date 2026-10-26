@@ -73,9 +73,11 @@ export interface KpiProps {
   progress?: { value: number; total: number }
   /** Makes the whole card a link to the list behind the number. */
   href?: string
+  /** A trend drawn along the foot of the card, such as a Sparkline. */
+  spark?: ReactNode
 }
 
-export function Kpi({ label, value, sub, help, tone = 'neutral', trend, wide, unknown, delta, progress, href }: KpiProps) {
+export function Kpi({ label, value, sub, help, tone = 'neutral', trend, wide, unknown, delta, progress, href, spark }: KpiProps) {
   const dir = trend === undefined || !Number.isFinite(trend) ? '' : trend > 0 ? 'up' : trend < 0 ? 'down' : 'flat'
   const shown = unknown ? DASH : value
   const cls = `kpi-value ${dir && !unknown ? `trend-${dir}` : ''} ${shown.length > 18 ? 'kpi-value-text' : ''}`
@@ -102,6 +104,7 @@ export function Kpi({ label, value, sub, help, tone = 'neutral', trend, wide, un
         </div>
       )}
       {unknown ? <div className="kpi-sub kpi-reason">{unknown}</div> : sub && <div className="kpi-sub">{sub}</div>}
+      {spark && !unknown && <div className="kpi-spark">{spark}</div>}
     </div>
   )
 }

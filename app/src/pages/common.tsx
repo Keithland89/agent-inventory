@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react'
+import { type CSSProperties, type ReactNode } from 'react'
 import { useData } from '../data/store'
 import { laneProblem, type LaneProblem, type ProblemKind } from '../metrics/coverage'
 import { href } from '../routes'
@@ -15,17 +15,24 @@ export function AgentName({ agentKey, name }: { agentKey: string; name: string }
   )
 }
 
-/** Mirrors a Power BI multi-row card: several labelled figures in one panel. */
-export function StatList({ title, help, items, span }: { title: string; help?: string; items: [string, ReactNode][]; span?: 1 | 2 | 3 }) {
+/** Mirrors a Power BI multi-row card: several labelled figures in one panel. Give a count and a `total` to draw a share meter under a row. */
+export function StatList({ title, help, items, span, total }: { title: string; help?: string; items: [string, ReactNode, number?][]; span?: 1 | 2 | 3; total?: number }) {
   return (
     <Panel title={title} help={help} span={span}>
-      <dl className="kv">
-        {items.map(([k, v]) => (
-          <div key={k} className="kv-row">
-            <dt>{k}</dt>
-            <dd>{v}</dd>
-          </div>
-        ))}
+      <dl className="kv kv-stats">
+        {items.map(([k, v, n]) => {
+          const share = total && n !== undefined && Number.isFinite(n) ? Math.min(1, Math.max(0, n / total)) : undefined
+          return (
+            <div
+              key={k}
+              className={`kv-row ${share !== undefined ? 'kv-meter' : ''}`}
+              style={share !== undefined ? ({ '--share': `${(share * 100).toFixed(1)}%` } as CSSProperties) : undefined}
+            >
+              <dt>{k}</dt>
+              <dd>{v}</dd>
+            </div>
+          )
+        })}
       </dl>
     </Panel>
   )

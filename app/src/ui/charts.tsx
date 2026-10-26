@@ -15,6 +15,16 @@ export interface Point {
 
 const fin = (n: number) => (Number.isFinite(n) ? n : 0)
 
+/** A bar with its top corners rounded and a square base on the axis. */
+function topRounded(x: number, y: number, w: number, h: number, r: number) {
+  const rr = Math.max(0, Math.min(r, w / 2, h))
+  if (h <= 0 || w <= 0) return ''
+  return `M${x},${y + h}V${y + rr}Q${x},${y} ${x + rr},${y}H${x + w - rr}Q${x + w},${y} ${x + w},${y + rr}V${y + h}Z`
+}
+
+/** Shows every nth axis label so labels never overlap; roughly one per `gap` pixels. */
+const tickEvery = (count: number, width: number, gap: number) => Math.max(1, Math.ceil(count / Math.max(2, Math.floor(width / gap))))
+
 function Tip({ x, y, width, children }: { x: number; y: number; width: number; children: ReactNode }) {
   const left = Math.min(Math.max(x + 12, 4), width - 200)
   return (
@@ -44,6 +54,8 @@ export function LineChart(props: {
   data: Point[]
   series: Series[]
   xFmt: (k: string) => string
+  /** Shorter label for the axis; the tooltip keeps `xFmt`. */
+  tickFmt?: (k: string) => string
   height?: number
   area?: boolean
   label: string
@@ -62,7 +74,8 @@ export function LineChart(props: {
   const B = 26
   const x = (i: number) => (data.length === 1 ? (L + width - R) / 2 : L + (i * (width - L - R)) / (data.length - 1))
   const y = (v: number) => T + (1 - fin(v) / top) * (h - T - B)
-  const every = Math.ceil(data.length / Math.max(2, Math.floor(width / 80)))
+  const every = tickEvery(data.length, width, 80)
+  const tick = props.tickFmt ?? props.xFmt
   return (
     <div className="chart" ref={ref}>
       <svg width={width} height={h} role="img" aria-label={props.label}>
@@ -89,7 +102,7 @@ export function LineChart(props: {
           {data.map((d, i) =>
             i % every === 0 ? (
               <text key={d.key} x={x(i)} y={h - 8} textAnchor="middle">
-                {props.xFmt(d.key)}
+                {tick(d.key)}
               </text>
             ) : null,
           )}
@@ -130,6 +143,8 @@ export function ColumnChart(props: {
   data: Point[]
   series: Series[]
   xFmt: (k: string) => string
+  /** Shorter label for the axis; the tooltip keeps `xFmt`. */
+  tickFmt?: (k: string) => string
   stacked?: boolean
   height?: number
   label: string
@@ -149,6 +164,8 @@ export function ColumnChart(props: {
   const band = (width - L - R) / data.length
   const gw = Math.min(band * 0.72, stacked ? 56 : 18 * series.length)
   const y = (v: number) => T + (1 - v / top) * (h - T - B)
+  const every = tickEvery(data.length, width, 64)
+  const tick = props.tickFmt ?? props.xFmt
   return (
     <div className="chart" ref={ref}>
       <svg width={width} height={h} role="img" aria-label={props.label}>
@@ -156,6 +173,7 @@ export function ColumnChart(props: {
         {data.map((d, i) => {
           const x0 = L + i * band + (band - gw) / 2
           let acc = 0
+          const topSeg = d.values.reduce((last, v, si) => (fin(v) > 0 ? si : last), -1)
           return (
             <g key={d.key} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}>
               <rect x={L + i * band} y={T} width={band} height={h - T - B} className={hover === i ? 'col-hover on' : 'col-hover'} />
@@ -163,16 +181,22 @@ export function ColumnChart(props: {
                 const val = fin(v)
                 if (stacked) {
                   const yTop = y(acc + val)
-                  const r = <rect key={si} x={x0} y={yTop} width={gw} height={Math.max(0, y(acc) - yTop)} fill={series[si].color} />
+                  const hh = Math.max(0, y(acc) - yTop)
                   acc += val
-                  return r
+                  return si === topSeg ? (
+                    <path key={si} d={topRounded(x0, yTop, gw, hh, 3)} fill={series[si].color} />
+                  ) : (
+                    <rect key={si} x={x0} y={yTop} width={gw} height={hh} fill={series[si].color} />
+                  )
                 }
                 const bw = gw / series.length
-                return <rect key={si} x={x0 + si * bw} y={y(val)} width={Math.max(1, bw - 2)} height={y(0) - y(val)} fill={series[si].color} rx={2} />
+                return <path key={si} d={topRounded(x0 + si * bw, y(val), Math.max(1, bw - 2), y(0) - y(val), 3)} fill={series[si].color} />
               })}
-              <text x={L + i * band + band / 2} y={h - 8} textAnchor="middle" className="axis-text">
-                {props.xFmt(d.key)}
-              </text>
+              {i % every === 0 && (
+                <text x={L + i * band + band / 2} y={h - 8} textAnchor="middle" className="axis-text">
+                  {tick(d.key)}
+                </text>
+              )}
             </g>
           )
         })}
@@ -404,6 +428,25 @@ export function Scatter(props: {
         </Tip>
       )}
     </div>
+  )
+}
+
+/** A small trend line for a KPI card, scaled to its own range. */
+export function Sparkline({ values, color, label }: { values: number[]; color: string; label: string }) {
+  const v = values.map(fin)
+  if (v.length < 2) return null
+  const W = 100
+  const H = 30
+  const max = Math.max(...v)
+  const min = Math.min(0, ...v)
+  const x = (i: number) => (i / (v.length - 1)) * W
+  const y = (n: number) => H - 2 - ((n - min) / (max - min || 1)) * (H - 4)
+  const pts = v.map((n, i) => `${x(i).toFixed(2)},${y(n).toFixed(2)}`)
+  return (
+    <svg className="spark" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label={label}>
+      <path d={`M0,${H} L${pts.join(' L')} L${W},${H} Z`} fill={color} fillOpacity={0.1} />
+      <polyline points={pts.join(' ')} fill="none" stroke={color} strokeWidth={1.75} strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+    </svg>
   )
 }
 

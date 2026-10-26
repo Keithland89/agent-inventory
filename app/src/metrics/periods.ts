@@ -45,6 +45,18 @@ export const change = (current: number, previous: number): Change => ({
   ratio: previous ? current / previous - 1 : NaN,
 })
 
+/** A measure for each of the `weeks` 7-day windows ending on `end`, oldest first. Feeds the KPI sparklines. */
+export function weeklySeries<T>(rows: readonly T[], date: (r: T) => string | null | undefined, end: string, measure: (rs: T[]) => number, weeks = 12): number[] {
+  const e = dayNum(end)
+  if (Number.isNaN(e)) return []
+  const buckets: T[][] = Array.from({ length: weeks }, () => [])
+  for (const r of rows) {
+    const ago = e - dayNum(date(r))
+    if (ago >= 0 && ago < weeks * 7) buckets[weeks - 1 - Math.floor(ago / 7)].push(r)
+  }
+  return buckets.map(measure)
+}
+
 /** A measure over the last `days` against the `days` before, ending on `end`. */
 export function periodChange<T>(rows: readonly T[], date: (r: T) => string | null | undefined, end: string, measure: (rs: T[]) => number, days = 7): Change {
   const [cur, prev] = splitPeriods(rows, date, end, days)
