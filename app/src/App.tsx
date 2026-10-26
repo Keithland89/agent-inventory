@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { AskPanel } from './ask/AskPanel'
 import { useData } from './data/store'
 import { RISK_ORDER } from './metrics/measures'
 import { Overview } from './pages/Overview'
@@ -73,6 +74,7 @@ export default function App() {
   const { ds, loading, notice } = useData()
   const [route, go] = useRoute()
   const [sourceOpen, setSourceOpen] = useState(false)
+  const [askOpen, setAskOpen] = useState(false)
   const view = route.tab.views.find((v) => v.id === route.view)
   const lanesWithData = ds.lanes.filter((l) => l.rows > 0).length
 
@@ -94,6 +96,14 @@ export default function App() {
                 <p>Agents, Copilot activity and governance across the tenant</p>
               </div>
             </div>
+            <div className="band-actions">
+            <button type="button" className="ask-btn" onClick={() => setAskOpen(true)} aria-haspopup="dialog" disabled={loading}>
+              <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M3 3.5h10a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H8l-3 2.5v-2.5H3a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1Z" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+                <path d="M5.5 7.5h5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+              </svg>
+              Ask
+            </button>
             <button type="button" className="source-chip" onClick={() => setSourceOpen(true)} aria-label="Data source and lane status">
               <span className={`tag mode-${ds.mode}`}>{ds.mode === 'live' ? 'Live data' : 'Sample data'}</span>
               <span className="source-dates">As of {dateLabel(ds.asOf.slice(0, 10))}</span>
@@ -101,6 +111,7 @@ export default function App() {
                 {loading ? 'Loading…' : ds.mode === 'live' ? `${lanesWithData}/${ds.lanes.length} lanes with data` : 'Change data'}
               </span>
             </button>
+            </div>
           </div>
           <nav className="tabs" aria-label="Sections">
             {TABS.map((t) => (
@@ -140,6 +151,7 @@ export default function App() {
           : 'Live data read through your own connections. Everything is calculated in your browser.'}
       </footer>
       <DataSourceDialog open={sourceOpen} onClose={() => setSourceOpen(false)} />
+      <AskPanel open={askOpen} onClose={() => setAskOpen(false)} route={route} />
     </div>
   )
 }

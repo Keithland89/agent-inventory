@@ -73,6 +73,14 @@ These views add no connector, flow, table or query. They are computed in the bro
   - Return rate: of the people who used an agent in the last 8 weeks, the share who used it in 2 or more weeks, counted per agent and person.
 - **Cost against use** (Copilot Credits): each inventory agent's credits beside its audited users and sessions over the same 30 days. An agent is flagged as high cost with few users when it is in the top quarter for credits (with 4 or more agents), has 2 or fewer users, and at most half its interactions are autonomous runs.
 
+### Ask
+
+The **Ask** button in the header opens a side panel for questions about what the app has loaded. It adds no connector and no query.
+
+- **Grounding.** When you send a question, the app builds a plain-text summary of about 5,000 characters, capped at 9,000. It is built from the data already in the browser: agent counts, risk, lifecycle verdicts, 28-day Copilot activity, integrations, cost and Shadow AI. It also names the page you're on, the filters you've set, and any lanes without data, so the answer treats them as unknown rather than zero. Owner names are included only when they've been resolved.
+- **In the player, with Cowork on.** The question and summary go to Microsoft 365 Copilot (Cowork) under your account, and the answer streams into the panel. You can stop it part-way. Follow-up questions include the last two answers. Cowork is a developer preview: the player only answers `cowork/*` methods when its `cowork` developer setting is on, and `@microsoft/managed-apps` 0.6 doesn't wrap them yet. `src/ask/cowork.ts` reuses the SDK's bridge channel (`tapBridge()` runs first in `main.tsx`). If Cowork doesn't start within 20 seconds, or rejects the call, the panel switches to handing off.
+- **Everywhere else (sample mode, `npm run dev`, or Cowork off).** The panel offers the question with its summary to copy, plus a link to Copilot Chat. "What gets sent" shows the exact text. The app never makes up answers.
+
 ### Landing tables
 
 The Dataverse connector reads the environment the app is deployed to. **Deploy the app to the same environment that holds the landing tables.** The app reads these entity sets:
@@ -138,6 +146,7 @@ The script keeps about 1,500 agents and every row related to them, keeps all Cop
 | `src/data/build.ts` | Assembles the dataset both modes share. |
 | `src/data/static.ts` | Static tables from the model: risk factors, agent gaps, API coverage, telemetry coverage, Shadow AI watchlist. |
 | `src/metrics/` | Measures (`measures.ts`) and Chat & Cowork metrics (`chat.ts`). |
+| `src/ask/` | The Ask panel: grounding summary (`context.ts`), Cowork bridge client (`cowork.ts`) and the panel. |
 | `src/pages/` | One file per tab. |
 | `src/ui/` | Shared components: tables, charts, drawer, dialogs. |
 | `scripts/prepare-sample.mjs` | Builds `public/sample`. |

@@ -77,7 +77,7 @@ Segoe UI Variable throughout. KPI values use tabular numerals so columns of figu
 
 ## Layout
 
-- The header band holds the title, the data-mode badge (Live or Sample), the as-of time and the data-source button.
+- The header band holds the title, the Ask button, the data-mode badge (Live or Sample), the as-of time and the data-source button.
 - Tabs sit under the band. Tabs with several report pages show sub-view pills.
 - Slicers sit in one row above the content and apply to every view on the tab.
 - Content flows as KPI cards, then charts, then tables, matching the order of the report page.
@@ -97,6 +97,7 @@ Flat panels with a 1px line border. Only the agent drawer and dialogs cast a sha
 - **DataTable:** sortable and searchable, with a "Show more" button for long tables. Agent rows open the drawer.
 - **Agent drawer:** identity, risk breakdown by factor, sharing, tools, knowledge and usage for one agent.
 - **Lane status:** one row per lane with its state, row count, time and last run.
+- **Ask panel:** a side sheet opened from the violet Ask pill in the header. It opens with three starter questions for the current section. Questions sit right-aligned in indigo bubbles; answers are plain text in the panel, never in a card. The handoff block (copy, open Copilot Chat, "What gets sent") is the only boxed element. The panel always states what it will send and where.
 
 ## Do's and Don'ts
 
