@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-export type TabId = 'overview' | 'inventory' | 'usage' | 'activity' | 'sharepoint' | 'governance' | 'integrations' | 'foundry' | 'cost' | 'shadow' | 'setup'
+export type TabId = 'overview' | 'inventory' | 'usage' | 'activity' | 'governance' | 'integrations' | 'foundry' | 'cost' | 'shadow' | 'setup'
 
 export interface TabDef {
   id: TabId
@@ -22,22 +22,24 @@ export const TABS: TabDef[] = [
   {
     id: 'inventory',
     label: 'Inventory',
-    intro: 'Every agent across Copilot Studio, Agent Builder and Azure AI Foundry, and who builds and owns them.',
+    intro: 'Every agent across Copilot Studio, Agent Builder, Azure AI Foundry and SharePoint, and who builds and owns them.',
     views: [
       { id: 'all', label: 'All agents' },
       { id: 'inventory', label: 'Agent inventory' },
       { id: 'creators', label: 'Creators & ownership' },
+      { id: 'sharepoint', label: 'SharePoint agents' },
     ],
     agentFilters: true,
   },
   {
     id: 'usage',
     label: 'Usage',
-    intro: 'Which agents people use, how recently, and how adoption grows.',
+    intro: 'Which agents people use, how recently, how adoption grows, and which agents to promote or retire.',
     views: [
       { id: 'analytics', label: 'Agent analytics' },
       { id: 'popularity', label: 'Usage & popularity' },
       { id: 'adoption', label: 'Adoption & activity' },
+      { id: 'lifecycle', label: 'Lifecycle & review' },
     ],
     agentFilters: true,
   },
@@ -48,15 +50,9 @@ export const TABS: TabDef[] = [
     views: [
       { id: 'interactions', label: 'Interactions' },
       { id: 'chat', label: 'Chat & Cowork' },
+      { id: 'habits', label: 'Habit stages' },
     ],
     agentFilters: true,
-  },
-  {
-    id: 'sharepoint',
-    label: 'SharePoint agents',
-    intro: 'Agents saved as .agent files in SharePoint sites, from the SharePoint audit log.',
-    views: [],
-    agentFilters: false,
   },
   {
     id: 'governance',
@@ -117,8 +113,12 @@ export interface Route {
   view: string
 }
 
-function parse(hash: string): Route {
-  const [t, v] = hash.replace(/^#\/?/, '').split('/')
+/** Old links that moved, so bookmarks keep working. */
+const MOVED: Record<string, [TabId, string]> = { sharepoint: ['inventory', 'sharepoint'] }
+
+export function parse(hash: string): Route {
+  const [t0, v0] = hash.replace(/^#\/?/, '').split('/')
+  const [t, v] = MOVED[t0] ?? [t0, v0]
   const tab = TABS.find((x) => x.id === t) ?? TABS[0]
   const view = tab.views.find((x) => x.id === v)?.id ?? tab.views[0]?.id ?? ''
   return { tab, view }

@@ -1,4 +1,6 @@
 import { useId, useState, type ReactNode } from 'react'
+import type { Change } from '../metrics/periods'
+import { int, signedPct, type Fmt } from './format'
 
 export function InfoTip({ text, label }: { text?: string; label: string }) {
   const [open, setOpen] = useState(false)
@@ -79,6 +81,22 @@ export function Kpi({ label, value, sub, help, tone = 'neutral', trend, wide }: 
 }
 
 export const KpiRow = ({ children }: { children: ReactNode }) => <div className="kpi-row">{children}</div>
+
+/** Change against the previous period, for a KPI's sub-line. Shows a count when the previous period was zero. */
+export function Delta({ change, label = 'vs previous 7 days', upIsGood = true, fmt = int }: { change: Change; label?: string; upIsGood?: boolean; fmt?: Fmt }) {
+  const d = change.delta
+  const tone = d === 0 ? '' : d > 0 === upIsGood ? 'trend-up' : 'trend-down'
+  const value = Number.isFinite(change.ratio) ? signedPct(change.ratio) : `${d > 0 ? '+' : d < 0 ? '−' : '±'}${fmt(Math.abs(d))}`
+  return (
+    <span title={`Last 7 days ${fmt(change.current)}, the 7 days before ${fmt(change.previous)}`}>
+      <b className={tone}>
+        <span aria-hidden="true">{d > 0 ? '▲ ' : d < 0 ? '▼ ' : ''}</span>
+        {value}
+      </b>{' '}
+      {label}
+    </span>
+  )
+}
 export const Grid = ({ children, cols = 2 }: { children: ReactNode; cols?: 2 | 3 }) => (
   <div className={`grid grid-${cols}`}>{children}</div>
 )

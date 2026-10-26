@@ -3,8 +3,8 @@ import { costWindow, COST_WINDOW_DAYS, CREDIT_ENTITLEMENT } from '../data/cost'
 import { useData } from '../data/store'
 import type { LaneId, LaneStatus } from '../data/types'
 import {
-  categoryBars, creditBars, creditsByAgent, creditTotals, dailySpend, mainCurrency, meterBars, poolRows, spendByResource,
-  type AgentCreditRow, type ResourceSpendRow,
+  categoryBars, costAgainstUse, creditBars, creditsByAgent, creditTotals, dailySpend, mainCurrency, meterBars, poolRows, spendByResource,
+  type AgentCreditRow, type CostUseRow, type ResourceSpendRow,
 } from '../metrics/cost'
 import { div } from '../metrics/measures'
 import { BarList, Distribution, LineChart } from '../ui/charts'
@@ -41,15 +41,17 @@ export function CopilotCredits() {
   const m = useMemo(() => {
     const rows = creditsByAgent(credits, agentByKey, ds.environments)
     const envOf = new Map(rows.map((r) => [r.key, r.envName]))
+    const use = costAgainstUse(rows, scope.interactions, costWindow(new Date(`${ds.asOf.slice(0, 10)}T00:00:00Z`)))
     return {
       totals: creditTotals(credits),
       rows,
+      use,
       top: rows.map((r) => ({ key: r.key, label: r.name, value: r.total, hint: r.envName })),
       features: toDistribution(creditBars(credits, (c) => c.feature).sort((a, b) => b.value - a.value)),
       envs: creditBars(credits, (c) => envOf.get(c.agentKey || `${c.envId}|${c.resourceId}`.toLowerCase()) ?? c.envId),
       pool: poolRows(ds.creditPool),
     }
-  }, [credits, agentByKey, ds.environments, ds.creditPool])
+  }, [credits, agentByKey, ds.environments, ds.creditPool, ds.asOf, scope.interactions])
   const copilotPool = m.pool.find((p) => p.currency === CREDIT_ENTITLEMENT)
   const notes = [laneNote(creditsLane, CREDIT_ROLE), laneNote(poolLane, CREDIT_ROLE)].filter(Boolean)
   const byKey = new Map(m.rows.map((r) => [r.key, r]))
@@ -146,6 +148,39 @@ export function CopilotCredits() {
               ]}
             />
           </Panel>
+          {m.use.rows.length > 0 && (
+            <Panel
+              title="Cost against use"
+              span={3}
+              note={`${int(m.use.perUser)} credits per active user and ${int(m.use.perSession)} per session over the same ${COST_WINDOW_DAYS} days, from the audit log. ${
+                m.use.flagged ? `${int(m.use.flagged)} flagged as high cost with few users.` : 'No agent is flagged as high cost with few users.'
+              }`}
+              help="Flagged agents are in the top quarter for credits and were used by 2 or fewer people. Mostly autonomous agents are never flagged, because they run without users."
+            >
+              <DataTable
+                label="Copilot Credits against audited use per agent"
+                rows={rowsOf(m.use.rows, (r) => r.key)}
+                search={(r) => `${r.name} ${r.envName}`}
+                onRowClick={(r) => openAgent(r.agentKey)}
+                initialSort={{ key: 'total', desc: true }}
+                columns={[
+                  agentCol((r: CostUseRow) => ({ key: r.agentKey, name: r.name })),
+                  num('total', 'Credits', (r: CostUseRow) => r.total, { bar: COLOR.agent }),
+                  num('users', 'Users', (r: CostUseRow) => r.users),
+                  num('sessions', 'Sessions', (r: CostUseRow) => r.sessions),
+                  num('perUser', 'Per user', (r: CostUseRow) => r.perUser),
+                  num('perSession', 'Per session', (r: CostUseRow) => r.perSession),
+                  num('autonomous', 'Autonomous runs', (r: CostUseRow) => r.autonomous),
+                  {
+                    key: 'flag',
+                    label: 'Flag',
+                    value: (r: CostUseRow) => (r.highCostLowUse ? 'High cost, few users' : ''),
+                    render: (r: CostUseRow) => (r.highCostLowUse ? <b className="trend-down">High cost, few users</b> : '–'),
+                  },
+                ]}
+              />
+            </Panel>
+          )}
         </Grid>
       )}
     </>

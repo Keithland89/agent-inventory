@@ -522,6 +522,12 @@ input[type='search']::placeholder {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
+.kpi-sub b.trend-up {
+  color: var(--good);
+}
+.kpi-sub b.trend-down {
+  color: var(--bad);
+}
 
 /* ---------- Panels and grids ---------- */
 

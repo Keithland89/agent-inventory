@@ -17,8 +17,9 @@ To bring the Copilot Inventory Power BI report into an app that needs no Power B
 - Who owns them, and how widely are they shared?
 - Which are used, idle or dormant?
 - Which carry risk, and why?
-- How do people use Copilot Chat, in-app Copilot and Cowork?
-- What do agents cost in Copilot Credits, and what does Azure AI cost?
+- How do people use Copilot Chat, in-app Copilot and Cowork, and is it becoming a habit?
+- Which agents are growing, declining or ready to retire, and which need a review?
+- What do agents cost in Copilot Credits, against how much they're used, and what does Azure AI cost?
 - What can't we see yet, and what has to be set up to see it?
 
 ## Data
@@ -44,3 +45,4 @@ Plain, factual and quiet. Use short labels and say what a number means. Call it 
 - Not a write tool in v1: no quarantine, owner changes or sharing changes yet.
 - Not a replacement for the Power BI report's historical snapshots; the app shows the current state.
 - No extra connectors beyond the four, and no external services.
+- No heavy compute: new views reuse loaded data with simple, documented rules, not extra queries, notebooks or AI grading.

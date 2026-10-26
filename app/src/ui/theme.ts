@@ -40,4 +40,29 @@ export const HABIT_COLOR: Record<string, string> = {
   'One-off': '#c7d2fe',
 }
 
+export const STAGE_COLOR: Record<string, string> = {
+  Habitual: '#312e81',
+  Regular: '#4f46e5',
+  Trying: '#818cf8',
+  New: '#0284c7',
+  Lapsed: '#b8c1cc',
+}
+
+export const LIFECYCLE_COLOR: Record<string, string> = {
+  New: '#0284c7',
+  Growing: '#312e81',
+  Steady: '#4f46e5',
+  Declining: '#b45309',
+  Dormant: '#7b8794',
+  'Never used': '#b8c1cc',
+}
+
+export const VERDICT_COLOR: Record<string, string> = {
+  Promote: '#312e81',
+  Keep: '#4f46e5',
+  Watch: '#0284c7',
+  Review: '#b42318',
+  Retire: '#7b8794',
+}
+
 export const colorAt = (i: number) => PALETTE[i % PALETTE.length]

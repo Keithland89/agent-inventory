@@ -1,5 +1,5 @@
 import { CREDIT_ENTITLEMENT, currencyLabel } from '../data/cost'
-import type { Agent, AgentCredit, AiCostDaily, AiCostMeter, AzureAIResource, CreditPool, Environment } from '../data/types'
+import type { Agent, AgentCredit, AiCostDaily, AiCostMeter, AzureAIResource, CreditPool, Environment, Interaction } from '../data/types'
 import { groupBy, sum, type Bar } from './measures'
 
 /* ---------- Copilot Credits ---------- */
@@ -54,6 +54,65 @@ export function creditsByAgent(credits: AgentCredit[], agentByKey: Map<string, A
     })
     .filter((r) => r.total > 0)
     .sort((a, b) => b.total - a.total)
+}
+
+export interface CostUseRow extends AgentCreditRow {
+  users: number
+  sessions: number
+  autonomous: number
+  perUser: number
+  perSession: number
+  /** In the top quarter for credits, with audited use from 2 or fewer users, mostly not autonomous. */
+  highCostLowUse: boolean
+}
+
+/**
+ * Credits set against audited use in the same window. Autonomous agents run without users,
+ * so they are never flagged as high cost and low use.
+ */
+export function costAgainstUse(rows: AgentCreditRow[], interactions: Interaction[], window: { from: string; to: string }) {
+  const use = new Map<string, { users: Set<string>; sessions: Set<string>; autonomous: number; n: number }>()
+  const allUsers = new Set<string>()
+  const allSessions = new Set<string>()
+  for (const i of interactions) {
+    if (!i.agentKey || i.date < window.from || i.date > window.to) continue
+    let u = use.get(i.agentKey)
+    if (!u) use.set(i.agentKey, (u = { users: new Set(), sessions: new Set(), autonomous: 0, n: 0 }))
+    u.n++
+    if (i.appHost === 'Autonomous') u.autonomous++
+    if (i.user) u.users.add(i.user)
+    if (i.threadId) u.sessions.add(i.threadId)
+  }
+  const inInventory = rows.filter((r) => r.agentKey)
+  const totals = inInventory.map((r) => r.total).sort((a, b) => a - b)
+  const p75 = totals.length >= 4 ? totals[Math.floor(totals.length * 0.75)] : Infinity
+  let credits = 0
+  const out: CostUseRow[] = inInventory.map((r) => {
+    const u = use.get(r.agentKey)
+    const users = u?.users.size ?? 0
+    const sessions = u?.sessions.size ?? 0
+    const autonomous = u?.autonomous ?? 0
+    if (u) {
+      credits += r.total
+      for (const x of u.users) allUsers.add(x)
+      for (const x of u.sessions) allSessions.add(x)
+    }
+    return {
+      ...r,
+      users,
+      sessions,
+      autonomous,
+      perUser: users ? r.total / users : NaN,
+      perSession: sessions ? r.total / sessions : NaN,
+      highCostLowUse: !!u && r.total >= p75 && users <= 2 && autonomous <= u.n / 2,
+    }
+  })
+  return {
+    rows: out,
+    perUser: allUsers.size ? credits / allUsers.size : NaN,
+    perSession: allSessions.size ? credits / allSessions.size : NaN,
+    flagged: out.filter((r) => r.highCostLowUse).length,
+  }
 }
 
 export const creditBars = (credits: AgentCredit[], key: (c: AgentCredit) => string): Bar[] =>
