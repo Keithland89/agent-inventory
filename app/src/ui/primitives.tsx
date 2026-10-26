@@ -1,6 +1,6 @@
 import { useId, useState, type ReactNode } from 'react'
 import type { Change } from '../metrics/periods'
-import { int, signedPct, type Fmt } from './format'
+import { DASH, int, signedPct, type Fmt } from './format'
 
 export function InfoTip({ text, label }: { text?: string; label: string }) {
   const [open, setOpen] = useState(false)
@@ -38,9 +38,10 @@ export function Panel(props: {
   children: ReactNode
   span?: 1 | 2 | 3
   className?: string
+  id?: string
 }) {
   return (
-    <section className={`panel span-${props.span ?? 1} ${props.className ?? ''}`} aria-label={props.title}>
+    <section id={props.id} className={`panel span-${props.span ?? 1} ${props.className ?? ''}`} aria-label={props.title}>
       <header className="panel-head">
         <div>
           <h3>
@@ -64,23 +65,62 @@ export interface KpiProps {
   tone?: 'licensed' | 'unlicensed' | 'agent' | 'neutral'
   trend?: number
   wide?: boolean
+  /** The number cannot be known because its data lane did not load. Shows a dash and this reason instead of a misleading zero. */
+  unknown?: string
+  /** A change pill beside the value, such as a DeltaPill. */
+  delta?: ReactNode
+  /** Draws a share meter under the value. */
+  progress?: { value: number; total: number }
+  /** Makes the whole card a link to the list behind the number. */
+  href?: string
 }
 
-export function Kpi({ label, value, sub, help, tone = 'neutral', trend, wide }: KpiProps) {
+export function Kpi({ label, value, sub, help, tone = 'neutral', trend, wide, unknown, delta, progress, href }: KpiProps) {
   const dir = trend === undefined || !Number.isFinite(trend) ? '' : trend > 0 ? 'up' : trend < 0 ? 'down' : 'flat'
+  const shown = unknown ? DASH : value
+  const cls = `kpi-value ${dir && !unknown ? `trend-${dir}` : ''} ${shown.length > 18 ? 'kpi-value-text' : ''}`
+  const share = progress && progress.total > 0 ? Math.min(1, Math.max(0, progress.value / progress.total)) : undefined
   return (
-    <div className={`kpi tone-${tone} ${wide ? 'kpi-wide' : ''}`}>
+    <div className={`kpi tone-${tone} ${wide ? 'kpi-wide' : ''} ${unknown ? 'kpi-unknown' : ''} ${href && !unknown ? 'kpi-link' : ''}`}>
       <div className="kpi-label">
         <span>{label}</span>
         <InfoTip text={help} label={label} />
       </div>
-      <div className={`kpi-value ${dir ? `trend-${dir}` : ''} ${value.length > 18 ? 'kpi-value-text' : ''}`}>{value}</div>
-      {sub && <div className="kpi-sub">{sub}</div>}
+      <div className="kpi-figure">
+        {href && !unknown ? (
+          <a className={cls} href={href} aria-label={`${value} ${label}: show the list`}>
+            {shown}
+          </a>
+        ) : (
+          <div className={cls}>{shown}</div>
+        )}
+        {!unknown && delta}
+      </div>
+      {share !== undefined && !unknown && (
+        <div className="kpi-meter" aria-hidden="true">
+          <span style={{ width: `${share * 100}%` }} />
+        </div>
+      )}
+      {unknown ? <div className="kpi-sub kpi-reason">{unknown}</div> : sub && <div className="kpi-sub">{sub}</div>}
     </div>
   )
 }
 
 export const KpiRow = ({ children }: { children: ReactNode }) => <div className="kpi-row">{children}</div>
+
+/** A compact change pill for a KPI, such as ▲ 12%. The label is read out to screen readers and shown in the tooltip. */
+export function DeltaPill({ change, label = 'vs previous 7 days', upIsGood = true, fmt = int }: { change: Change; label?: string; upIsGood?: boolean; fmt?: Fmt }) {
+  const d = change.delta
+  const tone = d === 0 ? 'flat' : d > 0 === upIsGood ? 'good' : 'bad'
+  const value = Number.isFinite(change.ratio) ? signedPct(change.ratio) : `${d > 0 ? '+' : d < 0 ? '−' : '±'}${fmt(Math.abs(d))}`
+  return (
+    <span className={`delta-pill delta-${tone}`} title={`Last 7 days ${fmt(change.current)}, the 7 days before ${fmt(change.previous)}`}>
+      <span aria-hidden="true">{d > 0 ? '▲' : d < 0 ? '▼' : '='}</span>
+      {value}
+      <span className="sr-only"> {label}</span>
+    </span>
+  )
+}
 
 /** Change against the previous period, for a KPI's sub-line. Shows a count when the previous period was zero. */
 export function Delta({ change, label = 'vs previous 7 days', upIsGood = true, fmt = int }: { change: Change; label?: string; upIsGood?: boolean; fmt?: Fmt }) {

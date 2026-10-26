@@ -1,54 +1,66 @@
 import { useMemo } from 'react'
-import { RISK_FACTORS, type RiskFactorRow } from '../data/static'
+import { RISK_FACTORS } from '../data/static'
 import { useData } from '../data/store'
 import type { Agent } from '../data/types'
 import { A, R, RISK_ORDER, bars, div, groupBy } from '../metrics/measures'
+import { href, useParam } from '../routes'
 import { BarList, Distribution } from '../ui/charts'
 import { DataTable } from '../ui/DataTable'
 import { dec2, int, pct } from '../ui/format'
-import { Grid, Kpi, KpiRow, Panel } from '../ui/primitives'
+import { Empty, Grid, Kpi, KpiRow, Panel, Select } from '../ui/primitives'
 import { PALETTE, RISK_COLOR } from '../ui/theme'
 import { StatList } from './common'
+import { useScrollOnParam } from '../ui/scroll'
 import { agentCol, num, rowsOf, text, toDistribution } from './helpers'
 
 interface FactorRow {
+  order: number
   factor: string
+  rationale: string
   points: number
   agents: number
   total: number
   share: number
 }
 
+const BAND_FILTER = [
+  { value: '', label: 'High and Medium' },
+  ...RISK_ORDER.map((b) => ({ value: b, label: b })),
+  { value: 'all', label: 'Any risk factor' },
+]
+
 export function Governance() {
   const { scope, openAgent } = useData()
   const { agents, riskDetail } = scope
+  const [param, setBand] = useParam('band')
+  const band = param === 'all' || RISK_ORDER.includes(param) ? param : ''
+  useScrollOnParam('agents-to-review', param)
   const m = useMemo(() => {
     const total = riskDetail.length
-    const factors: FactorRow[] = [...groupBy(riskDetail, (r) => r.factor)].map(([factor, rs]) => ({
-      factor,
-      points: rs[0].points,
-      agents: R.agentsAffected(rs),
-      total: R.points(rs),
-      share: div(rs.length, total),
-    }))
+    const fired = groupBy(riskDetail, (r) => r.factor)
+    const factors: FactorRow[] = RISK_FACTORS.map((f) => {
+      const rs = fired.get(f.factor) ?? []
+      return { order: f.sortOrder, factor: f.factor, rationale: f.rationale, points: f.score, agents: R.agentsAffected(rs), total: R.points(rs), share: div(rs.length, total) }
+    })
     return {
       factors,
       why: bars(riskDetail, (r) => r.factor),
       bands: bars(agents, (a) => a.riskBand),
       auth: bars(agents, (a) => a.authentication ?? '(Blank)'),
-      risky: rowsOf(
-        agents.filter((a) => a.riskScore > 0),
-        (a) => a.key,
-      ),
     }
   }, [agents, riskDetail])
+  const risky = useMemo(() => {
+    const keep = (a: Agent) =>
+      band === 'all' ? a.riskScore > 0 : band ? a.riskBand === band : a.riskBand === 'High' || a.riskBand === 'Medium'
+    return rowsOf(agents.filter(keep), (a) => a.key)
+  }, [agents, band])
 
   return (
     <>
       <p className="page-intro">Exposure posture: sharing, authentication, quarantine and the heuristic risk score.</p>
       <KpiRow>
-        <Kpi label="High risk" value={int(A.high(agents))} tone="unlicensed" help="Risk score of 5 or more." />
-        <Kpi label="Medium risk" value={int(A.medium(agents))} help="Risk score of 3 or 4." />
+        <Kpi label="High risk" value={int(A.high(agents))} tone="unlicensed" help="Risk score of 5 or more." href={href('governance', undefined, { band: 'High' })} />
+        <Kpi label="Medium risk" value={int(A.medium(agents))} help="Risk score of 3 or 4." href={href('governance', undefined, { band: 'Medium' })} />
         <Kpi label="Avg risk score" value={dec2(A.avgRisk(agents))} />
         <Kpi label="No authentication" value={int(A.unauthenticated(agents))} help="Authentication is None or blank." />
         <Kpi label="Shared tenant-wide" value={int(A.tenantWide(agents))} />
@@ -74,13 +86,13 @@ export function Governance() {
         <Panel title="Authentication modes">
           <BarList label="Agents by authentication mode" items={m.auth} color={PALETTE[1]} fmt={int} />
         </Panel>
-        <Panel title="Risk factor breakdown" span={2}>
+        <Panel title="Risk factor breakdown" span={2} help="A heuristic, not a Microsoft score. An agent's score is the sum of the points of its factors: High is 5 points or more, Medium 3 or 4.">
           <DataTable
             label="Risk factor breakdown"
             rows={rowsOf(m.factors, (r) => r.factor)}
-            initialSort={{ key: 'total', desc: true }}
+            initialSort={{ key: 'order' }}
             columns={[
-              text('factor', 'Risk factor', (r: FactorRow) => r.factor, '34%'),
+              { key: 'order', label: 'Risk factor', value: (r: FactorRow) => r.order, render: (r: FactorRow) => <span title={r.rationale}>{r.factor}</span>, width: '34%', align: 'left' },
               num('points', 'Points', (r: FactorRow) => r.points),
               num('agents', 'Agents affected', (r: FactorRow) => r.agents, { bar: RISK_COLOR.Medium }),
               num('total', 'Risk points', (r: FactorRow) => r.total),
@@ -88,33 +100,32 @@ export function Governance() {
             ]}
           />
         </Panel>
-        <Panel title="Highest risk agents" span={2}>
-          <DataTable
-            label="Highest risk agents"
-            rows={m.risky}
-            search={(a: Agent) => `${a.name} ${a.envName} ${a.riskReasons}`}
-            onRowClick={(a) => openAgent(a.key)}
-            initialSort={{ key: 'score', desc: true }}
-            columns={[
-              agentCol((a: Agent) => ({ key: a.key, name: a.name })),
-              text('creator', 'Created by', (a: Agent) => a.createdByName),
-              text('env', 'Environment', (a: Agent) => a.envName),
-              num('score', 'Score', (a: Agent) => a.riskScore, { bar: RISK_COLOR.High }),
-              text('band', 'Band', (a: Agent) => a.riskBand),
-              text('reasons', 'Reasons', (a: Agent) => a.riskReasons, '30%'),
-            ]}
-          />
-        </Panel>
-        <Panel title="Risk scoring model" help="A heuristic, not a Microsoft score. High is 5 points or more, Medium 3 or more.">
-          <DataTable
-            label="Risk scoring model"
-            rows={rowsOf(RISK_FACTORS, (r) => r.factor)}
-            initialSort={{ key: 'order' }}
-            columns={[
-              { key: 'order', label: 'Risk factor', value: (r) => r.sortOrder, render: (r) => r.factor },
-              num('score', 'Points', (r: RiskFactorRow) => r.score),
-            ]}
-          />
+        <Panel
+          id="agents-to-review"
+          title="Agents to review"
+          span={3}
+          note={band === '' ? 'High and Medium risk, highest score first.' : undefined}
+          actions={<Select label="Risk band" value={band} onChange={setBand} options={BAND_FILTER} />}
+        >
+          {risky.length ? (
+            <DataTable
+              label="Agents to review"
+              rows={risky}
+              search={(a: Agent) => `${a.name} ${a.envName} ${a.riskReasons}`}
+              onRowClick={(a) => openAgent(a.key)}
+              initialSort={{ key: 'score', desc: true }}
+              columns={[
+                agentCol((a: Agent) => ({ key: a.key, name: a.name })),
+                text('creator', 'Created by', (a: Agent) => a.createdByName),
+                text('env', 'Environment', (a: Agent) => a.envName),
+                num('score', 'Score', (a: Agent) => a.riskScore, { bar: RISK_COLOR.High }),
+                text('band', 'Band', (a: Agent) => a.riskBand),
+                text('reasons', 'Reasons', (a: Agent) => a.riskReasons, '30%'),
+              ]}
+            />
+          ) : (
+            <Empty>{band === '' ? 'No High or Medium risk agents for these filters.' : 'No agents in this band for these filters.'}</Empty>
+          )}
         </Panel>
       </Grid>
     </>

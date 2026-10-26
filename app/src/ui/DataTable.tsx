@@ -13,6 +13,8 @@ export interface Column<T> {
   bar?: string
   width?: string
   help?: string
+  /** Keeps short values such as dates and verdicts whole instead of truncating them. */
+  nowrap?: boolean
 }
 
 export interface TableRow<T> {
@@ -39,6 +41,8 @@ export function DataTable<T>(props: {
   label: string
   search?: (row: T) => string
   childNoun?: string
+  /** What to say when the table has no rows at all, before any search. */
+  empty?: ReactNode
 }) {
   const [sort, setSort] = useState(props.initialSort ?? { key: props.columns[0].key, desc: false })
   const [open, setOpen] = useState<Set<string>>(new Set())
@@ -108,7 +112,10 @@ export function DataTable<T>(props: {
           onKeyDown={props.onRowClick ? (e) => e.key === 'Enter' && props.onRowClick!(r.data) : undefined}
         >
           {props.columns.map((c, ci) => (
-            <td key={c.key} className={c.align === 'right' || (c.align !== 'left' && ci > 0 && typeof c.value(r.data) === 'number') ? 'num' : ''}>
+            <td
+              key={c.key}
+              className={`${c.align === 'right' || (c.align !== 'left' && ci > 0 && typeof c.value(r.data) === 'number') ? 'num' : ''} ${c.nowrap ? 'keep' : ''}`}
+            >
               {ci === 0 && hasKids ? (
                 <span className="tree" style={{ paddingLeft: depth * 22 }}>
                   {kids.length ? (
@@ -171,10 +178,10 @@ export function DataTable<T>(props: {
         </div>
       )}
       {sorted.length === 0 ? (
-        <Empty>No rows match.</Empty>
+        <Empty>{props.rows.length ? 'No rows match your search.' : (props.empty ?? 'Nothing to list for these filters.')}</Empty>
       ) : (
         <div className="table-scroll">
-          <table aria-label={props.label}>
+          <table aria-label={props.label} style={{ minWidth: Math.max(640, props.columns.length * 110) }}>
             <colgroup>
               {props.columns.map((c) => (
                 <col key={c.key} style={c.width ? { width: c.width } : undefined} />

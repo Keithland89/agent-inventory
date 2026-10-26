@@ -1,12 +1,13 @@
 import { useMemo } from 'react'
 import { useData } from '../data/store'
-import { A, ACTIVITY_ORDER, I, PLATFORM, bars, cumulative, monthly } from '../metrics/measures'
+import { A, ACTIVITY_ORDER, I, PLATFORM, bars, cumulative, div, monthly } from '../metrics/measures'
 import { lastDataDay, periodChange } from '../metrics/periods'
+import { href } from '../routes'
 import { BarList, ColumnChart, Distribution, LineChart } from '../ui/charts'
-import { dateLabel, dec1, int, monthLabel } from '../ui/format'
-import { Delta, Grid, Kpi, KpiRow, Panel } from '../ui/primitives'
+import { dateLabel, dec1, int, monthLabel, pct } from '../ui/format'
+import { DeltaPill, Grid, Kpi, KpiRow, Panel } from '../ui/primitives'
 import { ACTIVITY_COLOR, COLOR, PALETTE } from '../ui/theme'
-import { StatList } from './common'
+import { CoverageBanner, StatList } from './common'
 import { toDistribution } from './helpers'
 
 export function Overview() {
@@ -33,14 +34,17 @@ export function Overview() {
     }
   }, [agents, interactions, ds.interactions, ds.asOf])
   const wowHelp = m.end ? ` The change compares the 7 days to ${dateLabel(m.end)}, the last day with audit data, with the 7 days before.` : ''
+  const active = A.active30(agents)
 
   return (
     <>
+      <CoverageBanner />
       <KpiRow>
         <Kpi
           label="Total agents"
           value={int(agents.length)}
           tone="agent"
+          href={href('inventory', 'all')}
           sub={
             <>
               <b>{int(m.newAgents.current)}</b> new in 7 days
@@ -53,22 +57,30 @@ export function Overview() {
         <Kpi label="Foundry projects" value={int(A.platform(PLATFORM.foundry)(agents))} help="Azure AI Foundry projects that can host agents." />
         <Kpi
           label="Active (30 days)"
-          value={int(A.active30(agents))}
+          value={int(active)}
           tone="licensed"
-          sub={m.end ? <Delta change={m.agentsWow} label="agents used, week on week" /> : undefined}
-          help={`Agents with a usage signal in the last 30 days.${m.end ? ` The sub-line is the change in agents with audited interactions.${wowHelp}` : ''}`}
+          progress={{ value: active, total: agents.length }}
+          delta={m.end ? <DeltaPill change={m.agentsWow} label="agents used, week on week" /> : undefined}
+          sub={`${pct(div(active, agents.length))} of all agents`}
+          help={`Agents with a usage signal in the last 30 days.${m.end ? ` The pill is the change in agents with audited interactions.${wowHelp}` : ''}`}
         />
-        <Kpi label="High risk" value={int(A.high(agents))} tone="unlicensed" help="Agents scoring 5 or more on the heuristic risk model. See Governance & risk." />
+        <Kpi
+          label="High risk"
+          value={int(A.high(agents))}
+          tone="unlicensed"
+          href={href('governance', undefined, { band: 'High' })}
+          help="Agents scoring 5 or more on the heuristic risk model. See Governance & risk."
+        />
         <Kpi
           label="Active users"
           value={int(m.activeUsers)}
-          sub={m.end ? <Delta change={m.usersWow} label="week on week" /> : undefined}
+          delta={m.end ? <DeltaPill change={m.usersWow} label="week on week" /> : undefined}
           help={`Distinct people with at least one audited interaction with an agent.${wowHelp}`}
         />
         <Kpi
           label="Agent run-time"
           value={`${dec1(m.runTime)} h`}
-          sub={m.end ? <Delta change={m.runTimeWow} label="week on week" fmt={(h) => `${dec1(h)} h`} /> : undefined}
+          delta={m.end ? <DeltaPill change={m.runTimeWow} label="week on week" fmt={(h) => `${dec1(h)} h`} /> : undefined}
           help={`For every conversation and day, the time from the first to the last interaction, summed.${wowHelp}`}
         />
       </KpiRow>

@@ -26,6 +26,7 @@ export const num = <T,>(key: string, label: string, get: (r: T) => number, opts:
 export const date = <T,>(key: string, label: string, get: (r: T) => string | null | undefined): Column<T> => ({
   key,
   label,
+  nowrap: true,
   value: (r) => get(r) ?? '',
   render: (r) => {
     const v = get(r)

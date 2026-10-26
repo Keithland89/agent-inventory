@@ -77,10 +77,13 @@ Segoe UI Variable throughout. KPI values use tabular numerals so columns of figu
 
 ## Layout
 
-- The header band holds the title, the data-mode badge (Live or Sample), the as-of time and the data-source button.
-- Tabs sit under the band. Tabs with several report pages show sub-view pills.
-- Slicers sit in one row above the content and apply to every view on the tab.
+- The header band holds the title, the Ask button, the data-mode badge (Live or Sample), the as-of time and the data-source button.
+- A white side navigation sits left of the content, with sections grouped by job: Overview; Agents; Copilot; Spend & platforms; Security; Setup & coverage. Group labels are plain sentence case, not eyebrows. The current section has the soft-indigo fill. A small amber dot marks a section whose data lane failed or isn't in the sample.
+- Below 1000px (the player's canvas width) the side navigation becomes a drawer opened from a Menu button in the band, which names the current section. It closes on navigation, Escape or a click on the scrim.
+- Tabs with several report pages show sub-view pills in the toolbar.
+- Slicers sit in one row above the content and apply to every view on the tab. Under them, one line says "Showing N of M agents · Audit data through <date>", and each slicer that's set shows as a removable pill, with "Clear all" when two or more are set.
 - Content flows as KPI cards, then charts, then tables, matching the order of the report page.
+- Filters that a number links to live in the URL query (`#/usage/lifecycle?verdict=Retire`, `#/governance?band=High`), so a filtered list can be bookmarked or shared.
 
 ## Elevation & Depth
 
@@ -92,15 +95,19 @@ Flat panels with a 1px line border. Only the agent drawer and dialogs cast a sha
 
 ## Components
 
-- **KPI card:** label, value, optional footnote.
+- **KPI card:** label, then the figure (value plus an optional change pill), an optional 4px meter for a part of a whole, and one line of context. The change pill compares the last 7 days with the 7 before: green for a good change, red for a bad one, grey for flat, with an arrow so colour isn't the only cue. A value that opens its list is a link: the whole card is the hit area, and hover underlines the value. A value whose lane didn't arrive shows a dash and the reason instead of a zero.
+- **Lane notice:** above a page's figures when a lane it depends on failed, isn't in the sample or returned no rows. It names the lane, says why and links to Live lane status. Failed is a soft red tint; the others are neutral. Overview shows the same as one coverage line for the whole app.
 - **Charts:** hand-written SVG with no chart library. Hover shows the exact value.
-- **DataTable:** sortable and searchable, with a "Show more" button for long tables. Agent rows open the drawer.
+- **DataTable:** sortable and searchable, with a "Show more" button for long tables. Agent rows open the drawer. Numbers, dates and verdicts never truncate; below its minimum width the table scrolls sideways. Its empty state says whether the search or the filters emptied it.
 - **Agent drawer:** identity, risk breakdown by factor, sharing, tools, knowledge and usage for one agent.
 - **Lane status:** one row per lane with its state, row count, time and last run.
+- **Ask panel:** a side sheet opened from the violet Ask pill in the header. It opens with three starter questions for the current section. Questions sit right-aligned in indigo bubbles; answers are plain text in the panel, never in a card. The handoff block (copy, open Copilot Chat, "What gets sent") is the only boxed element. The panel always states what it will send and where.
 
 ## Do's and Don'ts
 
 - Do say why a panel is empty: lane not set up, access denied or no matching rows.
+- Don't show 0 for a figure whose lane didn't load; show a dash and the reason.
+- Do link a count to the list it counts.
 - Do keep the data-mode badge visible at all times.
 - Don't invent colours for risk or surface groups; use the fixed ones.
 - Don't show names that weren't resolved; show the id or "Unresolved".

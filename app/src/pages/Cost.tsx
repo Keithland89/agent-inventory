@@ -1,42 +1,28 @@
 import { useMemo } from 'react'
 import { costWindow, COST_WINDOW_DAYS, CREDIT_ENTITLEMENT } from '../data/cost'
 import { useData } from '../data/store'
-import type { LaneId, LaneStatus } from '../data/types'
 import {
   categoryBars, costAgainstUse, creditBars, creditsByAgent, creditTotals, dailySpend, mainCurrency, meterBars, poolRows, spendByResource,
   type AgentCreditRow, type CostUseRow, type ResourceSpendRow,
 } from '../metrics/cost'
+import { laneProblems, unknownFrom } from '../metrics/coverage'
 import { div } from '../metrics/measures'
 import { BarList, Distribution, LineChart } from '../ui/charts'
 import { DataTable } from '../ui/DataTable'
 import { dateLabel, dayLabel, int, money, pct } from '../ui/format'
 import { Empty, Grid, Kpi, KpiRow, Panel } from '../ui/primitives'
 import { COLOR, PALETTE } from '../ui/theme'
+import { LaneNotice } from './common'
 import { agentCol, num, rowsOf, text, toDistribution } from './helpers'
 
-const OK = new Set(['ok', 'sample', 'loading'])
-
-/** Why a cost lane has no rows, in words a tenant admin can act on. */
-function laneNote(lane: LaneStatus | undefined, role: string): string | undefined {
-  if (!lane || OK.has(lane.state)) return undefined
-  if (lane.state === 'denied') return `${lane.label}: access denied. ${role}`
-  if (lane.state === 'not-set-up') return `${lane.label}: the connection is not set up. Run the installer, or add the connection in the app settings.`
-  if (lane.state === 'empty') return `${lane.label}: no rows came back. ${lane.detail ?? ''}`.trim()
-  return `${lane.label}: could not be read. ${lane.detail ?? ''}`.trim()
-}
-
-function useLane(id: LaneId) {
-  const { ds } = useData()
-  return ds.lanes.find((l) => l.id === id)
-}
-
-const CREDIT_ROLE = 'The licensing API needs a Power Platform administrator (or Dynamics 365 administrator) on the connection.'
 const COST_ROLE = 'Cost Management needs Cost Management Reader, or Reader, on each subscription that holds Azure AI resources.'
 
 export function CopilotCredits() {
   const { ds, scope, agentByKey, openAgent } = useData()
-  const creditsLane = useLane('credits')
-  const poolLane = useLane('creditpool')
+  const problems = laneProblems(ds.lanes, ['credits', 'creditpool'])
+  const creditsUnknown = unknownFrom(problems.find((p) => p.lane.id === 'credits'))
+  const poolUnknown = unknownFrom(problems.find((p) => p.lane.id === 'creditpool'))
+  const poolLane = ds.lanes.find((l) => l.id === 'creditpool')
   const credits = scope.credits
   const m = useMemo(() => {
     const rows = creditsByAgent(credits, agentByKey, ds.environments)
@@ -53,7 +39,6 @@ export function CopilotCredits() {
     }
   }, [credits, agentByKey, ds.environments, ds.creditPool, ds.asOf, scope.interactions])
   const copilotPool = m.pool.find((p) => p.currency === CREDIT_ENTITLEMENT)
-  const notes = [laneNote(creditsLane, CREDIT_ROLE), laneNote(poolLane, CREDIT_ROLE)].filter(Boolean)
   const byKey = new Map(m.rows.map((r) => [r.key, r]))
 
   return (
@@ -62,36 +47,45 @@ export function CopilotCredits() {
         Copilot Credits that Copilot Studio agents consumed in the last {COST_WINDOW_DAYS} days, from the Power Platform licensing API, and the tenant's prepaid capacity.
         Billed credits draw down the capacity pool; non-billed credits are covered by Microsoft 365 Copilot licences. The agent slicers apply to per-agent credits, not to the pool.
       </p>
-      {notes.map((n) => (
-        <p key={n} className="notice">
-          {n}
-        </p>
-      ))}
+      <LaneNotice problems={problems} />
       <KpiRow>
-        <Kpi label="Billed credits" value={int(m.totals.billed)} tone="agent" help={`Credits charged to the tenant's capacity in the last ${COST_WINDOW_DAYS} days.`} />
+        <Kpi
+          label="Billed credits"
+          value={int(m.totals.billed)}
+          tone="agent"
+          help={`Credits charged to the tenant's capacity in the last ${COST_WINDOW_DAYS} days.`}
+          unknown={creditsUnknown}
+        />
         <Kpi
           label="Non-billed credits"
           value={int(m.totals.nonBilled)}
           tone="licensed"
           help="Usage by Microsoft 365 Copilot licensed users in Teams, SharePoint and Copilot Chat, which is not charged."
+          unknown={creditsUnknown}
         />
-        <Kpi label="Agents consuming" value={int(m.totals.agents)} sub={m.totals.orphanedAgents ? `${int(m.totals.orphanedAgents)} not in inventory` : undefined} />
+        <Kpi
+          label="Agents consuming"
+          value={int(m.totals.agents)}
+          sub={m.totals.orphanedAgents ? `${int(m.totals.orphanedAgents)} not in inventory` : undefined}
+          unknown={creditsUnknown}
+        />
         <Kpi
           label="Copilot Credits purchased"
           value={copilotPool ? int(copilotPool.purchased) : '–'}
           help="Prepaid Copilot Credit capacity for the tenant, from the licensing currency report."
+          unknown={poolUnknown}
         />
         <Kpi
           label="Capacity used"
           value={copilotPool ? pct(copilotPool.used) : '–'}
           tone={copilotPool && copilotPool.used >= 0.8 ? 'unlicensed' : 'neutral'}
           help="Consumed as a share of purchased Copilot Credits for the current period."
+          progress={copilotPool ? { value: copilotPool.consumed, total: copilotPool.purchased } : undefined}
+          unknown={poolUnknown}
         />
       </KpiRow>
       {credits.length === 0 && m.pool.length === 0 ? (
-        <Empty>
-          {scope.filtered ? 'No credits for the agents in view.' : 'No credit data was returned. The cost lanes need the Power Platform admin connection; see Setup & coverage.'}
-        </Empty>
+        scope.filtered ? <Empty>No credits for the agents in view.</Empty> : problems.length ? null : <Empty>No credit data was returned.</Empty>
       ) : (
         <Grid cols={3}>
           <Panel title="Top agents by credits" span={2} note="Billed plus non-billed. Select an agent to open its details.">
@@ -189,7 +183,9 @@ export function CopilotCredits() {
 
 export function AzureAiSpend() {
   const { ds } = useData()
-  const lane = useLane('aicost')
+  const lane = ds.lanes.find((l) => l.id === 'aicost')
+  const problems = laneProblems(ds.lanes, ['aicost'])
+  const unknown = unknownFrom(problems[0])
   const m = useMemo(() => {
     const { currency, mixed } = mainCurrency(ds.aiCostDaily)
     const window = costWindow(new Date(`${ds.asOf.slice(0, 10)}T00:00:00Z`))
@@ -211,27 +207,42 @@ export function AzureAiSpend() {
       top: resources.map((r) => ({ key: r.id, label: r.name, value: r.cost, hint: r.category })),
     }
   }, [ds.aiCostDaily, ds.aiCostMeters, ds.aiResources, ds.asOf])
-  const note = laneNote(lane, COST_ROLE)
   const unlisted = m.resources.filter((r) => !r.listed).length
 
   return (
     <>
       <p className="page-intro">
-        Azure spend on AI resources in the last {COST_WINDOW_DAYS} days, from Cost Management, for the subscriptions that hold Azure AI resources.         Costs are actual
+        Azure spend on AI resources in the last {COST_WINDOW_DAYS} days, from Cost Management, for the subscriptions that hold Azure AI resources. Costs are actual
         billed amounts in your billing currency and lag by about a day. Foundry project spend rolls up to its parent account. The agent slicers do not apply here.
       </p>
-      {note && <p className="notice">{note}</p>}
-      {!note && lane?.detail && lane.state !== 'sample' && <p className="notice">{lane.detail}</p>}
+      <LaneNotice problems={problems} />
+      {!problems.length && lane?.detail && lane.state !== 'sample' && <p className="notice">{lane.detail}</p>}
       {m.mixed && <p className="notice">Spend arrived in more than one currency. Only {m.currency} is shown.</p>}
       <KpiRow>
-        <Kpi label={`AI spend (${COST_WINDOW_DAYS} days)`} value={m.fmt(m.total)} tone="agent" />
-        <Kpi label="Average per day" value={m.fmt(div(m.total, m.daily.length))} />
-        <Kpi label="Last 7 days" value={m.fmt(m.daily.slice(-7).reduce((s, d) => s + d.values[0], 0))} trend={m.trend} help="Change against the 7 days before." />
-        <Kpi label="Resources with spend" value={int(m.resources.length)} sub={unlisted ? `${int(unlisted)} not in the Foundry listing` : undefined} />
-        <Kpi label="Top resource share" value={pct(div(m.resources[0]?.cost ?? NaN, m.total))} help={m.resources[0] ? `${m.resources[0].name} (${m.resources[0].category})` : undefined} />
+        <Kpi label={`AI spend (${COST_WINDOW_DAYS} days)`} value={m.fmt(m.total)} tone="agent" unknown={unknown} />
+        <Kpi label="Average per day" value={m.fmt(div(m.total, m.daily.length))} unknown={unknown} />
+        <Kpi
+          label="Last 7 days"
+          value={m.fmt(m.daily.slice(-7).reduce((s, d) => s + d.values[0], 0))}
+          trend={m.trend}
+          help="Change against the 7 days before."
+          unknown={unknown}
+        />
+        <Kpi
+          label="Resources with spend"
+          value={int(m.resources.length)}
+          sub={unlisted ? `${int(unlisted)} not in the Foundry listing` : undefined}
+          unknown={unknown}
+        />
+        <Kpi
+          label="Top resource share"
+          value={pct(div(m.resources[0]?.cost ?? NaN, m.total))}
+          help={m.resources[0] ? `${m.resources[0].name} (${m.resources[0].category})` : undefined}
+          unknown={unknown}
+        />
       </KpiRow>
       {m.resources.length === 0 ? (
-        <Empty>No Azure AI spend was returned. {COST_ROLE}</Empty>
+        problems.length ? null : <Empty>No Azure AI spend was returned. {COST_ROLE}</Empty>
       ) : (
         <Grid cols={3}>
           <Panel title="Daily AI spend" span={2}>
