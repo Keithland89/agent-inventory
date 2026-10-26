@@ -5,6 +5,7 @@ import { Overview } from './pages/Overview'
 import { AgentInventory, AllAgents, Creators } from './pages/Inventory'
 import { Adoption, AgentAnalytics, UsagePopularity } from './pages/Usage'
 import { ChatCowork, Interactions } from './pages/Activity'
+import { HabitStages, LifecycleReview } from './pages/Lifecycle'
 import { SharePointAgents } from './pages/SharePoint'
 import { Governance } from './pages/Governance'
 import { KnowledgeGrounding, KnowledgeSources, Tools } from './pages/Integrations'
@@ -23,13 +24,11 @@ function Page({ route }: { route: Route }) {
     case 'overview':
       return <Overview />
     case 'inventory':
-      return view === 'creators' ? <Creators /> : view === 'inventory' ? <AgentInventory /> : <AllAgents />
+      return view === 'creators' ? <Creators /> : view === 'inventory' ? <AgentInventory /> : view === 'sharepoint' ? <SharePointAgents /> : <AllAgents />
     case 'usage':
-      return view === 'popularity' ? <UsagePopularity /> : view === 'adoption' ? <Adoption /> : <AgentAnalytics />
+      return view === 'popularity' ? <UsagePopularity /> : view === 'adoption' ? <Adoption /> : view === 'lifecycle' ? <LifecycleReview /> : <AgentAnalytics />
     case 'activity':
-      return view === 'chat' ? <ChatCowork /> : <Interactions />
-    case 'sharepoint':
-      return <SharePointAgents />
+      return view === 'chat' ? <ChatCowork /> : view === 'habits' ? <HabitStages /> : <Interactions />
     case 'governance':
       return <Governance />
     case 'integrations':
@@ -48,8 +47,8 @@ function Page({ route }: { route: Route }) {
 const opts = (values: string[]) => values.map((v) => ({ value: v, label: v }))
 const uniq = (values: string[]) => [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b))
 
-/** Views inside an agent-filtered tab that are not about individual agents, so the slicers would mislead. */
-const UNFILTERED_VIEWS = new Set(['activity/chat', 'cost/azure'])
+/** Views inside an agent-filtered tab that are not about inventory agents, so the slicers would mislead. */
+const UNFILTERED_VIEWS = new Set(['inventory/sharepoint', 'activity/chat', 'activity/habits', 'cost/azure'])
 
 function FilterBar({ route }: { route: Route }) {
   const { ds, filters, setFilter, resetFilters } = useData()

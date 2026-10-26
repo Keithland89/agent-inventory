@@ -1,11 +1,13 @@
 import { useMemo } from 'react'
 import { useData } from '../data/store'
 import { weeklyCount } from '../metrics/chat'
+import { agentTrends, LIFECYCLE_HELP, lifecycleOf, verdictOf } from '../metrics/lifecycle'
 import { I } from '../metrics/measures'
+import { lastDataDay } from '../metrics/periods'
 import { LineChart } from './charts'
 import { dateLabel, dec1, int, DASH } from './format'
 import { Sheet } from './Sheet'
-import { COLOR, RISK_COLOR } from './theme'
+import { COLOR, LIFECYCLE_COLOR, RISK_COLOR, VERDICT_COLOR } from './theme'
 
 const day = (iso: string) => (iso ? dateLabel(iso.slice(0, 10)) : DASH)
 
@@ -16,8 +18,12 @@ export function AgentDrawer({ agentKey, onClose }: { agentKey: string | null; on
   const d = useMemo(() => {
     if (!agent) return null
     const rows = ds.interactions.filter((i) => i.agentKey === agent.key)
+    const trend = agentTrends(rows, lastDataDay(ds.interactions)).get(agent.key)
+    const stage = lifecycleOf(agent, trend)
     return {
       rows,
+      stage,
+      review: verdictOf(agent, stage),
       weekly: weeklyCount(rows),
       reasons: ds.riskDetail.filter((r) => r.agentKey === agent.key),
       knowledge: ds.knowledge.filter((k) => k.agentKey === agent.key),
@@ -47,6 +53,18 @@ export function AgentDrawer({ agentKey, onClose }: { agentKey: string | null; on
             <div>
               <dt>Activity</dt>
               <dd>{agent.activityStatus}</dd>
+            </div>
+            <div>
+              <dt>Lifecycle</dt>
+              <dd style={{ color: LIFECYCLE_COLOR[d.stage] }} title={LIFECYCLE_HELP[d.stage]}>
+                {d.stage}
+              </dd>
+            </div>
+            <div>
+              <dt>Verdict</dt>
+              <dd style={{ color: VERDICT_COLOR[d.review.verdict] }} title={d.review.reason}>
+                {d.review.verdict}
+              </dd>
             </div>
             <div>
               <dt>Users</dt>

@@ -2,15 +2,14 @@
 
 A Copilot Managed App version of the Copilot Inventory Power BI report. It runs entirely in the browser inside the Managed Apps player, reads the same sources as the report through four connectors, and computes every column and measure in TypeScript. Nothing is sent anywhere else.
 
-It covers all 16 report pages in ten tabs with sub-views. It adds a **Chat & Cowork** view built from the same audit-log lane, and a **Cost & consumption** tab that the report doesn't have.
+It covers all 16 report pages in nine tabs with sub-views. It adds a **Chat & Cowork** view built from the same audit-log lane, a **Cost & consumption** tab that the report doesn't have, and three computed views (**Lifecycle & review**, **Habit stages**, cost against use) that reuse data the app already loads.
 
 | Tab | Sub-views | Report pages |
 |---|---|---|
 | Overview | | Overview |
-| Inventory | All agents · Agent inventory · Creators & ownership | All Agents, Agent Inventory, Creators |
-| Usage | Agent analytics · Usage & popularity · Adoption & activity | Agent Analytics, Usage & Popularity, Adoption |
-| Copilot activity | Interactions · **Chat & Cowork** (new) | Copilot Interactions |
-| SharePoint agents | | SharePoint Agents |
+| Inventory | All agents · Agent inventory · Creators & ownership · SharePoint agents | All Agents, Agent Inventory, Creators, SharePoint Agents |
+| Usage | Agent analytics · Usage & popularity · Adoption & activity · **Lifecycle & review** (new) | Agent Analytics, Usage & Popularity, Adoption |
+| Copilot activity | Interactions · **Chat & Cowork** (new) · **Habit stages** (new) | Copilot Interactions |
 | Governance & risk | | Governance & Risk |
 | Integrations | Tools · Knowledge & grounding · Knowledge sources | Tools, Knowledge & Grounding, Knowledge Sources |
 | Azure AI Foundry | | Azure AI Foundry |
@@ -18,7 +17,7 @@ It covers all 16 report pages in ten tabs with sub-views. It adds a **Chat & Cow
 | Shadow AI | | Shadow AI |
 | Setup & coverage | Data sources & gaps · Live lane status | Data Sources & Gaps |
 
-Slicers (Environment, Platform, Risk band, Agent origin) appear on the tabs whose report pages have them. Selecting an agent anywhere opens the agent drawer from the All agents page.
+Slicers (Environment, Platform, Risk band, Agent origin) appear on the tabs whose report pages have them. Selecting an agent anywhere opens the agent drawer from the All agents page. SharePoint agents moved from their own tab to a view under Inventory; old `#/sharepoint` links still open it.
 
 ## Data modes
 
@@ -57,6 +56,22 @@ Caveats, not yet checked against a live tenant:
 - Cost Management data lags by about a day, and some offers (free trials, sponsorships) have none. A query that returns a `nextLink` is counted as truncated and the lane status says so.
 
 The cost lanes are in **Setup & coverage → Live lane status** like every other lane: denied, not set up and empty each explain which role is missing.
+
+### Lifecycle, habits and trends
+
+These views add no connector, flow, table or query. They are computed in the browser from the audit-log interactions and agent inventory that are already loaded. Windows end on the last day with audited interactions, not on today, so a lagging audit feed doesn't look like a drop. The thresholds are heuristics, not Microsoft definitions.
+
+- **Overview week on week**: active agents, active users and agent run-time in the last 7 days against the 7 days before. Total agents shows how many were created in the last 7 days.
+- **Habit stages** (Copilot activity), in the style of ValueLens. A person's stage depends on how many different weeks they used Copilot in the last 8:
+  - Habitual: 6 or more weeks. Regular: 3 to 5. Trying: 1 or 2.
+  - New: first seen in the last 2 weeks. Lapsed: no use in the last 4 weeks but some in the last 90 days.
+  - Stages by month are measured on each month's last day, once 8 weeks of history exist. "Moved up" compares each person's stage now with 4 weeks ago.
+  - Habit cohorts on Chat & Cowork are different: they measure how many days a week people use Copilot in the weeks they are active.
+- **Lifecycle & review** (Usage). Each agent gets a stage and a verdict, also shown in the agent drawer:
+  - Stage: New (created under 30 days ago), Never used, Dormant (no use for 90 days), Growing or Declining (distinct users in the last 4 weeks changed by at least 2 and 25% against the 4 weeks before), otherwise Steady.
+  - Verdict, checked in order: Retire (Dormant, or never used 60 days after creation), Review (high risk or no owner), Watch (New, Never used or Declining), Promote (Growing, low risk and not shared tenant-wide), otherwise Keep.
+  - Return rate: of the people who used an agent in the last 8 weeks, the share who used it in 2 or more weeks, counted per agent and person.
+- **Cost against use** (Copilot Credits): each inventory agent's credits beside its audited users and sessions over the same 30 days. An agent is flagged as high cost with few users when it is in the top quarter for credits (with 4 or more agents), has 2 or fewer users, and at most half its interactions are autonomous runs.
 
 ### Landing tables
 

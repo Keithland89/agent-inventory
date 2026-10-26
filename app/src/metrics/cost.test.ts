@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import type { Agent, AgentCredit, AiCostDaily, AiCostMeter, AzureAIResource } from '../data/types'
+import type { Agent, AgentCredit, AiCostDaily, AiCostMeter, AzureAIResource, Interaction } from '../data/types'
 import { money } from '../ui/format'
-import { categoryBars, creditBars, creditsByAgent, creditTotals, dailySpend, mainCurrency, meterBars, poolRows, spendByResource } from './cost'
+import { categoryBars, costAgainstUse, creditBars, creditsByAgent, creditTotals, dailySpend, mainCurrency, meterBars, poolRows, spendByResource, type AgentCreditRow } from './cost'
 
 const credit = (o: Partial<AgentCredit>): AgentCredit => ({
   agentKey: '', envId: 'E1', resourceId: 'b1', feature: 'Generative answer', product: 'Copilot Studio', billed: 0, nonBilled: 0, lastRefreshed: '', ...o,
@@ -43,6 +43,35 @@ describe('credits', () => {
     expect(rows.map((r) => r.name)).toEqual(['Copilot Credits', 'AI Builder credits'])
     expect(Number.isNaN(rows[0].used)).toBe(true)
     expect(rows[1].used).toBeCloseTo(0.1)
+  })
+})
+
+describe('cost against use', () => {
+  const row = (agentKey: string, total: number): AgentCreditRow => ({ key: agentKey || 'x', agentKey, name: agentKey, envName: '', billed: total, nonBilled: 0, total, topFeature: '' })
+  const ix = (agentKey: string, user: string, o: Partial<Interaction> = {}) =>
+    ({ date: '2026-09-01', time: '', surfaceKey: '', agentKey, user, appHost: 'Teams', threadId: `${agentKey}${user}`, resourceCount: 0, ...o }) as Interaction
+  const rows = [row('pricey', 480), row('busy', 300), row('bot', 500), row('quiet', 100), row('unused', 450), row('', 900)]
+  const use = [
+    ix('pricey', 'u1'),
+    ...['u1', 'u2', 'u3', 'u4'].map((u) => ix('busy', u)),
+    ix('bot', 'svc', { appHost: 'Autonomous' }),
+    ix('quiet', 'u2'),
+    ix('pricey', 'u9', { date: '2026-07-01' }),
+  ]
+  const r = costAgainstUse(rows, use, { from: '2026-08-03', to: '2026-09-01' })
+  const by = new Map(r.rows.map((x) => [x.agentKey, x]))
+
+  it('sets credits against users and sessions in the same window, for inventory agents only', () => {
+    expect(r.rows).toHaveLength(5)
+    expect(by.get('pricey')).toMatchObject({ users: 1, sessions: 1, perUser: 480, perSession: 480 })
+    expect(by.get('busy')).toMatchObject({ users: 4, perUser: 75 })
+    expect(by.get('unused')?.perUser).toBeNaN()
+    expect(r.perUser).toBeCloseTo(1380 / 5)
+  })
+
+  it('flags costly agents with few users, but not autonomous ones or ones with no audited use', () => {
+    expect(r.rows.filter((x) => x.highCostLowUse).map((x) => x.agentKey)).toEqual(['pricey'])
+    expect(r.flagged).toBe(1)
   })
 })
 
