@@ -5,9 +5,9 @@ import { agentTrends, LIFECYCLE_HELP, lifecycleOf, verdictOf } from '../metrics/
 import { I } from '../metrics/measures'
 import { lastDataDay } from '../metrics/periods'
 import { LineChart } from './charts'
-import { dateLabel, dec1, int, DASH, regionLabel } from './format'
+import { connectorLabel, dateLabel, dec1, int, DASH, regionLabel } from './format'
 import { Sheet } from './Sheet'
-import { COLOR, LIFECYCLE_COLOR, RISK_COLOR, VERDICT_COLOR } from './theme'
+import { COLOR, LIFECYCLE_TEXT, RISK_TEXT, VERDICT_TEXT } from './theme'
 
 const day = (iso: string) => (iso ? dateLabel(iso.slice(0, 10)) : DASH)
 
@@ -46,7 +46,7 @@ export function AgentDrawer({ agentKey, onClose }: { agentKey: string | null; on
           <dl className="stat-grid">
             <div>
               <dt>Risk</dt>
-              <dd style={{ color: RISK_COLOR[agent.riskBand] }}>
+              <dd style={{ color: RISK_TEXT[agent.riskBand] }}>
                 {agent.riskBand} ({agent.riskScore})
               </dd>
             </div>
@@ -56,13 +56,13 @@ export function AgentDrawer({ agentKey, onClose }: { agentKey: string | null; on
             </div>
             <div>
               <dt>Lifecycle</dt>
-              <dd style={{ color: LIFECYCLE_COLOR[d.stage] }} title={LIFECYCLE_HELP[d.stage]}>
+              <dd style={{ color: LIFECYCLE_TEXT[d.stage] }} title={LIFECYCLE_HELP[d.stage]}>
                 {d.stage}
               </dd>
             </div>
             <div>
               <dt>Verdict</dt>
-              <dd style={{ color: VERDICT_COLOR[d.review.verdict] }} title={d.review.reason}>
+              <dd style={{ color: VERDICT_TEXT[d.review.verdict] }} title={d.review.reason}>
                 {d.review.verdict}
               </dd>
             </div>
@@ -163,7 +163,7 @@ export function AgentDrawer({ agentKey, onClose }: { agentKey: string | null; on
               <ul className="detail-list">
                 {d.connectors.map((c) => (
                   <li key={c.connectorId}>
-                    {c.connectorId} {c.isMcp ? <small>MCP</small> : null}
+                    <span title={c.connectorId}>{connectorLabel(c.connectorId)}</span> {c.isMcp ? <small>MCP</small> : null}
                   </li>
                 ))}
               </ul>

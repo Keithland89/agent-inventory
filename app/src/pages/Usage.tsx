@@ -10,6 +10,7 @@ import { dec1, int, monthLabel, pct } from '../ui/format'
 import { Grid, Kpi, KpiRow, Panel, Select } from '../ui/primitives'
 import { ACTIVITY_COLOR, COLOR } from '../ui/theme'
 import { agentCol, date, num, ordered, rowsOf, text, toDistribution } from './helpers'
+import { PageFilters } from '../ui/PageFilters'
 
 const nameOf = (a: Agent) => ({ key: a.key, name: a.name })
 const BANDS = ['No adoption', 'Under 5%', '5-10%', '10-25%', '25% and above', 'No agents']
@@ -37,9 +38,9 @@ export function AgentAnalytics() {
 
   return (
     <>
-      <div className="filters page-filters" role="group" aria-label="Page filters">
+      <PageFilters label="Page filters">
         <Select label="Month" value={month} onChange={setMonth} options={months.map((k) => ({ value: k, label: monthLabel(k) }))} allLabel="All" />
-      </div>
+      </PageFilters>
       <KpiRow>
         <Kpi label="Active users" value={int(I.activeUsers(interactions))} tone="licensed" />
         <Kpi label="Total sessions" value={int(I.sessions(interactions))} />
@@ -54,7 +55,7 @@ export function AgentAnalytics() {
           <Distribution label="Agents by creator category" items={toDistribution(m.creator)} fmt={int} />
         </Panel>
         <Panel title="Trending agents by active users" span={2}>
-          <BarList label="Agents by active users" items={m.trending} color={COLOR.agent} fmt={int} limit={12} onSelect={openAgent} />
+          <BarList label="Agents by active users" items={m.trending} color={COLOR.agent} fmt={int} limit={7} onSelect={openAgent} />
         </Panel>
         <Panel title="Top platforms used to build agents">
           <BarList label="Agents by platform" items={m.platforms} color={COLOR.licensed} fmt={int} />
@@ -223,7 +224,7 @@ export function Adoption() {
           <BarList label="Environments by adoption band" items={m.bands} color={COLOR.licensed} fmt={int} keepOrder />
         </Panel>
         <Panel title="Biggest clean-up targets" note="Environments with the most never-used agents.">
-          <BarList label="Never-used agents by environment" items={m.cleanup} color={COLOR.unlicensed} fmt={int} limit={10} />
+          <BarList label="Never-used agents by environment" items={m.cleanup} color={COLOR.unlicensed} fmt={int} limit={6} />
         </Panel>
         <Panel title="Platform adoption" span={2}>
           <DataTable

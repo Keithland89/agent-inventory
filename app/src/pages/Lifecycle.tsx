@@ -10,9 +10,10 @@ import { BarList, ColumnChart, Distribution, Funnel, GroupedBars } from '../ui/c
 import { DataTable } from '../ui/DataTable'
 import { dateLabel, DASH, int, monthLabel, pct } from '../ui/format'
 import { Empty, Grid, Kpi, KpiRow, Panel, Select } from '../ui/primitives'
-import { LIFECYCLE_COLOR, RISK_COLOR, STAGE_COLOR, VERDICT_COLOR } from '../ui/theme'
+import { LIFECYCLE_COLOR, RISK_TEXT, STAGE_COLOR, VERDICT_COLOR, VERDICT_TEXT } from '../ui/theme'
 import { agentCol, date, num, rowsOf, text } from './helpers'
 import { useScrollOnParam } from '../ui/scroll'
+import { PageFilters, PageIntro } from '../ui/PageFilters'
 
 const options = (values: readonly string[]) => values.map((v) => ({ value: v, label: v }))
 const signed = (n: number) => (Number.isFinite(n) ? `${n > 0 ? '+' : n < 0 ? '−' : ''}${int(Math.abs(n))}` : DASH)
@@ -55,13 +56,13 @@ export function HabitStages() {
 
   return (
     <>
-      <p className="page-intro">
+      <PageIntro>
         How many weeks people keep coming back to Copilot, in the style of ValueLens habit stages. Habit cohorts on Chat & Cowork measure how often people use
         Copilot in the weeks they are active; stages measure whether they keep returning. Agent filters don't apply here.
-      </p>
-      <div className="filters page-filters" role="group" aria-label="Product filter">
+      </PageIntro>
+      <PageFilters label="Product filter">
         <Select label="Product" value={group} onChange={(v) => setGroup(v as AppGroup | '')} options={options(APP_GROUPS)} allLabel="All products" />
-      </div>
+      </PageFilters>
       {m.users === 0 ? (
         <Empty>No Copilot activity in the 90 days to the last audit day. The audit-log lane feeds this view; see Setup & coverage.</Empty>
       ) : (
@@ -160,10 +161,10 @@ export function LifecycleReview() {
 
   return (
     <>
-      <p className="page-intro">
+      <PageIntro>
         Where each agent is in its life, and what to do about it. Trends compare distinct users in the 4 weeks to {m.end ? dateLabel(m.end) : 'the last audit day'} with
         the 4 weeks before. Rules are simple and visible, so treat a verdict as a prompt to look, not a decision.
-      </p>
+      </PageIntro>
       <KpiRow>
         <Kpi label="Growing" value={int(n('Growing', m.stages))} tone="licensed" help={LIFECYCLE_HELP.Growing} />
         <Kpi label="Declining" value={int(n('Declining', m.stages))} help={LIFECYCLE_HELP.Declining} />
@@ -218,7 +219,7 @@ export function LifecycleReview() {
                   key: 'verdict',
                   label: 'Verdict',
                   value: (r: AgentReview) => SEVERITY.indexOf(r.verdict),
-                  render: (r: AgentReview) => <b style={{ color: VERDICT_COLOR[r.verdict] }}>{r.verdict}</b>,
+                  render: (r: AgentReview) => <b style={{ color: VERDICT_TEXT[r.verdict] }}>{r.verdict}</b>,
                   align: 'left',
                   nowrap: true,
                   help: 'Sorted by urgency: Retire, Review, Watch, Promote, then Keep.',
@@ -232,7 +233,7 @@ export function LifecycleReview() {
                   key: 'risk',
                   label: 'Risk',
                   value: (r: AgentReview) => r.agent.riskScore,
-                  render: (r: AgentReview) => <span style={{ color: RISK_COLOR[r.agent.riskBand] }}>{r.agent.riskBand}</span>,
+                  render: (r: AgentReview) => <span style={{ color: RISK_TEXT[r.agent.riskBand] }}>{r.agent.riskBand}</span>,
                 },
                 text('owner', 'Owner', (r: AgentReview) => r.agent.ownerName),
                 date('last', 'Last activity', (r: AgentReview) => r.agent.lastActivityAt),

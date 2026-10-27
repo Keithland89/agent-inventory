@@ -690,7 +690,8 @@ export function Treemap(props: { items: BarItem[]; color: string; fmt?: Fmt; lab
               <span className={big ? 'tm-text' : 'sr-only'}>
                 <span className="tm-label">{t.label}</span>
                 <span className="tm-val">
-                  {fmt(t.value)} · {shareOf(t.value / total)}
+                  {fmt(t.value)}
+                  {r.w >= 120 && ` · ${shareOf(t.value / total)}`}
                 </span>
               </span>
             </li>

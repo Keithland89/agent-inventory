@@ -6,10 +6,11 @@ import { bars } from '../metrics/measures'
 import { BarList, Distribution } from '../ui/charts'
 import { DataTable } from '../ui/DataTable'
 import { int, regionLabel } from '../ui/format'
-import { Empty, Grid, Kpi, KpiRow, Panel } from '../ui/primitives'
+import { Empty, Grid, Kpi, KpiRow, Panel, Stack } from '../ui/primitives'
 import { COLOR } from '../ui/theme'
 import { LaneNotice } from './common'
 import { rowsOf, text, toDistribution } from './helpers'
+import { PageIntro } from '../ui/PageFilters'
 
 export function Foundry() {
   const { ds } = useData()
@@ -31,9 +32,9 @@ export function Foundry() {
 
   return (
     <>
-      <p className="page-intro">
+      <PageIntro>
         Azure AI resources and Foundry projects found through Azure Resource Manager, plus Power Platform agent flows. The agent slicers do not apply here.
-      </p>
+      </PageIntro>
       <LaneNotice problems={problems} />
       <KpiRow>
         <Kpi label="Azure AI resources" value={int(res.length)} tone="agent" unknown={resUnknown} />
@@ -54,18 +55,20 @@ export function Foundry() {
           <Panel title="Resource categories">
             {res.length ? <Distribution label="Azure AI resources by category" items={m.categories} fmt={int} /> : <Empty>No Azure AI resources.</Empty>}
           </Panel>
-          <Panel title="SKUs">
-            <BarList label="Azure AI resources by SKU" items={m.skus} color={COLOR.agent} fmt={int} limit={10} />
-          </Panel>
           <Panel title="Regions">
             <BarList label="Azure AI resources by region" items={m.regions} color={COLOR.licensed} fmt={int} limit={10} />
           </Panel>
-          <Panel title="Agent flows by state">
-            <BarList label="Agent flows by state" items={m.flowStates} color={COLOR.licensed} fmt={int} />
-          </Panel>
-          <Panel title="Agent flows by type">
-            <BarList label="Agent flows by type" items={m.flowTypes} color={COLOR.licensed} fmt={int} />
-          </Panel>
+          <Stack>
+            <Panel title="SKUs">
+              <BarList label="Azure AI resources by SKU" items={m.skus} color={COLOR.agent} fmt={int} limit={6} />
+            </Panel>
+            <Panel title="Agent flows by state">
+              <BarList label="Agent flows by state" items={m.flowStates} color={COLOR.licensed} fmt={int} />
+            </Panel>
+            <Panel title="Agent flows by type">
+              <BarList label="Agent flows by type" items={m.flowTypes} color={COLOR.licensed} fmt={int} />
+            </Panel>
+          </Stack>
           <Panel title="Azure AI estate" span={3}>
             <DataTable
               label="Azure AI estate"

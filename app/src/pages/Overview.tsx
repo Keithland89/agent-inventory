@@ -73,25 +73,41 @@ interface AttentionItem {
   label: string
   help: string
   to: string
+  /** Security exposure to fix first, or housekeeping that can wait for a review cycle. */
+  urgent?: boolean
 }
+
+const ATTENTION_GROUPS = [
+  { urgent: true, title: 'Fix first' },
+  { urgent: false, title: 'Tidy up' },
+] as const
 
 /** The briefing's second half: the few counts worth acting on, worst first, each linking to the agents behind it. */
 function AttentionList({ items, unknown }: { items: AttentionItem[]; unknown?: string }) {
   const shown = items.filter((i) => i.count > 0)
   return (
-    <Panel title="What needs attention" note="Worst first. Select a line to see the agents behind it.">
+    <Panel title="What needs attention" note="Security exposure first, then housekeeping. Select a line to see the agents behind it.">
       {shown.length ? (
-        <ul className="attention">
-          {shown.map((i) => (
-            <li key={i.id}>
-              <a href={i.to} title={i.help}>
-                <span className="at-count">{int(i.count)}</span>
-                <span className="at-label">{i.label}</span>
-                <span className="at-go" aria-hidden="true">›</span>
-              </a>
-            </li>
-          ))}
-        </ul>
+        ATTENTION_GROUPS.map((g) => {
+          const rows = shown.filter((i) => !!i.urgent === g.urgent)
+          if (!rows.length) return null
+          return (
+            <section key={g.title} className={`at-group${g.urgent ? ' urgent' : ''}`} aria-label={g.title}>
+              <h4>{g.title}</h4>
+              <ul className="attention">
+                {rows.map((i) => (
+                  <li key={i.id}>
+                    <a href={i.to} title={i.help}>
+                      <span className="at-count">{int(i.count)}</span>
+                      <span className="at-label">{i.label}</span>
+                      <span className="at-go" aria-hidden="true">›</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )
+        })
       ) : (
         <p className="panel-note">Nothing stands out: no agent fails a check.</p>
       )}
@@ -144,7 +160,7 @@ export function Overview() {
   const check = (id: string) => m.checks.find((c) => c.check.id === id)
   const fromCheck = (id: string): AttentionItem => {
     const c = check(id)!
-    return { id, count: c.count, label: c.check.label, help: c.check.help, to: href('inventory', 'all', { focus: id }) }
+    return { id, count: c.count, label: c.check.label, help: c.check.help, to: href('inventory', 'all', { focus: id }), urgent: id === 'high-no-owner' || id === 'shared-no-auth' }
   }
   const attention: AttentionItem[] = [
     fromCheck('high-no-owner'),
@@ -227,9 +243,9 @@ export function Overview() {
           actions={<Segmented label="Agent growth view" value={growth} options={GROWTH_VIEWS} onChange={setGrowth} />}
         >
           {growth === 'total' ? (
-            <LineChart label="Cumulative agents by month" data={m.cumulative} series={[{ name: 'Agents', color: COLOR.agent, fmt: int }]} xFmt={monthLabel} tickFmt={monthTick} height={220} area />
+            <LineChart label="Cumulative agents by month" data={m.cumulative} series={[{ name: 'Agents', color: COLOR.agent, fmt: int }]} xFmt={monthLabel} tickFmt={monthTick} height={340} area />
           ) : (
-            <ColumnChart label="New agents per month" data={m.created} series={[{ name: 'Agents created', color: COLOR.licensed, fmt: int }]} xFmt={monthLabel} tickFmt={monthTick} height={220} />
+            <ColumnChart label="New agents per month" data={m.created} series={[{ name: 'Agents created', color: COLOR.licensed, fmt: int }]} xFmt={monthLabel} tickFmt={monthTick} height={340} />
           )}
         </Panel>
         <AttentionList items={attention} unknown={creditsUnknown} />

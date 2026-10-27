@@ -9,6 +9,7 @@ import { dateLabel, dayLabel, dec1, int, monthLabel, pct } from '../ui/format'
 import { Grid, Kpi, KpiRow, Panel, Segmented, Select } from '../ui/primitives'
 import { COLOR, GROUP_COLOR, HABIT_COLOR } from '../ui/theme'
 import { date, num, rowsOf, text, toDistribution } from './helpers'
+import { PageFilters, PageIntro } from '../ui/PageFilters'
 
 const uniq = (v: string[]) => [...new Set(v.filter(Boolean))].sort()
 const options = (v: string[]) => v.map((x) => ({ value: x, label: x }))
@@ -98,7 +99,7 @@ export function Interactions() {
   const allSurfaces = [...surfaces.values()]
   return (
     <>
-      <div className="filters page-filters" role="group" aria-label="Page filters">
+      <PageFilters label="Page filters">
         <Select label="Surface platform" value={platform} onChange={setPlatform} options={options(uniq(allSurfaces.map((s) => s.platform)))} allLabel="All" />
         <Select label="Surface type" value={type} onChange={setType} options={options(uniq(allSurfaces.map((s) => s.type)))} allLabel="All" />
         <label className={`field ${from ? 'field-set' : ''}`}>
@@ -109,7 +110,7 @@ export function Interactions() {
           <span>To</span>
           <input type="date" value={to} min={dates.lo} max={dates.hi} onChange={(e) => setTo(e.target.value)} />
         </label>
-      </div>
+      </PageFilters>
       <KpiRow>
         <Kpi label="Interactions" value={int(rows.length)} tone="agent" help="Audited Copilot interactions, one per prompt or agent turn." />
         <Kpi label="Sessions" value={int(I.sessions(rows))} />
@@ -131,7 +132,7 @@ export function Interactions() {
           actions={<Segmented label="Trend view" value={trendView} options={TREND_VIEWS} onChange={setTrendView} />}
         >
           {trendView === 'day' ? (
-            <LineChart label="Interactions per day" data={m.trend} series={[{ name: 'Interactions', color: COLOR.agent, fmt: int }]} xFmt={dayLabel} area />
+            <LineChart label="Interactions per day" data={m.trend} series={[{ name: 'Interactions', color: COLOR.agent, fmt: int }]} xFmt={dayLabel} height={330} area />
           ) : (
             <ColumnChart
               label="Sessions and interactions by month"
@@ -141,6 +142,7 @@ export function Interactions() {
                 { name: 'Interactions', color: COLOR.agent, fmt: int },
               ]}
               xFmt={monthLabel}
+              height={330}
             />
           )}
         </Panel>
@@ -214,9 +216,9 @@ export function ChatCowork() {
 
   return (
     <>
-      <p className="page-intro">
+      <PageIntro>
         Every Copilot surface in the audit log, grouped by product. Agent filters don't apply here: this view covers Copilot Chat and Cowork as well as agents.
-      </p>
+      </PageIntro>
       <KpiRow>
         {(['Copilot Chat', 'In-app Copilot', 'Cowork', 'Agents'] as AppGroup[]).map((g) => (
           <Kpi key={g} label={`${g} users`} value={int(get(g)?.users ?? 0)} sub={`${int(get(g)?.turns ?? 0)} turns · ${int(get(g)?.sessions ?? 0)} sessions`} tone="neutral" />
@@ -248,12 +250,12 @@ export function ChatCowork() {
           />
         </Panel>
       </Grid>
-      <div className="filters page-filters" role="group" aria-label="Product filter">
+      <PageFilters label="Product filter">
         <Select label="Product" value={group} onChange={(v) => setGroup(v as AppGroup | '')} options={options([...APP_GROUPS])} allLabel="All products" />
-      </div>
+      </PageFilters>
       <Grid cols={3}>
         <Panel title="Split by app" note={group ? `Client apps in ${group}.` : 'Client apps, coloured by product group.'}>
-          <BarList label="Turns by client app" items={m.apps} color={COLOR.neutral} fmt={int} limit={15} />
+          <BarList label="Turns by client app" items={m.apps} color={COLOR.neutral} fmt={int} limit={9} />
         </Panel>
         <Panel title="Habit cohorts" help="Average active days per active week: 4 or more is a daily habit, 2 or more is regular; otherwise occasional, or one-off for a single day.">
           <Distribution label="Users by habit cohort" items={HABITS.map((h) => ({ label: h, value: m.habits[h], color: HABIT_COLOR[h] }))} fmt={int} />

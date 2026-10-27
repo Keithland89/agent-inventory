@@ -11,6 +11,7 @@ import { Grid, Kpi, KpiRow, Panel, Select } from '../ui/primitives'
 import { COLOR } from '../ui/theme'
 import { LaneNotice } from './common'
 import { date, num, rowsOf, text, toDistribution } from './helpers'
+import { PageFilters, PageIntro } from '../ui/PageFilters'
 
 const uniq = (v: string[]) => [...new Set(v.filter(Boolean))].sort().map((x) => ({ value: x, label: x }))
 
@@ -34,17 +35,17 @@ export function ShadowAI() {
   return (
     <>
       {hasRows && (
-        <div className="filters page-filters" role="group" aria-label="Page filters">
+        <PageFilters label="Page filters">
           <Select label="Layer" value={layer} onChange={setLayer} options={uniq(ds.shadowSignals.map((s) => s.layer))} allLabel="All" />
           <Select label="Posture" value={posture} onChange={setPosture} options={uniq(ds.shadowSignals.map((s) => s.posture))} allLabel="All" />
-        </div>
+        </PageFilters>
       )}
       {problem ? (
         <LaneNotice problems={[problem]} />
       ) : (
-        <p className="page-intro">
+        <PageIntro>
           {found === 0 ? `None of the ${watched} watched AI tools were found on managed devices.` : `${found} of ${watched} watched AI tools found on managed devices.`}
-        </p>
+        </PageIntro>
       )}
       <KpiRow>
         <Kpi

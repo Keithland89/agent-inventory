@@ -322,7 +322,7 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding-block: 16px 12px;
+  padding-block: 12px 10px;
 }
 .page-head h2 {
   font-family: var(--font-display);
@@ -337,6 +337,10 @@ a {
 .page-head p {
   margin-top: 2px;
   color: var(--ink-2);
+}
+.intro-slot:empty,
+.page-head:has(.intro-slot > *) .tab-intro {
+  display: none;
 }
 
 .filters {
@@ -424,12 +428,64 @@ a {
   color: inherit;
 }
 
+/* The tab's filters and the view's own filters share one dock that stays at the top while the page scrolls. */
+.dock-sentinel {
+  height: 1px;
+  margin-bottom: -1px;
+}
+.filter-dock {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  transition: box-shadow 0.15s ease;
+}
+.filter-dock:not(.has-agent-filters):not(:has(.page-filter-slot > *)) {
+  display: none;
+}
+.toolbar:has(+ .dock-sentinel + .filter-dock:is(.has-agent-filters, :has(.page-filter-slot > *))) {
+  border-bottom-color: transparent;
+}
+.filter-dock.stuck {
+  box-shadow: 0 8px 16px -14px rgb(23 23 60 / 0.35);
+}
+.filter-dock > .filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 6px 20px;
+  padding-block: 6px 8px;
+}
+.filter-dock .filter-summary {
+  margin-left: auto;
+  min-height: 32px;
+}
+.dock-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 12px;
+}
+.page-filter-slot:empty {
+  display: none;
+}
+.page-filter-slot .page-filters {
+  width: auto;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+.dock-row:has(.filter-fields + .page-filter-slot > *) {
+  column-gap: 20px;
+}
+
 .main {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding-block: 20px 32px;
+  gap: 12px;
+  padding-block: 14px 24px;
 }
 .main:focus {
   outline: none;
@@ -454,7 +510,7 @@ a {
   appearance: none;
   height: 32px;
   min-width: 112px;
-  max-width: 220px;
+  max-width: 168px;
   padding: 0 30px 0 10px;
   border: 1px solid var(--line);
   border-radius: 7px;
@@ -821,8 +877,8 @@ a.kpi-value:focus-visible {
 }
 .hero-parts {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-  gap: 10px 18px;
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+  gap: 10px 14px;
   margin: auto 0 0;
   padding: 10px 0 0;
   list-style: none;
@@ -941,11 +997,25 @@ a.kpi-value:focus-visible {
 .at-go {
   color: var(--ink-3);
 }
+.at-group + .at-group {
+  margin-top: 10px;
+}
+.at-group h4 {
+  margin-bottom: 2px;
+  color: var(--ink-3);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.at-group.urgent h4,
+.at-group.urgent .at-count {
+  color: var(--bad);
+}
 /* ---------- Panels and grids ---------- */
 
 .grid {
   display: grid;
-  gap: 16px;
+  gap: 12px;
   align-items: stretch;
 }
 .grid-2 {
@@ -966,7 +1036,7 @@ a.kpi-value:focus-visible {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  padding: 16px 18px 18px;
+  padding: 14px 16px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
@@ -977,7 +1047,7 @@ a.kpi-value:focus-visible {
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 .panel-head h3 {
   display: flex;
@@ -988,6 +1058,17 @@ a.kpi-value:focus-visible {
 .panel-body {
   flex: 1;
   min-width: 0;
+}
+
+/* Short panels stacked in one cell beside a tall neighbour; the last one takes up any slack. */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.stack > .panel:last-child {
+  flex: 1;
 }
 .panel-body:has(> .donut:only-child, > .funnel:only-child, > .gauge:only-child) {
   display: grid;
@@ -1282,9 +1363,10 @@ a.kpi-value:focus-visible {
   min-width: 0;
   font-size: 13px;
   line-height: 1.25;
-  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.bl-label small {
   white-space: nowrap;
-  text-overflow: ellipsis;
 }
 .bl-label small {
   color: var(--ink-3);
@@ -1570,6 +1652,8 @@ a.kpi-value:focus-visible {
   opacity: 0.85;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Gauge */
@@ -1627,12 +1711,10 @@ a.kpi-value:focus-visible {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 .table-scroll {
   overflow-x: auto;
-  border: 1px solid var(--line);
-  border-radius: 8px;
 }
 .table-wrap table {
   width: 100%;
@@ -1643,6 +1725,7 @@ a.kpi-value:focus-visible {
 }
 .table-wrap th {
   padding: 0;
+  border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
   background: var(--surface-2);
   text-align: left;
@@ -1653,19 +1736,25 @@ a.kpi-value:focus-visible {
   align-items: flex-end;
   gap: 4px;
   width: 100%;
-  padding: 9px 12px;
+  padding: 7px 10px;
   border: 0;
   background: none;
   color: var(--ink-2);
   font-size: 12.5px;
   font-weight: 600;
   line-height: 1.3;
+  white-space: nowrap;
   text-align: left;
   cursor: pointer;
 }
 .table-wrap th.num button {
   justify-content: flex-end;
   text-align: right;
+}
+.th-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .table-wrap th button:hover {
   color: var(--ink);
@@ -1678,15 +1767,18 @@ a.kpi-value:focus-visible {
   flex: none;
   width: 1ch;
   color: var(--ink-3);
-  opacity: 0.45;
+  opacity: 0;
+}
+.table-wrap th button:is(:hover, :focus-visible) .sort {
+  opacity: 0.7;
 }
 .sort.on {
   color: var(--accent);
   opacity: 1;
 }
 .table-wrap td {
-  height: 40px;
-  padding: 7px 12px;
+  height: 34px;
+  padding: 5px 10px;
   border-bottom: 1px solid var(--line-2);
   vertical-align: middle;
   overflow: hidden;
@@ -1716,9 +1808,26 @@ a.kpi-value:focus-visible {
 .table-wrap tbody tr:hover td {
   background: var(--hover);
 }
-.table-wrap > .more {
-  display: block;
-  margin: 10px auto 0;
+.table-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 16px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line-2);
+  color: var(--ink-3);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+.table-foot > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}
+.table-foot small {
+  margin-left: auto;
+  font-size: inherit;
 }
 
 .tree {
@@ -1807,7 +1916,6 @@ a.kpi-value:focus-visible {
 .cell-bar > i > span {
   display: block;
   height: 100%;
-  min-width: 2px;
   border-radius: 2px;
   opacity: 0.85;
 }
@@ -2136,6 +2244,14 @@ a.kpi-value:focus-visible {
   .filter-fields:not(.open) {
     display: none;
   }
+  .filter-dock > .filters {
+    gap: 8px;
+  }
+  .filter-dock .filter-summary {
+    order: -1;
+    width: 100%;
+    margin-left: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2249,10 +2365,8 @@ a.kpi-value:focus-visible {
 .kv-row {
   display: contents;
 }
-.page-intro {
-  max-width: 82ch;
-  margin-bottom: 14px;
-  color: var(--ink-2);
+.view-intro {
+  max-width: 96ch;
 }
 .foot-note {
   margin-top: 12px;
@@ -2610,5 +2724,17 @@ a.kpi-value:focus-visible {
 @media (max-width: 640px) {
   .band-actions .source-dates {
     display: none;
+  }
+}
+
+/* On phones a pinned dock would eat a quarter of the screen, so it scrolls away with the page. */
+@media (max-width: 600px) {
+  .filter-dock {
+    position: static;
+  }
+  /* View tabs wrap rather than scroll sideways, so every view stays visible. */
+  .toolbar-inner > .segmented {
+    flex-wrap: wrap;
+    overflow-x: visible;
   }
 }

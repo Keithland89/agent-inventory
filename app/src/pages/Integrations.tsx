@@ -4,11 +4,12 @@ import type { Agent, KnowledgeSource } from '../data/types'
 import { A, C, EXTERNAL_TYPES, K, N, bars, distinct, div, freshness, groupBy, sum } from '../metrics/measures'
 import { BarList, ColumnChart } from '../ui/charts'
 import { DataTable, type Column } from '../ui/DataTable'
-import { int, pct } from '../ui/format'
-import { Empty, Grid, Kpi, KpiRow, Panel } from '../ui/primitives'
+import { connectorLabel, int, pct } from '../ui/format'
+import { Empty, Grid, Kpi, KpiRow, Panel, Stack } from '../ui/primitives'
 import { COLOR } from '../ui/theme'
 import { StatList } from './common'
 import { agentCol, bool, num, rowsOf, text } from './helpers'
+import { PageIntro } from '../ui/PageFilters'
 
 const nameOf = (a: Agent) => ({ key: a.key, name: a.name })
 
@@ -52,11 +53,11 @@ export function Tools() {
     const mcp = [...groupBy(connectors, (c) => (c.isMcp ? 'MCP servers' : 'Other connectors'))].map(([key, rs]) => ({
       id: key,
       data: { key, label: key, links: rs.length } as ConnectorRow,
-      children: bars(rs, (c) => c.connectorId).map((b) => ({ id: `${key}:${b.key}`, data: { key: b.key, label: b.label, links: b.value } })),
+      children: bars(rs, (c) => connectorLabel(c.connectorId)).map((b) => ({ id: `${key}:${b.key}`, data: { key: b.key, label: b.label, links: b.value } })),
     }))
     return {
       channels: [...channels].map(([k, v]) => ({ key: k, label: k, value: v })).sort((a, b) => b.value - a.value),
-      top: bars(connectors, (c) => c.connectorId),
+      top: bars(connectors, (c) => connectorLabel(c.connectorId)),
       mcp,
       surface: rowsOf(
         agents.filter((a) => a.toolCount + a.connectorCount + a.knowledgeCount + a.connectedAgentCount > 0),
@@ -67,7 +68,7 @@ export function Tools() {
 
   return (
     <>
-      <p className="page-intro">Connectors, Model Context Protocol servers, channels and multi-agent connections. Knowledge & grounding shows what agents read.</p>
+      <PageIntro>Connectors, Model Context Protocol servers, channels and multi-agent connections. Knowledge & grounding shows what agents read.</PageIntro>
       <KpiRow>
         <Kpi label="Connector links" value={int(C.links(connectors))} tone="agent" />
         <Kpi label="Distinct connectors" value={int(C.distinct(connectors))} />
@@ -78,35 +79,37 @@ export function Tools() {
       </KpiRow>
       <Grid cols={3}>
         <Panel title="Most used connectors">
-          <BarList label="Connector links by connector" items={m.top} color={COLOR.agent} fmt={int} limit={12} />
+          <BarList label="Connector links by connector" items={m.top} color={COLOR.agent} fmt={int} limit={8} />
         </Panel>
         <Panel title="Channels">
-          <BarList label="Agents by channel" items={m.channels} color={COLOR.licensed} fmt={int} limit={12} />
+          <BarList label="Agents by channel" items={m.channels} color={COLOR.licensed} fmt={int} limit={8} />
         </Panel>
-        <StatList
-          title="Component footprint"
-          items={[
-            ['Topics', int(A.topics(agents))],
-            ['Tools', int(A.tools(agents))],
-            ['Knowledge sources', int(A.knowledge(agents))],
-            ['Connector links', int(C.links(connectors))],
-            ['Multi-agent links', int(A.multiAgentLinks(agents))],
-          ]}
-        />
-        <Panel title="MCP server usage">
-          {m.mcp.length ? (
-            <DataTable
-              label="Connector links by MCP status"
-              rows={m.mcp}
-              childNoun="connectors"
-              initialSort={{ key: 'links', desc: true }}
-              columns={[text('label', 'Connector', (r: ConnectorRow) => r.label, '60%'), num('links', 'Links', (r: ConnectorRow) => r.links, { bar: COLOR.agent })]}
-            />
-          ) : (
-            <Empty>No connector links in view.</Empty>
-          )}
-        </Panel>
-        <Panel title="Agents with the largest tool surface" span={2}>
+        <Stack>
+          <StatList
+            title="Component footprint"
+            items={[
+              ['Topics', int(A.topics(agents))],
+              ['Tools', int(A.tools(agents))],
+              ['Knowledge sources', int(A.knowledge(agents))],
+              ['Connector links', int(C.links(connectors))],
+              ['Multi-agent links', int(A.multiAgentLinks(agents))],
+            ]}
+          />
+          <Panel title="MCP server usage">
+            {m.mcp.length ? (
+              <DataTable
+                label="Connector links by MCP status"
+                rows={m.mcp}
+                childNoun="connectors"
+                initialSort={{ key: 'links', desc: true }}
+                columns={[text('label', 'Connector', (r: ConnectorRow) => r.label, '60%'), num('links', 'Links', (r: ConnectorRow) => r.links, { bar: COLOR.agent })]}
+              />
+            ) : (
+              <Empty>No connector links in view.</Empty>
+            )}
+          </Panel>
+        </Stack>
+        <Panel title="Agents with the largest tool surface" span={3}>
           <DataTable
             label="Agents with the largest tool surface"
             rows={m.surface}
@@ -171,7 +174,7 @@ export function KnowledgeGrounding() {
 
   return (
     <>
-      <p className="page-intro">What every agent is connected to: the only integration surface Agent Builder agents expose.</p>
+      <PageIntro>What every agent is connected to: the only integration surface Agent Builder agents expose.</PageIntro>
       <KpiRow>
         <Kpi label="Knowledge sources" value={int(K.sources(knowledge))} tone="agent" />
         <Kpi label="Grounded agents" value={int(grounded)} tone="licensed" />
@@ -301,6 +304,7 @@ export function KnowledgeSources() {
           <DataTable
             label="Most widely shared sources"
             rows={rowsOf(m.locators, (r) => r.locator)}
+            pageSize={6}
             search={(r) => r.locator}
             initialSort={{ key: 'agents', desc: true }}
             columns={[

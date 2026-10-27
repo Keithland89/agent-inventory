@@ -15,12 +15,19 @@ export interface Column<T> {
   help?: string
   /** Keeps short values such as dates and verdicts whole instead of truncating them. */
   nowrap?: boolean
+  /** Keeps the column even when every row is blank or zero. */
+  keep?: boolean
 }
 
 export interface TableRow<T> {
   id: string
   data: T
   children?: TableRow<T>[]
+}
+
+/** Blank, a dash, zero or not a number: nothing worth a column. */
+function blank(v: number | string) {
+  return typeof v === 'number' ? !Number.isFinite(v) || v === 0 : !v.trim() || v === DASH || v === '-' || v === '–'
 }
 
 function cmp(a: number | string, b: number | string) {
@@ -47,10 +54,18 @@ export function DataTable<T>(props: {
   minWidth?: number
 }) {
   const [sort, setSort] = useState(props.initialSort ?? { key: props.columns[0].key, desc: false })
+  const pageSize = props.pageSize ?? 12
   const [open, setOpen] = useState<Set<string>>(new Set())
-  const [limit, setLimit] = useState(props.pageSize ?? 12)
+  const [limit, setLimit] = useState(pageSize)
   const [q, setQ] = useState('')
-  const col = props.columns.find((c) => c.key === sort.key) ?? props.columns[0]
+  // Columns that are blank for every row only push the useful ones off the edge, so they drop out with a note saying which.
+  const { columns, hidden } = useMemo(() => {
+    const all = props.rows.flatMap((r) => [r, ...(r.children ?? [])])
+    if (all.length < 2) return { columns: props.columns, hidden: [] as string[] }
+    const drop = props.columns.filter((c, i) => i > 0 && !c.keep && all.every((r) => blank(c.value(r.data))))
+    return { columns: props.columns.filter((c) => !drop.includes(c)), hidden: drop.map((c) => c.label) }
+  }, [props.columns, props.rows])
+  const col = columns.find((c) => c.key === sort.key) ?? columns[0]
 
   const sorted = useMemo(() => {
     const s = (rs: TableRow<T>[]): TableRow<T>[] =>
@@ -73,12 +88,12 @@ export function DataTable<T>(props: {
 
   const maxOf = useMemo(() => {
     const m: Record<string, number> = {}
-    for (const c of props.columns) {
+    for (const c of columns) {
       if (!c.bar) continue
       m[c.key] = Math.max(0, ...props.rows.map((r) => Number(c.value(r.data))).filter(Number.isFinite))
     }
     return m
-  }, [props.columns, props.rows])
+  }, [columns, props.rows])
 
   const hasKids = props.rows.some((r) => r.children?.length)
   const expandAll = !!q.trim()
@@ -92,7 +107,7 @@ export function DataTable<T>(props: {
         return (
           <span className="cell-bar">
             <i>
-              <span style={{ width: `${(v / maxOf[c.key]) * 100}%`, background: c.bar }} />
+              <span style={{ width: `${(v / maxOf[c.key]) * 100}%`, minWidth: v > 0 ? 2 : 0, background: c.bar }} />
             </i>
             <b>{text}</b>
           </span>
@@ -113,7 +128,7 @@ export function DataTable<T>(props: {
           tabIndex={props.onRowClick ? 0 : undefined}
           onKeyDown={props.onRowClick ? (e) => e.key === 'Enter' && props.onRowClick!(r.data) : undefined}
         >
-          {props.columns.map((c, ci) => (
+          {columns.map((c, ci) => (
             <td
               key={c.key}
               className={`${c.align === 'right' || (c.align !== 'left' && ci > 0 && typeof c.value(r.data) === 'number') ? 'num' : ''} ${c.nowrap ? 'keep' : ''}`}
@@ -183,15 +198,15 @@ export function DataTable<T>(props: {
         <Empty>{props.rows.length ? 'No rows match your search.' : (props.empty ?? 'Nothing to list for these filters.')}</Empty>
       ) : (
         <div className="table-scroll">
-          <table aria-label={props.label} style={{ minWidth: props.minWidth ?? Math.max(640, props.columns.length * 110) }}>
+          <table aria-label={props.label} style={{ minWidth: props.minWidth ?? columns.length * 96 }}>
             <colgroup>
-              {props.columns.map((c) => (
+              {columns.map((c) => (
                 <col key={c.key} style={c.width ? { width: c.width } : undefined} />
               ))}
             </colgroup>
             <thead>
               <tr>
-                {props.columns.map((c, ci) => {
+                {columns.map((c, ci) => {
                   const active = sort.key === c.key
                   const numeric = ci > 0 && c.align !== 'left' && props.rows[0] && typeof c.value(props.rows[0].data) === 'number'
                   return (
@@ -200,13 +215,13 @@ export function DataTable<T>(props: {
                       scope="col"
                       className={numeric || c.align === 'right' ? 'num' : ''}
                       aria-sort={active ? (sort.desc ? 'descending' : 'ascending') : 'none'}
-                      title={c.help}
+                      title={c.help ?? c.label}
                     >
                       <button
                         type="button"
                         onClick={() => setSort({ key: c.key, desc: active ? !sort.desc : ci > 0 })}
                       >
-                        {c.label}
+                        <span className="th-label">{c.label}</span>
                         <span className={`sort ${active ? 'on' : ''}`} aria-hidden="true">
                           {active ? (sort.desc ? '↓' : '↑') : '↕'}
                         </span>
@@ -220,10 +235,25 @@ export function DataTable<T>(props: {
           </table>
         </div>
       )}
-      {sorted.length > limit && (
-        <button type="button" className="link-btn more" onClick={() => setLimit((l) => l + 25)}>
-          Show more ({sorted.length - limit} remaining)
-        </button>
+      {(sorted.length > pageSize || hidden.length > 0) && (
+        <div className="table-foot">
+          {sorted.length > pageSize && (
+            <span>
+              {Math.min(limit, sorted.length).toLocaleString()} of {sorted.length.toLocaleString()}
+              {sorted.length > limit && (
+                <button type="button" className="link-btn" onClick={() => setLimit((l) => l + 25)}>
+                  Show {Math.min(25, sorted.length - limit)} more
+                </button>
+              )}
+              {limit > pageSize && (
+                <button type="button" className="link-btn" onClick={() => setLimit(pageSize)}>
+                  Show fewer
+                </button>
+              )}
+            </span>
+          )}
+          {hidden.length > 0 && <small>No data in these rows for {hidden.join(', ')}</small>}
+        </div>
       )}
     </div>
   )

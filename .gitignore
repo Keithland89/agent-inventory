@@ -36,3 +36,6 @@ work/flow-*.json
 
 # Local design-review snapshots (impeccable skill)
 app/.impeccable/
+
+# Local design-critique snapshots from the impeccable skill
+.impeccable/

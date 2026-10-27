@@ -57,6 +57,11 @@ export function Panel(props: {
   )
 }
 
+/** Short panels stacked in one grid cell, so they sit beside a tall neighbour instead of stretching to match it. */
+export function Stack({ children, span }: { children: ReactNode; span?: 1 | 2 | 3 }) {
+  return <div className={`stack span-${span ?? 1}`}>{children}</div>
+}
+
 export interface KpiProps {
   label: string
   value: string

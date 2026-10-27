@@ -3,6 +3,7 @@ import { useData } from '../data/store'
 import { laneProblem, type LaneProblem, type ProblemKind } from '../metrics/coverage'
 import { href } from '../routes'
 import { Panel } from '../ui/primitives'
+import { PageIntro } from '../ui/PageFilters'
 
 /** An agent name that opens the drill-in drawer. */
 export function AgentName({ agentKey, name }: { agentKey: string; name: string }) {
@@ -50,7 +51,7 @@ export function NamesNote() {
 }
 
 export function Intro({ children }: { children: ReactNode }) {
-  return <p className="page-intro">{children}</p>
+  return <PageIntro>{children}</PageIntro>
 }
 
 const HEADLINE: Record<ProblemKind, string> = { failed: "didn't load", absent: "isn't in the sample", empty: 'returned no rows' }

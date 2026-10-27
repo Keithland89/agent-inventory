@@ -19,6 +19,7 @@ import { DataSourcesGaps, LaneStatusView } from './pages/Setup'
 import { href, NAV_GROUPS, TABS, useRoute, type Route, type TabId } from './routes'
 import { DataSourceDialog } from './ui/DataSourceDialog'
 import { dateLabel, int } from './ui/format'
+import { FilterSlot, IntroSlot } from './ui/filterSlot'
 import { Segmented, Select } from './ui/primitives'
 
 function Page({ route }: { route: Route }) {
@@ -56,20 +57,38 @@ const UNFILTERED_VIEWS = new Set(['inventory/sharepoint', 'activity/chat', 'acti
 const FILTER_LABELS = { env: 'Environment', platform: 'Platform', riskBand: 'Risk band', origin: 'Agent origin' } as const
 type FilterKey = keyof typeof FILTER_LABELS
 
-function FilterBar({ route }: { route: Route }) {
+function FilterBar({ route, slotRef }: { route: Route; slotRef: (el: HTMLDivElement | null) => void }) {
   const { ds, scope, filters, setFilter, resetFilters } = useData()
   const [open, setOpen] = useState(false)
-  if (!route.tab.agentFilters || UNFILTERED_VIEWS.has(`${route.tab.id}/${route.view}`)) return null
+  const [stuck, setStuck] = useState(false)
+  const sentinel = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = sentinel.current
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    const io = new IntersectionObserver(([e]) => setStuck(!e.isIntersecting))
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+  const agentFilters = !!route.tab.agentFilters && !UNFILTERED_VIEWS.has(`${route.tab.id}/${route.view}`)
   const set = (Object.keys(FILTER_LABELS) as FilterKey[]).filter((k) => filters[k])
   const through = lastDataDay(ds.interactions)
   return (
-    <div className="filters" role="group" aria-label="Agent filters">
-      <div id="agent-filter-fields" className={`filter-fields ${open ? 'open' : ''}`}>
+    <>
+    <div ref={sentinel} className="dock-sentinel" aria-hidden="true" />
+    <div className={`filter-dock${stuck ? ' stuck' : ''}${agentFilters ? ' has-agent-filters' : ''}`}>
+    <div className="filters">
+      <div className="dock-row">
+      {agentFilters && (
+      <div id="agent-filter-fields" className={`filter-fields ${open ? 'open' : ''}`} role="group" aria-label="Agent filters">
         <Select label="Environment" value={filters.env} onChange={(v) => setFilter('env', v)} options={opts(uniq(ds.agents.map((a) => a.envName)))} allLabel="All" />
         <Select label="Platform" value={filters.platform} onChange={(v) => setFilter('platform', v)} options={opts(uniq(ds.agents.map((a) => a.platform)))} allLabel="All" />
         <Select label="Risk band" value={filters.riskBand} onChange={(v) => setFilter('riskBand', v)} options={opts(RISK_ORDER)} allLabel="All" />
         <Select label="Agent origin" value={filters.origin} onChange={(v) => setFilter('origin', v)} options={opts(uniq(ds.agents.map((a) => a.agentOrigin)))} allLabel="All" />
       </div>
+      )}
+      <div ref={slotRef} className="page-filter-slot" />
+      </div>
+      {agentFilters && (
       <div className="filter-summary">
         <button type="button" className="filter-toggle" aria-expanded={open} aria-controls="agent-filter-fields" onClick={() => setOpen((o) => !o)}>
           <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
@@ -106,7 +125,10 @@ function FilterBar({ route }: { route: Route }) {
           </ul>
         )}
       </div>
+      )}
     </div>
+    </div>
+    </>
   )
 }
 
@@ -204,6 +226,8 @@ export default function App() {
   const [askOpen, setAskOpen] = useState(false)
   const [menuFor, setMenuFor] = useState<string | null>(null)
   const menuBtn = useRef<HTMLButtonElement>(null)
+  const [slot, setSlot] = useState<HTMLDivElement | null>(null)
+  const [introSlot, setIntroSlot] = useState<HTMLDivElement | null>(null)
   const view = route.tab.views.find((v) => v.id === route.view)
   const lanesWithData = ds.lanes.filter((l) => l.rows > 0).length
   // The drawer belongs to the page it was opened on, so navigating closes it without an effect.
@@ -277,21 +301,26 @@ export default function App() {
                   {route.tab.label}
                   {view && route.tab.views.length > 1 && <span className="crumb"> · {view.label}</span>}
                 </h2>
-                <p>{route.tab.intro}</p>
+                <p className="tab-intro">{route.tab.intro}</p>
+                <div ref={setIntroSlot} className="intro-slot" />
               </div>
               {route.tab.views.length > 1 && (
                 <Segmented label={`${route.tab.label} views`} value={route.view} options={route.tab.views} onChange={(v) => go(route.tab.id, v)} />
               )}
             </div>
-            <FilterBar route={route} />
           </div>
+          <FilterBar route={route} slotRef={setSlot} />
           <main id="main" className="main" tabIndex={-1}>
             {notice && (
               <p className="notice" role="status">
                 {notice}
               </p>
             )}
-            <Page route={route} />
+            <FilterSlot.Provider value={slot}>
+              <IntroSlot.Provider value={introSlot}>
+                <Page route={route} />
+              </IntroSlot.Provider>
+            </FilterSlot.Provider>
           </main>
           <footer className="foot">
             {ds.mode === 'sample'
