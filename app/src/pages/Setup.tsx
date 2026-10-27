@@ -8,6 +8,7 @@ import { dec1, int } from '../ui/format'
 import { Grid, Kpi, KpiRow, Panel } from '../ui/primitives'
 import { COLOR } from '../ui/theme'
 import { date, num, rowsOf, text, toDistribution } from './helpers'
+import { PageFilters, PageIntro } from '../ui/PageFilters'
 
 const VERDICT_COLOR: Record<string, string> = { Working: COLOR.licensed, Blocked: COLOR.unlicensed }
 
@@ -16,7 +17,7 @@ export function DataSourcesGaps() {
   const verdicts = bars(API_COVERAGE, (r) => r.verdict)
   return (
     <>
-      <p className="page-intro">What the platform APIs expose, what they do not, and the gaps that still need a workaround.</p>
+      <PageIntro>What the platform APIs expose, what they do not, and the gaps that still need a workaround.</PageIntro>
       <KpiRow>
         <Kpi label="Agent 365 gaps" value={int(AGENT_GAPS.length)} tone="unlicensed" />
         <Kpi label="APIs tested" value={int(API_COVERAGE.length)} />
@@ -129,12 +130,12 @@ export function LaneStatusView() {
   const withData = ds.lanes.filter((l) => l.state === 'ok' || l.state === 'sample').length
   return (
     <>
-      <p className="page-intro">
+      <PageIntro>
         {ds.mode === 'live'
           ? `Live data. ${withData} of ${ds.lanes.length} lanes returned rows. Each lane loads on its own, so one failing lane leaves the rest of the app working.`
           : 'Anonymised sample data. Live data needs the app to run inside the Copilot Managed Apps player.'}
-      </p>
-      <div className="filters page-filters" role="group" aria-label="Data mode">
+      </PageIntro>
+      <PageFilters label="Data mode">
         <button type="button" className="btn" disabled={!hostAvailable || loading || ds.mode === 'live'} onClick={() => switchMode('live')}>
           Use live data
         </button>
@@ -144,7 +145,7 @@ export function LaneStatusView() {
         <button type="button" className="btn" disabled={loading} onClick={reload}>
           Reload
         </button>
-      </div>
+      </PageFilters>
       <Grid cols={2}>
         <Panel title="Data lanes" span={2} note={ds.appEnvironment ? 'Dataverse lanes read the environment the app is deployed to.' : undefined}>
           <LaneTable lanes={ds.lanes} />

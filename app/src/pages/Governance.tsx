@@ -12,6 +12,7 @@ import { COLOR, RISK_COLOR } from '../ui/theme'
 import { StatList } from './common'
 import { useScrollOnParam } from '../ui/scroll'
 import { agentCol, num, rowsOf, text, toDistribution } from './helpers'
+import { PageIntro } from '../ui/PageFilters'
 
 interface FactorRow {
   order: number
@@ -57,7 +58,7 @@ export function Governance() {
 
   return (
     <>
-      <p className="page-intro">Exposure posture: sharing, authentication, quarantine and the heuristic risk score.</p>
+      <PageIntro>Exposure posture: sharing, authentication, quarantine and the heuristic risk score.</PageIntro>
       <KpiRow>
         <Kpi label="High risk" value={int(A.high(agents))} tone="unlicensed" help="Risk score of 5 or more." href={href('governance', undefined, { band: 'High' })} />
         <Kpi label="Medium risk" value={int(A.medium(agents))} help="Risk score of 3 or 4." href={href('governance', undefined, { band: 'Medium' })} />
@@ -104,7 +105,7 @@ export function Governance() {
           title="Agents to review"
           span={3}
           note={band === '' ? 'High and Medium risk, highest score first.' : undefined}
-          actions={<Select label="Risk band" value={band} onChange={setBand} options={BAND_FILTER} />}
+          actions={<Select label="Show" value={band} onChange={setBand} options={BAND_FILTER} />}
         >
           {risky.length ? (
             <DataTable

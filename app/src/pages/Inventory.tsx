@@ -4,13 +4,14 @@ import type { Agent } from '../data/types'
 import { A, ACTIVITY_ORDER, bars, groupBy, perAgentUsage } from '../metrics/measures'
 import { BarList, ColumnChart, Treemap } from '../ui/charts'
 import { DataTable } from '../ui/DataTable'
-import { dec1, int, regionLabel } from '../ui/format'
+import { dec1, int, knowledgeLabel, regionLabel } from '../ui/format'
 import { Grid, Kpi, KpiRow, Panel, Select } from '../ui/primitives'
 import { ACTIVITY_COLOR, COLOR, PALETTE } from '../ui/theme'
 import { ATTENTION, attentionCheck } from '../metrics/attention'
 import { useParam } from '../routes'
 import { NamesNote } from './common'
 import { agentCol, bool, date, num, rowsOf, text } from './helpers'
+import { PageFilters, PageIntro } from '../ui/PageFilters'
 
 const nameOf = (a: Agent) => ({ key: a.key, name: a.name })
 const search = (a: Agent) => `${a.name} ${a.envName} ${a.platform} ${a.createdByName} ${a.ownerName}`
@@ -42,11 +43,11 @@ export function AllAgents() {
 
   return (
     <>
-      <div className="filters page-filters" role="group" aria-label="Page filters">
+      <PageFilters label="Page filters">
         <Select label="Activity status" value={status} onChange={setStatus} options={ACTIVITY_ORDER.map((s) => ({ value: s, label: s }))} allLabel="All" />
         <Select label="Needs attention" value={check ? focus : ''} onChange={setFocus} options={ATTENTION.map((c) => ({ value: c.id, label: c.label }))} allLabel="Any" />
-      </div>
-      {check && <p className="page-intro">{check.help}</p>}
+      </PageFilters>
+      {check && <PageIntro>{check.help}</PageIntro>}
       <KpiRow>
         <Kpi label="Total agents" value={int(agents.length)} tone="agent" />
         <Kpi label="Agents at risk" value={int(A.atRisk(agents))} tone="unlicensed" help="Agents in the Medium or High risk band." />
@@ -91,7 +92,7 @@ export function AllAgents() {
             initialSort={{ key: 'ktypes', desc: true }}
             columns={[
               agentCol(nameOf),
-              text('kinds', 'Knowledge types', (a: Agent) => a.knowledgeTypes, '20%'),
+              text('kinds', 'Knowledge types', (a: Agent) => knowledgeLabel(a.knowledgeTypes), '20%'),
               num('ktypes', 'Types', (a: Agent) => a.knowledgeTypeCount),
               num('graph', 'Graph conn.', (a: Agent) => a.graphConnectorCount),
               num('sp', 'SharePoint sites', (a: Agent) => a.sharePointSiteCount),
@@ -154,13 +155,13 @@ export function AgentInventory() {
       <NamesNote />
       <Grid cols={3}>
         <Panel title="Top agent creators" note={m.noCreator ? `${int(m.noCreator)} agents have no recorded creator, mostly ones the platform made.` : undefined}>
-          <BarList label="Agents by creator" items={m.creators} color={COLOR.licensed} fmt={int} limit={10} />
+          <BarList label="Agents by creator" items={m.creators} color={COLOR.licensed} fmt={int} limit={8} />
         </Panel>
         <Panel title="Models in use">
           <Treemap label="Agents by model" items={m.models} color={COLOR.licensed} fmt={int} limit={9} height={240} />
         </Panel>
         <Panel title="Regions">
-          <BarList label="Agents by region" items={m.regions} color={COLOR.licensed} fmt={int} limit={10} />
+          <BarList label="Agents by region" items={m.regions} color={COLOR.licensed} fmt={int} limit={8} />
         </Panel>
         <Panel title="Agent register" note="Who built each agent, where it lives, and its component footprint." span={3}>
           <DataTable
@@ -245,10 +246,10 @@ export function Creators() {
       <NamesNote />
       <Grid cols={3}>
         <Panel title="Top creators">
-          <BarList label="Human-built agents by creator" items={m.topCreators} color={COLOR.licensed} fmt={int} limit={10} />
+          <BarList label="Human-built agents by creator" items={m.topCreators} color={COLOR.licensed} fmt={int} limit={7} />
         </Panel>
         <Panel title="Top owners" note={m.noOwner ? `${int(m.noOwner)} agents have no recorded owner.` : undefined}>
-          <BarList label="Agents by owner" items={m.owners} color={COLOR.licensed} fmt={int} limit={10} />
+          <BarList label="Agents by owner" items={m.owners} color={COLOR.licensed} fmt={int} limit={7} />
         </Panel>
         <Panel title="Owner identity resolution">
           <BarList label="Agents by owner identity type" items={m.resolution} color={COLOR.licensed} fmt={int} />

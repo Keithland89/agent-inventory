@@ -86,3 +86,56 @@ export function regionLabel(code: string | null | undefined): string {
   }
   return words.join(' ')
 }
+const CONNECTOR_NAMES: Record<string, string> = {
+  commondataserviceforapps: 'Dataverse',
+  office365: 'Office 365 Outlook',
+  office365users: 'Office 365 Users',
+  sharepointonline: 'SharePoint',
+  teams: 'Microsoft Teams',
+  msnweather: 'MSN Weather',
+  dynamicsax: 'Dynamics 365 Finance and Operations',
+  excelonlinebusiness: 'Excel Online (Business)',
+  planner: 'Planner',
+  azureaisearch: 'Azure AI Search',
+  'service-now': 'ServiceNow',
+  powerplatformadminv2: 'Power Platform for Admins V2',
+  computeroperator: 'Computer use',
+  processmining: 'Process mining',
+  microsoftlearndocsmcpserver: 'Microsoft Learn Docs MCP',
+  d365erpmcpserver: 'Dynamics 365 ERP MCP',
+  d365contactcenteradminmcpserver: 'Dynamics 365 Contact Center admin MCP',
+  a365copilotchatmcp: 'Agent 365 Copilot Chat MCP',
+  a365memcp: 'Agent 365 Me MCP',
+  a365outlookmailmcp: 'Agent 365 Outlook Mail MCP',
+  a365mcpservers: 'Agent 365 MCP servers',
+  workiqsharepoint: 'Work IQ SharePoint',
+  workiqmcp: 'Work IQ MCP',
+}
+
+/** A readable name for a Power Platform connector id such as `shared_office365`; unknown ids lose only the `shared_` prefix. */
+export function connectorLabel(id: string): string {
+  const key = id.replace(/^shared_/, '')
+  return CONNECTOR_NAMES[key] ?? (key || DASH)
+}
+
+const KNOWLEDGE_NAMES: Record<string, string> = {
+  publicSites: 'Public websites',
+  sharepointSites: 'SharePoint',
+  dataverseSources: 'Dataverse',
+  files: 'Files',
+  fileGroups: 'File groups',
+  graphConnectors: 'Graph connectors',
+  powerPlatformConnectors: 'Connectors',
+  bingCustomSearch: 'Bing custom search',
+  teamsMessages: 'Teams messages',
+}
+
+/** Turns the API's `sharepointSites; publicSites` list into `SharePoint, Public websites`. */
+export function knowledgeLabel(list: string): string {
+  return list
+    .split(';')
+    .map((k) => k.trim())
+    .filter(Boolean)
+    .map((k) => KNOWLEDGE_NAMES[k] ?? k)
+    .join(', ')
+}

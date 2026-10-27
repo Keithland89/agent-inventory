@@ -5,9 +5,10 @@ import { distinct, groupBy } from '../metrics/measures'
 import { BarList } from '../ui/charts'
 import { DataTable } from '../ui/DataTable'
 import { int } from '../ui/format'
-import { Empty, Grid, Kpi, KpiRow, Panel, Select } from '../ui/primitives'
+import { Empty, Grid, Kpi, KpiRow, Panel, Select, Stack } from '../ui/primitives'
 import { COLOR } from '../ui/theme'
 import { bool, date, num, rowsOf, shortHost, text } from './helpers'
+import { PageFilters, PageIntro } from '../ui/PageFilters'
 
 const uniq = (v: string[]) => [...new Set(v.filter(Boolean))].sort()
 const options = (v: string[]) => v.map((x) => ({ value: x, label: x }))
@@ -69,7 +70,7 @@ export function SharePointAgents() {
 
   return (
     <>
-      <div className="filters page-filters" role="group" aria-label="Page filters">
+      <PageFilters label="Page filters">
         <Select label="Site" value={site} onChange={setSite} options={uniq(ds.spAgents.map((a) => a.siteUrl)).map((s) => ({ value: s, label: shortHost(s) }))} allLabel="All" />
         <Select
           label="Deleted"
@@ -83,8 +84,8 @@ export function SharePointAgents() {
         />
         <Select label="Source application" value={app} onChange={setApp} options={options(uniq(ds.spAgents.map((a) => a.applicationName)))} allLabel="All" />
         <Select label="Last operation" value={op} onChange={setOp} options={options(uniq(ds.spAgents.map((a) => a.lastOperation)))} allLabel="All" />
-      </div>
-      <p className="page-intro">.agent files observed through Purview file operations. Usage joins to the inventory through the file's list item id.</p>
+      </PageFilters>
+      <PageIntro>.agent files observed through Purview file operations. Usage joins to the inventory through the file's list item id.</PageIntro>
       {ds.spAgents.length === 0 ? (
         <Empty>No SharePoint agents were collected. The SharePoint agent logging flow writes this table; see Setup & coverage.</Empty>
       ) : (
@@ -97,15 +98,17 @@ export function SharePointAgents() {
             <Kpi label="Interactions" value={int(m.usage.length)} />
           </KpiRow>
           <Grid cols={3}>
-            <Panel title="Current agents by site">
-              <BarList label="Current SharePoint agents by site" items={m.bySite} color={COLOR.licensed} fmt={int} limit={10} />
+            <Panel title="Current agents by site" span={2}>
+              <BarList label="Current SharePoint agents by site" items={m.bySite} color={COLOR.licensed} fmt={int} limit={8} />
             </Panel>
-            <Panel title="Latest observed operation">
-              <BarList label="SharePoint agents by last operation" items={m.ops} color={COLOR.licensed} fmt={int} />
-            </Panel>
-            <Panel title="Source application">
-              <BarList label="SharePoint agents by source application" items={m.apps} color={COLOR.licensed} fmt={int} />
-            </Panel>
+            <Stack>
+              <Panel title="Latest observed operation">
+                <BarList label="SharePoint agents by last operation" items={m.ops} color={COLOR.licensed} fmt={int} />
+              </Panel>
+              <Panel title="Source application">
+                <BarList label="SharePoint agents by source application" items={m.apps} color={COLOR.licensed} fmt={int} />
+              </Panel>
+            </Stack>
             <Panel title="Inventory and usage by site" span={3}>
               <DataTable
                 label="Inventory and usage by site"

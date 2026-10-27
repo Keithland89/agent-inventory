@@ -65,4 +65,9 @@ export const VERDICT_COLOR: Record<string, string> = {
   Retire: '#7b8794',
 }
 
+/** The pale bar colours are too light to read as text, so text uses these darker tones of the same hues (4.5:1 or better on white). */
+export const RISK_TEXT: Record<string, string> = { ...RISK_COLOR, Low: '#5f63b8' }
+export const LIFECYCLE_TEXT: Record<string, string> = { ...LIFECYCLE_COLOR, New: '#3f6a8c', Dormant: '#5a6573', 'Never used': '#5a6573' }
+export const VERDICT_TEXT: Record<string, string> = { ...VERDICT_COLOR, Watch: '#3f6a8c', Retire: '#5a6573' }
+
 export const colorAt = (i: number) => PALETTE[i % PALETTE.length]

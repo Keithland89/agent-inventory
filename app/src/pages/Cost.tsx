@@ -14,6 +14,7 @@ import { Empty, Grid, Kpi, KpiRow, Panel } from '../ui/primitives'
 import { COLOR } from '../ui/theme'
 import { LaneNotice } from './common'
 import { agentCol, num, rowsOf, text, toDistribution } from './helpers'
+import { PageIntro } from '../ui/PageFilters'
 
 const COST_ROLE = 'Cost Management needs Cost Management Reader, or Reader, on each subscription that holds Azure AI resources.'
 
@@ -43,10 +44,10 @@ export function CopilotCredits() {
 
   return (
     <>
-      <p className="page-intro">
+      <PageIntro>
         Copilot Credits that Copilot Studio agents consumed in the last {COST_WINDOW_DAYS} days, from the Power Platform licensing API, and the tenant's prepaid capacity.
         Billed credits draw down the capacity pool; non-billed credits are covered by Microsoft 365 Copilot licences. The agent slicers apply to per-agent credits, not to the pool.
-      </p>
+      </PageIntro>
       <LaneNotice problems={problems} />
       <KpiRow>
         <Kpi
@@ -224,10 +225,10 @@ export function AzureAiSpend() {
 
   return (
     <>
-      <p className="page-intro">
+      <PageIntro>
         Azure spend on AI resources in the last {COST_WINDOW_DAYS} days, from Cost Management, for the subscriptions that hold Azure AI resources. Costs are actual
         billed amounts in your billing currency and lag by about a day. Foundry project spend rolls up to its parent account. The agent slicers do not apply here.
-      </p>
+      </PageIntro>
       <LaneNotice problems={problems} />
       {!problems.length && lane?.detail && lane.state !== 'sample' && <p className="notice">{lane.detail}</p>}
       {m.mixed && <p className="notice">Spend arrived in more than one currency. Only {m.currency} is shown.</p>}
