@@ -96,7 +96,7 @@ test('pending steps leave out checks, done and skipped steps', () => {
 
 test('the plan saves as Markdown', () => {
   const md = planMarkdown(plan({ scopeMode: 'Dataverse' }), { now: new Date('2024-05-01T10:30:00Z') });
-  assert.match(md, /^# Copilot Inventory install: the plan/);
+  assert.match(md, /^# Agent Monitor install: the plan/);
   assert.match(md, /Made 2024-05-01 10:30 UTC\./);
   assert.match(md, /## 6\. Reader at the tenant root management group \*\(skipped\)\*/);
   assert.match(md, /## 12\. Lane D: grant the knowledge sweep in each environment \*\(asks again before it runs\)\*/);

@@ -100,7 +100,7 @@ test('the JSON is found after other output', () => {
 
 test('init puts the app in the landing environment', () => {
   assert.deepEqual(initArgs({ displayName: APP_NAME, environmentId: ENV_ID }), [
-    'app', 'init', '--repo', 'none', '--display-name', 'Copilot Inventory', '--build-type', 'none', '--build-path', './dist', '--environment-id', ENV_ID,
+    'app', 'init', '--repo', 'none', '--display-name', 'Agent Monitor', '--build-type', 'none', '--build-path', './dist', '--environment-id', ENV_ID,
   ]);
 });
 
