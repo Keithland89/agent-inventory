@@ -8,7 +8,7 @@ import { BarList, Donut } from '../ui/charts'
 import { DataTable } from '../ui/DataTable'
 import { dec2, int, pct } from '../ui/format'
 import { Empty, Grid, Kpi, KpiRow, Panel, Select } from '../ui/primitives'
-import { PALETTE, RISK_COLOR } from '../ui/theme'
+import { COLOR, RISK_COLOR } from '../ui/theme'
 import { StatList } from './common'
 import { useScrollOnParam } from '../ui/scroll'
 import { agentCol, num, rowsOf, text, toDistribution } from './helpers'
@@ -61,10 +61,9 @@ export function Governance() {
       <KpiRow>
         <Kpi label="High risk" value={int(A.high(agents))} tone="unlicensed" help="Risk score of 5 or more." href={href('governance', undefined, { band: 'High' })} />
         <Kpi label="Medium risk" value={int(A.medium(agents))} help="Risk score of 3 or 4." href={href('governance', undefined, { band: 'Medium' })} />
-        <Kpi label="Avg risk score" value={dec2(A.avgRisk(agents))} />
         <Kpi label="No authentication" value={int(A.unauthenticated(agents))} help="Authentication is None or blank." />
         <Kpi label="Shared tenant-wide" value={int(A.tenantWide(agents))} />
-        <Kpi label="Shared but unused" value={int(A.orphan(agents))} help="Shared with the whole tenant and never used." />
+        <Kpi label="Shared but unused" value={int(A.orphan(agents))} help="Shared with the whole tenant, with no usage in Power Platform or the audit log." href={href('inventory', 'all', { focus: 'shared-unused' })} />
       </KpiRow>
       <Grid cols={3}>
         <Panel title="Risk bands">
@@ -84,7 +83,7 @@ export function Governance() {
           ]}
         />
         <Panel title="Authentication modes">
-          <BarList label="Agents by authentication mode" items={m.auth} color={PALETTE[1]} fmt={int} />
+          <BarList label="Agents by authentication mode" items={m.auth} color={COLOR.licensed} fmt={int} />
         </Panel>
         <Panel title="Risk factor breakdown" span={2} help="A heuristic, not a Microsoft score. An agent's score is the sum of the points of its factors: High is 5 points or more, Medium 3 or 4.">
           <DataTable

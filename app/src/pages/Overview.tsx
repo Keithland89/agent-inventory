@@ -1,13 +1,19 @@
 import { useMemo, useState } from 'react'
 import { useData } from '../data/store'
-import { A, ACTIVITY_ORDER, I, PLATFORM, bars, cumulative, div, monthly } from '../metrics/measures'
+import { A, I, PLATFORM, bars, cumulative, div, monthly } from '../metrics/measures'
 import { lastDataDay, periodChange, weeklySeries } from '../metrics/periods'
+import { ATTENTION, attentionCounts } from '../metrics/attention'
+import { groupSummary, type AppGroup } from '../metrics/chat'
+import { costAgainstUse, creditTotals, creditsByAgent } from '../metrics/cost'
+import { laneProblems, unknownFrom } from '../metrics/coverage'
+import { agentTrends, reviewAgents } from '../metrics/lifecycle'
+import { COST_WINDOW_DAYS, costWindow } from '../data/cost'
 import { href } from '../routes'
-import { BarList, ColumnChart, Distribution, Donut, LineChart, Sparkline } from '../ui/charts'
-import { dateLabel, dec1, int, monthLabel, monthTick, pct, pct0 } from '../ui/format'
+import { ColumnChart, LineChart, Sparkline } from '../ui/charts'
+import { dateLabel, int, monthLabel, monthTick, pct, pct0 } from '../ui/format'
 import { DeltaPill, Grid, InfoTip, Kpi, KpiRow, Panel, Segmented } from '../ui/primitives'
-import { ACTIVITY_COLOR, COLOR, PALETTE, RISK_COLOR } from '../ui/theme'
-import { CoverageBanner, StatList } from './common'
+import { COLOR, RISK_COLOR } from '../ui/theme'
+import { CoverageBanner } from './common'
 import { toDistribution } from './helpers'
 
 const SHORT_PLATFORM: Record<string, string> = {
@@ -61,41 +67,104 @@ function EstateCard({ total, newIn7, parts }: { total: number; newIn7: number; p
   )
 }
 
+interface AttentionItem {
+  id: string
+  count: number
+  label: string
+  help: string
+  to: string
+}
+
+/** The briefing's second half: the few counts worth acting on, worst first, each linking to the agents behind it. */
+function AttentionList({ items, unknown }: { items: AttentionItem[]; unknown?: string }) {
+  const shown = items.filter((i) => i.count > 0)
+  return (
+    <Panel title="What needs attention" note="Worst first. Select a line to see the agents behind it.">
+      {shown.length ? (
+        <ul className="attention">
+          {shown.map((i) => (
+            <li key={i.id}>
+              <a href={i.to} title={i.help}>
+                <span className="at-count">{int(i.count)}</span>
+                <span className="at-label">{i.label}</span>
+                <span className="at-go" aria-hidden="true">›</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="panel-note">Nothing stands out: no agent fails a check.</p>
+      )}
+      {unknown && <p className="panel-note">Credits not loaded ({unknown.toLowerCase()}), so high-cost agents are not checked.</p>}
+    </Panel>
+  )
+}
+
 export function Overview() {
-  const { ds, scope } = useData()
-  const { agents, interactions } = scope
+  const { ds, scope, agentByKey } = useData()
+  const { agents, interactions, credits } = scope
   const [greeting] = useState(() => greetingFor(new Date().getHours()))
   const [growth, setGrowth] = useState<GrowthView>('total')
+  const creditsUnknown = unknownFrom(laneProblems(ds.lanes, ['credits'])[0])
   const m = useMemo(() => {
     const created = monthly(agents, (a) => a.createdMonth)
     const end = lastDataDay(ds.interactions)
+    const groups = new Map(groupSummary(interactions).map((g) => [g.group, g.users]))
+    const retire = reviewAgents(agents, agentTrends(interactions, end)).filter((r) => r.verdict === 'Retire').length
+    const costRows = creditsByAgent(credits, agentByKey, ds.environments)
+    const highCost = costAgainstUse(costRows, interactions, costWindow(new Date(`${ds.asOf.slice(0, 10)}T00:00:00Z`))).flagged
     return {
       created,
       cumulative: cumulative(created),
       platform: bars(agents, (a) => a.platform),
-      activity: bars(agents, (a) => a.activityStatus),
-      orchestration: bars(agents, (a) => a.orchestration),
-      auth: bars(agents, (a) => a.authentication ?? '(Blank)'),
-      envs: bars(agents, (a) => a.envName),
-      activeUsers: I.activeUsers(interactions),
-      runTime: I.runTimeHours(interactions),
+      users: I.users(interactions),
+      groups,
+      credits: creditTotals(credits),
       end,
+      checks: attentionCounts(agents),
+      retire,
+      highCost,
       newAgents: periodChange(agents, (a) => a.createdAt, ds.asOf, (rs) => rs.length),
-      usersWow: periodChange(interactions, (i) => i.date, end, I.activeUsers),
-      runTimeWow: periodChange(interactions, (i) => i.date, end, I.runTimeHours),
+      usersWow: periodChange(interactions, (i) => i.date, end, I.users),
       agentsWow: periodChange(interactions, (i) => i.date, end, I.agentsWithInteractions),
-      usersTrend: weeklySeries(interactions, (i) => i.date, end, I.activeUsers),
-      runTimeTrend: weeklySeries(interactions, (i) => i.date, end, I.runTimeHours),
+      usersTrend: weeklySeries(interactions, (i) => i.date, end, I.users),
       highTrend: cumulative(monthly(agents.filter((a) => a.riskBand === 'High'), (a) => a.createdMonth))
         .slice(-12)
         .map((p) => p.values[0]),
     }
-  }, [agents, interactions, ds.interactions, ds.asOf])
+  }, [agents, interactions, credits, agentByKey, ds.interactions, ds.environments, ds.asOf])
   const wowHelp = m.end ? ` The change compares the 7 days to ${dateLabel(m.end)}, the last day with audit data, with the 7 days before.` : ''
   const active = A.active30(agents)
   const high = A.high(agents)
+  const shared = A.tenantWide(agents)
+  const sharedUnused = A.orphan(agents)
   const trendLabel = (what: string, v: number[], fmt: (n: number) => string, span: string) =>
     v.length > 1 ? `${what}, ${span}: from ${fmt(v[0])} to ${fmt(v[v.length - 1])}` : what
+  const groupUsers = (g: AppGroup) => int(m.groups.get(g) ?? 0)
+  const check = (id: string) => m.checks.find((c) => c.check.id === id)
+  const fromCheck = (id: string): AttentionItem => {
+    const c = check(id)!
+    return { id, count: c.count, label: c.check.label, help: c.check.help, to: href('inventory', 'all', { focus: id }) }
+  }
+  const attention: AttentionItem[] = [
+    fromCheck('high-no-owner'),
+    fromCheck('shared-no-auth'),
+    {
+      id: 'retire',
+      count: m.retire,
+      label: 'Due to retire',
+      help: 'Dormant for 90 days, or never used 60 days after it was created.',
+      to: href('usage', 'lifecycle', { verdict: 'Retire' }),
+    },
+    {
+      id: 'high-cost',
+      count: creditsUnknown ? 0 : m.highCost,
+      label: 'High credit use, few users',
+      help: `In the top quarter for Copilot Credits over ${COST_WINDOW_DAYS} days, with audited use from 2 or fewer people.`,
+      to: href('cost', 'credits'),
+    },
+    ...ATTENTION.slice(2).map((c) => fromCheck(c.id)),
+  ]
 
   return (
     <>
@@ -103,6 +172,15 @@ export function Overview() {
         <h3>{greeting}</h3>
         <p>Here's the agent estate as of {dateLabel(ds.asOf.slice(0, 10))}.</p>
       </div>
+      <p className="headline">
+        <b>{int(agents.length)}</b> agents, and <b>{pct0(div(active, agents.length))}</b> of them were used in the last 30 days. <b>{int(high)}</b> {high === 1 ? 'is' : 'are'} high risk
+        {shared ? (
+          <>
+            , and <b>{int(sharedUnused)}</b> of the {int(shared)} shared tenant-wide {sharedUnused === 1 ? 'has' : 'have'} never been used
+          </>
+        ) : null}
+        .
+      </p>
       <CoverageBanner />
       <KpiRow>
         <EstateCard total={agents.length} newIn7={m.newAgents.current} parts={toDistribution(m.platform, undefined)} />
@@ -116,6 +194,23 @@ export function Overview() {
           help={`Agents with a usage signal in the last 30 days.${m.end ? ` The pill is the change in agents with audited interactions.${wowHelp}` : ''}`}
         />
         <Kpi
+          label="People using Copilot"
+          value={int(m.users)}
+          href={href('activity', 'chat')}
+          delta={m.end ? <DeltaPill change={m.usersWow} label="week on week" /> : undefined}
+          sub={`Chat ${groupUsers('Copilot Chat')} · Cowork ${groupUsers('Cowork')} · Agents ${groupUsers('Agents')}`}
+          spark={<Sparkline values={m.usersTrend} color={COLOR.licensed} label={trendLabel('Weekly Copilot users', m.usersTrend, int, 'last 12 weeks')} />}
+          help={`Distinct people with at least one audited Copilot interaction: Copilot Chat, Copilot in the Microsoft 365 apps, Cowork or an agent. The line shows each of the last 12 weeks.${wowHelp}`}
+        />
+        <Kpi
+          label="Copilot Credits"
+          value={int(m.credits.total)}
+          href={href('cost', 'credits')}
+          unknown={creditsUnknown}
+          sub={`${int(m.credits.billed)} billed, last ${COST_WINDOW_DAYS} days`}
+          help={`Copilot Credits that Copilot Studio agents consumed in the last ${COST_WINDOW_DAYS} days. Billed credits draw down the tenant's capacity; the rest are covered by Microsoft 365 Copilot licences.`}
+        />
+        <Kpi
           label="High risk"
           value={int(high)}
           tone="unlicensed"
@@ -123,22 +218,6 @@ export function Overview() {
           sub={`${pct(div(high, agents.length))} of all agents`}
           spark={<Sparkline values={m.highTrend} color={RISK_COLOR.High} label={trendLabel('High-risk agents', m.highTrend, int, 'cumulative over the last 12 months')} />}
           help="Agents scoring 5 or more on the heuristic risk model. See Governance & risk. The line is the running total of high-risk agents by the month they were created."
-        />
-        <Kpi
-          label="Active users"
-          value={int(m.activeUsers)}
-          delta={m.end ? <DeltaPill change={m.usersWow} label="week on week" /> : undefined}
-          sub="People using agents"
-          spark={<Sparkline values={m.usersTrend} color={COLOR.licensed} label={trendLabel('Weekly active users', m.usersTrend, int, 'last 12 weeks')} />}
-          help={`Distinct people with at least one audited interaction with an agent. The line shows each of the last 12 weeks.${wowHelp}`}
-        />
-        <Kpi
-          label="Agent run-time"
-          value={`${dec1(m.runTime)} h`}
-          delta={m.end ? <DeltaPill change={m.runTimeWow} label="week on week" fmt={(h) => `${dec1(h)} h`} /> : undefined}
-          sub="Time in agent conversations"
-          spark={<Sparkline values={m.runTimeTrend} color={COLOR.licensed} label={trendLabel('Weekly run-time hours', m.runTimeTrend, dec1, 'last 12 weeks')} />}
-          help={`For every conversation and day, the time from the first to the last interaction, summed. The line shows each of the last 12 weeks.${wowHelp}`}
         />
       </KpiRow>
       <Grid cols={3}>
@@ -148,34 +227,12 @@ export function Overview() {
           actions={<Segmented label="Agent growth view" value={growth} options={GROWTH_VIEWS} onChange={setGrowth} />}
         >
           {growth === 'total' ? (
-            <LineChart label="Cumulative agents by month" data={m.cumulative} series={[{ name: 'Agents', color: COLOR.agent, fmt: int }]} xFmt={monthLabel} tickFmt={monthTick} height={200} area />
+            <LineChart label="Cumulative agents by month" data={m.cumulative} series={[{ name: 'Agents', color: COLOR.agent, fmt: int }]} xFmt={monthLabel} tickFmt={monthTick} height={220} area />
           ) : (
-            <ColumnChart label="New agents per month" data={m.created} series={[{ name: 'Agents created', color: COLOR.licensed, fmt: int }]} xFmt={monthLabel} tickFmt={monthTick} height={200} />
+            <ColumnChart label="New agents per month" data={m.created} series={[{ name: 'Agents created', color: COLOR.licensed, fmt: int }]} xFmt={monthLabel} tickFmt={monthTick} height={220} />
           )}
         </Panel>
-        <StatList
-          title="Estate health"
-          total={agents.length}
-          items={[
-            ['Published', int(A.published(agents)), A.published(agents)],
-            ['Active (30 days)', int(active), active],
-            ['Never used', int(A.neverUsed(agents)), A.neverUsed(agents)],
-            ['Shared tenant-wide', int(A.tenantWide(agents)), A.tenantWide(agents)],
-            ['High risk', int(high), high],
-          ]}
-        />
-        <Panel title="Activity status">
-          <Distribution label="Agents by activity status" items={toDistribution(m.activity, ACTIVITY_COLOR, ACTIVITY_ORDER)} fmt={int} />
-        </Panel>
-        <Panel title="Orchestration">
-          <BarList label="Agents by orchestration" items={m.orchestration} color={PALETTE[1]} fmt={int} limit={8} />
-        </Panel>
-        <Panel title="Authentication">
-          <Donut label="Agents by authentication" items={toDistribution(m.auth)} unit="agents" />
-        </Panel>
-        <Panel title="Top environments" span={3}>
-          <BarList label="Agents by environment" items={m.envs} color={COLOR.licensed} fmt={int} limit={12} />
-        </Panel>
+        <AttentionList items={attention} unknown={creditsUnknown} />
       </Grid>
     </>
   )

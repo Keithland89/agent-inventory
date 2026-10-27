@@ -1,5 +1,5 @@
 <#
-Copilot Inventory installer {{VERSION}}, started from PowerShell.
+Agent Monitor installer {{VERSION}}, started from PowerShell.
 
 Downloads the release zip from GitHub (the installer, the four managed solutions and the app's
 build), checks its SHA-256, unpacks it under %LOCALAPPDATA%\AgentInventory\installer and opens the
@@ -19,7 +19,7 @@ Options:
                    proxy blocks GitHub's download host. It must be the zip from the same release.
   -Proxy <url>     Download through this proxy, signed in as you.
   -Uninstall       Remove the unpacked installer and its command. Your install record in
-                   Documents\Copilot Inventory stays, and so does everything the installer set up in
+                   Documents\Agent Monitor stays, and so does everything the installer set up in
                    your tenant: the installer's own uninstall command removes that.
 Anything else goes to the installer, for example: status, or install --device-code.
 With irm | iex, set $env:AGENT_INVENTORY_ZIP or $env:AGENT_INVENTORY_PROXY instead.
@@ -65,7 +65,7 @@ Works in Windows PowerShell 5.1 and PowerShell 7. The release build fills in {{V
     if (-not (Test-Path -LiteralPath $Base)) { Write-Host 'Nothing to remove.'; return }
     Remove-Item -LiteralPath $Base -Recurse -Force
     Remove-Item -LiteralPath $Shim -Force -ErrorAction SilentlyContinue
-    Write-Host "Removed $Base. Your install record in Documents\Copilot Inventory is still there, and so is the app's work folder in $InvHome\app."
+    Write-Host "Removed $Base. Your install record in Documents\Agent Monitor is still there, and so is the app's work folder in $InvHome\app."
     return
   }
 
@@ -100,7 +100,7 @@ Works in Windows PowerShell 5.1 and PowerShell 7. The release build fills in {{V
     } else {
       $zip = Join-Path $Base "$Version.zip.partial-$PID"
       $downloaded = $true
-      Write-Host "Downloading the Copilot Inventory installer $Version..."
+      Write-Host "Downloading the Agent Monitor installer $Version..."
       if ($FullLanguage) {
         # Windows PowerShell 5.1 may not offer TLS 1.2 by default, and doesn't sign in to the system proxy.
         try {
@@ -132,7 +132,7 @@ Works in Windows PowerShell 5.1 and PowerShell 7. The release build fills in {{V
     $actual = $actual.ToLowerInvariant()
     if ($actual -ne $Sha256.ToLowerInvariant()) {
       if ($downloaded) { Remove-Item -LiteralPath $zip -Force -ErrorAction SilentlyContinue }
-      throw "$zip isn't the Copilot Inventory installer $Version (its SHA-256 is $actual, not $Sha256). Download $ZipName from release installer-v$Version again."
+      throw "$zip isn't the Agent Monitor installer $Version (its SHA-256 is $actual, not $Sha256). Download $ZipName from release installer-v$Version again."
     }
 
     Write-Host 'Unpacking it...'
@@ -186,7 +186,10 @@ Works in Windows PowerShell 5.1 and PowerShell 7. The release build fills in {{V
   $Docs = $null
   if ($FullLanguage) { try { $Docs = [Environment]::GetFolderPath('MyDocuments') } catch { } }
   if (-not $Docs) { $Docs = Join-Path $env:USERPROFILE 'Documents' }
-  $Work = Join-Path $Docs 'Copilot Inventory'
+  $Work = Join-Path $Docs 'Agent Monitor'
+  # Installs from before the rename keep their record in the old folder until the new one exists.
+  $Legacy = Join-Path $Docs 'Copilot Inventory'
+  if (-not (Test-Path -LiteralPath $Work) -and (Test-Path -LiteralPath (Join-Path $Legacy 'agent-inventory-install.json'))) { $Work = $Legacy }
   New-Item -ItemType Directory -Path $Work -Force | Out-Null
 
   $script = Join-Path $Root 'installer\bin\agent-inventory-install.js'
@@ -194,11 +197,11 @@ Works in Windows PowerShell 5.1 and PowerShell 7. The release build fills in {{V
   $AgainCmd = $Again -replace '\|', '^|'
   Set-Content -LiteralPath $Shim -Encoding Ascii -Value @(
     '@echo off'
-    'rem Runs the Copilot Inventory installer that install.ps1 unpacked. install.ps1 writes this file.'
+    'rem Runs the Agent Monitor installer that install.ps1 unpacked. install.ps1 writes this file.'
     'setlocal'
     "set `"INV_SCRIPT=$script`""
     'if not exist "%INV_SCRIPT%" ('
-    "  echo This copy of the Copilot Inventory installer has been removed or replaced. In PowerShell, run: $AgainCmd"
+    "  echo This copy of the Agent Monitor installer has been removed or replaced. In PowerShell, run: $AgainCmd"
     '  exit /b 1'
     ')'
     'set "AGENT_INVENTORY_LAUNCHER=pwsh"'

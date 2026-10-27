@@ -6,9 +6,17 @@ import { test } from 'node:test';
 import { addHandOff, assertNoSecrets, clearHandOff, defaultRecordPath, deleteRecord, emptyRecord, loadRecord, RECORD_VERSION, saveRecord } from '../src/config.js';
 import { workDir } from './helpers.js';
 
-test('the record lives in Documents\\Copilot Inventory', () => {
+test('the record lives in Documents\\Agent Monitor', () => {
   const path = defaultRecordPath({ USERPROFILE: join('C:', 'Users', 'someone') });
-  assert.equal(path, join('C:', 'Users', 'someone', 'Documents', 'Copilot Inventory', 'agent-inventory-install.json'));
+  assert.equal(path, join('C:', 'Users', 'someone', 'Documents', 'Agent Monitor', 'agent-inventory-install.json'));
+});
+
+test('an install from before the rename keeps using its record in Documents\\Copilot Inventory', () => {
+  const home = join('C:', 'Users', 'someone');
+  const legacy = join(home, 'Documents', 'Copilot Inventory', 'agent-inventory-install.json');
+  const renamed = join(home, 'Documents', 'Agent Monitor', 'agent-inventory-install.json');
+  assert.equal(defaultRecordPath({ USERPROFILE: home }, (p) => p === legacy), legacy);
+  assert.equal(defaultRecordPath({ USERPROFILE: home }, (p) => p === legacy || p === renamed), renamed);
 });
 
 test('a record saves and loads back the same', (t) => {
@@ -18,7 +26,7 @@ test('a record saves and loads back the same', (t) => {
   const record = emptyRecord();
   record.tenantId = 'tenant';
   record.environment = { id: 'env', name: 'Landing', url: 'https://landing.example.test' };
-  record.auditApp = { appId: 'app', objectId: 'obj', displayName: 'Copilot Inventory - audit collector', created: true, consented: true, secretKeyId: 'key', secretExpires: '2025-01-01T00:00:00Z', secretWhere: 'envvar' };
+  record.auditApp = { appId: 'app', objectId: 'obj', displayName: 'Agent Monitor - audit collector', created: true, consented: true, secretKeyId: 'key', secretExpires: '2025-01-01T00:00:00Z', secretWhere: 'envvar' };
   record.solutions.interactions = { version: '1.0.0.8', importedAt: '2024-01-01T00:00:00Z' };
   record.flows['flow-1'] = 'on';
   record.managedApp = { appId: 'managed', environmentId: 'env', buildHash: 'abc', dataSources: ['arm'] };

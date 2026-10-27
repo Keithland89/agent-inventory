@@ -100,8 +100,8 @@ export function HabitStages() {
               <Funnel
                 label="Users from active to habitual"
                 steps={[
-                  { label: 'Active in 90 days', value: m.users, color: '#c7d2fe', help: 'Everyone with Copilot activity in the 90 days to the last audit day.' },
-                  { label: 'Active in the last 4 weeks', value: m.users - m.mix.Lapsed, color: '#a5b4fc', help: 'Everyone except Lapsed.' },
+                  { label: 'Active in 90 days', value: m.users, color: '#d6d8f2', help: 'Everyone with Copilot activity in the 90 days to the last audit day.' },
+                  { label: 'Active in the last 4 weeks', value: m.users - m.mix.Lapsed, color: '#b6b9e8', help: 'Everyone except Lapsed.' },
                   { label: 'Past their first 2 weeks', value: m.mix.Habitual + m.mix.Regular + m.mix.Trying, color: STAGE_COLOR.Trying, help: 'Active recently, and started more than 2 weeks ago: Trying, Regular or Habitual.' },
                   { label: 'Regular or better', value: m.mix.Habitual + m.mix.Regular, color: STAGE_COLOR.Regular, help: `${STAGE_HELP.Regular} Or Habitual.` },
                   { label: 'Habitual', value: m.mix.Habitual, color: STAGE_COLOR.Habitual, help: STAGE_HELP.Habitual },

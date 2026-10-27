@@ -240,10 +240,10 @@ export default function App() {
             <div className="brand">
               <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">
                 <rect width="28" height="28" rx="7" fill="var(--band)" />
-                <path d="M7 9h14M7 14h14M7 19h9" stroke="#c4b5fd" strokeWidth="2.6" strokeLinecap="round" />
+                <path d="M7 9h14M7 14h14M7 19h9" stroke="#c9c8ee" strokeWidth="2.6" strokeLinecap="round" />
               </svg>
               <div>
-                <h1>Copilot Inventory</h1>
+                <h1>Agent Monitor</h1>
                 <p>Agents, Copilot activity and governance across the tenant</p>
               </div>
             </div>

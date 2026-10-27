@@ -8,7 +8,7 @@ import { BarList, ColumnChart, Distribution, LineChart, Scatter } from '../ui/ch
 import { DataTable } from '../ui/DataTable'
 import { dec1, int, monthLabel, pct } from '../ui/format'
 import { Grid, Kpi, KpiRow, Panel, Select } from '../ui/primitives'
-import { ACTIVITY_COLOR, COLOR, PALETTE } from '../ui/theme'
+import { ACTIVITY_COLOR, COLOR } from '../ui/theme'
 import { agentCol, date, num, ordered, rowsOf, text, toDistribution } from './helpers'
 
 const nameOf = (a: Agent) => ({ key: a.key, name: a.name })
@@ -45,8 +45,6 @@ export function AgentAnalytics() {
         <Kpi label="Total sessions" value={int(I.sessions(interactions))} />
         <Kpi label="Avg session length" value={`${dec1(I.avgSessionMinutes(interactions))} min`} help="Run-time divided by sessions." />
         <Kpi label="Agent run-time" value={`${dec1(m.runTime)} h`} />
-        <Kpi label="Agents with instructions" value={int(A.withInstructions(agents))} />
-        <Kpi label="Connected platforms" value={int(A.connectedPlatforms(agents))} />
       </KpiRow>
       <Grid cols={3}>
         <Panel title="Active users over time" span={2}>
@@ -59,7 +57,7 @@ export function AgentAnalytics() {
           <BarList label="Agents by active users" items={m.trending} color={COLOR.agent} fmt={int} limit={12} onSelect={openAgent} />
         </Panel>
         <Panel title="Top platforms used to build agents">
-          <BarList label="Agents by platform" items={m.platforms} color={PALETTE[3]} fmt={int} />
+          <BarList label="Agents by platform" items={m.platforms} color={COLOR.licensed} fmt={int} />
         </Panel>
       </Grid>
     </>
@@ -85,7 +83,6 @@ export function UsagePopularity() {
         <Kpi label="Agents with usage" value={int(A.used(agents))} tone="licensed" help="Agents with any Power Platform resource-usage record." />
         <Kpi label="Used in 30 days" value={int(A.active30(agents))} />
         <Kpi label="Used this week" value={int(A.active7(agents))} />
-        <Kpi label="Usage coverage" value={pct(A.usageCoverage(agents))} help="Share of agents that carry a usage signal at all." />
         <Kpi label="Active environments" value={int(A.activeEnvs(agents))} />
         <Kpi label="Environment adoption" value={pct(A.envAdoption(agents))} help="Environments with a used agent, out of environments with any agent." />
       </KpiRow>
@@ -202,7 +199,6 @@ export function Adoption() {
         <Kpi label="Never used" value={int(A.neverUsed(agents))} tone="unlicensed" />
         <Kpi label="Idle (90d)" value={int(A.idle(agents))} />
         <Kpi label="Dormant (90d+)" value={int(A.dormant(agents))} />
-        <Kpi label="Avg days since use" value={dec1(A.avgDaysSinceUse(agents))} />
       </KpiRow>
       <Grid cols={3}>
         <Panel title="Last-used trend" span={2}>
@@ -224,7 +220,7 @@ export function Adoption() {
           />
         </Panel>
         <Panel title="Environments by adoption band">
-          <BarList label="Environments by adoption band" items={m.bands} color={PALETTE[3]} fmt={int} keepOrder />
+          <BarList label="Environments by adoption band" items={m.bands} color={COLOR.licensed} fmt={int} keepOrder />
         </Panel>
         <Panel title="Biggest clean-up targets" note="Environments with the most never-used agents.">
           <BarList label="Never-used agents by environment" items={m.cleanup} color={COLOR.unlicensed} fmt={int} limit={10} />

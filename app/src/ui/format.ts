@@ -62,3 +62,27 @@ export const money = (currency: string): Fmt => (n) => {
   if (!f) return `${(Math.abs(n) >= 100 ? nf0 : nf2).format(n)}${currency ? ` ${currency}` : ''}`
   return (Math.abs(n) >= 100 ? f.whole : f.cents).format(n)
 }
+
+const REGION_WORDS = [
+  'southeast', 'united', 'states', 'kingdom', 'central', 'south', 'north', 'east', 'west', 'europe', 'asia', 'pacific',
+  'australia', 'japan', 'india', 'germany', 'switzerland', 'norway', 'sweden', 'france', 'canada', 'brazil', 'africa',
+  'korea', 'singapore', 'italy', 'poland', 'spain', 'israel', 'qatar', 'mexico', 'new', 'zealand', 'taiwan',
+  'indonesia', 'malaysia', 'chile', 'austria', 'belgium', 'denmark', 'finland', 'greece', 'ireland', 'uae', 'gov', 'us', 'uk',
+].sort((a, b) => b.length - a.length)
+const REGION_UPPER = new Set(['us', 'uk', 'uae'])
+
+/** Readable Azure or Power Platform region names: "eastus2" becomes "East US 2", "unitedkingdom" becomes "United Kingdom". */
+export function regionLabel(code: string | null | undefined): string {
+  const raw = (code ?? '').trim()
+  if (!raw || /[\sA-Z]/.test(raw)) return raw
+  const words: string[] = []
+  let rest = raw
+  while (rest) {
+    const digits = /^\d+/.exec(rest)
+    const word = digits?.[0] ?? REGION_WORDS.find((w) => rest.startsWith(w))
+    if (!word) return raw
+    words.push(REGION_UPPER.has(word) ? word.toUpperCase() : word[0].toUpperCase() + word.slice(1))
+    rest = rest.slice(word.length)
+  }
+  return words.join(' ')
+}

@@ -1,27 +1,27 @@
-/* Copilot Inventory app design system. Light canvas, light indigo-tinted header band, white panels. */
+/* Agent Monitor app design system. Quiet neutral canvas, flat white header and panels; colour is kept for the data. */
 
 :root {
-  --canvas: #f4f5fa;
+  --canvas: #f5f6f8;
   --surface: #ffffff;
-  --surface-2: #f8f8fc;
-  --ink: #17172f;
-  --ink-2: #474a63;
-  --ink-3: #5f6279;
-  --line: #dcdeeb;
-  --line-2: #eceef6;
-  --band: #1e1b4b;
+  --surface-2: #f8f9fb;
+  --ink: #1b1d2b;
+  --ink-2: #4a4d5e;
+  --ink-3: #626575;
+  --line: #e2e4ea;
+  --line-2: #eef0f3;
+  --band: #24224f;
   --band-ink: #ffffff;
-  --accent: #4f46e5;
-  --accent-ink: #3730a3;
-  --accent-soft: #eef0ff;
-  --hover: #f1f2fb;
-  --good: #4f46e5;
-  --bad: #b42318;
-  --licensed: #4f46e5;
-  --unlicensed: #b45309;
-  --agent: #0f766e;
+  --accent: #4b47c2;
+  --accent-ink: #383491;
+  --accent-soft: #f0f0fa;
+  --hover: #f3f4f7;
+  --good: #4b47c2;
+  --bad: #b0382c;
+  --licensed: #4b47c2;
+  --unlicensed: #a8682b;
+  --agent: #2f7a72;
   --radius: 10px;
-  --shadow: 0 1px 2px rgb(23 23 60 / 0.06);
+  --shadow: 0 1px 2px rgb(20 22 40 / 0.035);
   --shadow-pop: 0 8px 28px rgb(23 23 60 / 0.18);
   --font: 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, sans-serif;
   --font-display: 'Segoe UI Variable Display', 'Segoe UI', system-ui, -apple-system, sans-serif;
@@ -96,7 +96,7 @@ a {
 
 .band {
   border-bottom: 1px solid var(--line);
-  background: linear-gradient(100deg, #f1efff 0%, #f8f7ff 30%, var(--surface) 60%);
+  background: var(--surface);
   color: var(--ink);
 }
 .band-inner,
@@ -160,8 +160,8 @@ a {
 .source-chip .tag {
   padding: 1px 8px;
   border-radius: 999px;
-  background: #f5c26b;
-  color: #3a2603;
+  background: #f6eedf;
+  color: #6b4a14;
   font-weight: 600;
   font-size: 11.5px;
 }
@@ -172,10 +172,9 @@ a {
 .source-chip .source-action {
   display: inline-block;
   margin: 0;
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: var(--band);
-  color: var(--band-ink);
+  padding: 2px 8px 2px 10px;
+  border-left: 1px solid var(--line);
+  color: var(--accent-ink);
   font-weight: 600;
 }
 
@@ -651,15 +650,20 @@ input[type='search']::placeholder {
   font-size: 13px;
   font-weight: 500;
 }
+/* Only KPIs tied to a population carry its colour dot; the rest stay plain. */
 .kpi-label > span:first-child::before {
-  content: '';
+  content: none;
   display: inline-block;
-  width: 8px;
-  height: 8px;
-  margin-right: 8px;
+  width: 6px;
+  height: 6px;
+  margin-right: 7px;
   border-radius: 50%;
-  background: #a9acc9;
-  vertical-align: 1px;
+  vertical-align: 2px;
+}
+.tone-licensed .kpi-label > span:first-child::before,
+.tone-unlicensed .kpi-label > span:first-child::before,
+.tone-agent .kpi-label > span:first-child::before {
+  content: '';
 }
 .tone-licensed .kpi-label > span:first-child::before {
   background: var(--licensed);
@@ -673,7 +677,7 @@ input[type='search']::placeholder {
 .kpi-value {
   font-family: var(--font-display);
   font-size: 28px;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1.15;
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
@@ -762,7 +766,7 @@ input[type='search']::placeholder {
   transition: border-color 0.15s ease;
 }
 .kpi-link:hover {
-  border-color: #b9bdf0;
+  border-color: #c4c5e6;
 }
 a.kpi-value {
   color: inherit;
@@ -807,9 +811,8 @@ a.kpi-value:focus-visible {
 
 /* Hero card: the whole estate, split by platform. */
 .kpi-hero {
-  flex: 2.4 1 420px;
+  flex: 2.4 1 360px;
   gap: 6px;
-  background: linear-gradient(160deg, #f6f5ff 0%, var(--surface) 55%);
 }
 .kpi-hero .kpi-value {
   font-size: 36px;
@@ -831,8 +834,8 @@ a.kpi-value:focus-visible {
 }
 .hero-track {
   display: block;
-  height: 8px;
-  border-radius: 4px;
+  height: 6px;
+  border-radius: 3px;
   background: var(--line-2);
   overflow: hidden;
 }
@@ -852,7 +855,7 @@ a.kpi-value:focus-visible {
 .hp-value {
   font-family: var(--font-display);
   font-size: 17px;
-  font-weight: 600;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
 .hp-value small {
@@ -888,6 +891,56 @@ a.kpi-value:focus-visible {
   color: var(--ink-3);
 }
 
+/* The Overview briefing: one computed sentence, then the counts worth acting on. */
+.headline {
+  margin: -4px 0 14px;
+  max-width: 72ch;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+.headline b {
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.attention {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.attention li + li {
+  border-top: 1px solid var(--line);
+}
+.attention a {
+  display: grid;
+  grid-template-columns: 4.5ch 1fr auto;
+  align-items: baseline;
+  gap: 12px;
+  padding: 9px 2px;
+  color: inherit;
+  text-decoration: none;
+}
+.attention a:hover .at-label,
+.attention a:focus-visible .at-label {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.at-count {
+  text-align: right;
+  font-weight: 500;
+  font-size: 17px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.at-label {
+  color: var(--ink-2);
+}
+.at-go {
+  color: var(--ink-3);
+}
 /* ---------- Panels and grids ---------- */
 
 .grid {
@@ -1240,19 +1293,19 @@ a.kpi-value:focus-visible {
   text-overflow: ellipsis;
 }
 .bl-track {
-  height: 12px;
-  border-radius: 3px;
-  background: #eff0f7;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--line-2);
   overflow: hidden;
 }
 .bl-bar {
   display: block;
   height: 100%;
-  border-radius: 3px;
+  border-radius: 2px;
 }
 .bl-value {
   text-align: right;
-  font-weight: 600;
+  font-weight: 500;
   font-size: 13px;
   font-variant-numeric: tabular-nums;
 }
@@ -2229,12 +2282,12 @@ a.kpi-value:focus-visible {
   background-color: var(--accent-soft);
 }
 .source-chip .tag.mode-live {
-  background: #e0e7ff;
-  color: #312e81;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
 }
 .source-chip .tag.mode-sample {
-  background: #f5c26b;
-  color: #3a2603;
+  background: #f6eedf;
+  color: #6b4a14;
 }
 .boot-lanes {
   display: grid;
@@ -2327,18 +2380,21 @@ a.kpi-value:focus-visible {
   gap: 7px;
   min-height: 34px;
   padding: 4px 14px 4px 12px;
-  border: 1px solid var(--accent);
+  border: 1px solid var(--line);
   border-radius: 999px;
-  background: var(--accent);
-  color: #ffffff;
+  background: var(--surface);
+  color: var(--ink);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.ask-btn svg {
+  color: var(--accent);
 }
 .ask-btn:hover {
-  border-color: var(--accent-ink);
-  background: var(--accent-ink);
+  border-color: #c4c5e6;
+  background: var(--hover);
 }
 .ask-btn:disabled {
   opacity: 0.6;

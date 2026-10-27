@@ -9,9 +9,9 @@ import { laneProblems, unknownFrom } from '../metrics/coverage'
 import { div } from '../metrics/measures'
 import { BarList, Donut, Gauge, LineChart, Treemap } from '../ui/charts'
 import { DataTable } from '../ui/DataTable'
-import { dateLabel, dayLabel, int, money, pct } from '../ui/format'
+import { dateLabel, dayLabel, int, money, pct, regionLabel } from '../ui/format'
 import { Empty, Grid, Kpi, KpiRow, Panel } from '../ui/primitives'
-import { COLOR, PALETTE } from '../ui/theme'
+import { COLOR } from '../ui/theme'
 import { LaneNotice } from './common'
 import { agentCol, num, rowsOf, text, toDistribution } from './helpers'
 
@@ -268,7 +268,7 @@ export function AzureAiSpend() {
             <BarList label="Azure AI resources by spend" items={m.top} color={COLOR.agent} fmt={m.fmt} limit={10} />
           </Panel>
           <Panel title="Top meters" span={2} help="Cost Management meters, such as model input and output tokens, compute hours or pages read.">
-            <BarList label="Azure AI spend by meter" items={m.meters} color={PALETTE[3]} fmt={m.fmt} limit={12} />
+            <BarList label="Azure AI spend by meter" items={m.meters} color={COLOR.licensed} fmt={m.fmt} limit={12} />
           </Panel>
           <Panel title="Spend by resource" span={3}>
             <DataTable
@@ -280,7 +280,7 @@ export function AzureAiSpend() {
                 text('name', 'Resource', (r: ResourceSpendRow) => r.name, '20%'),
                 text('category', 'Type', (r: ResourceSpendRow) => r.category),
                 text('rg', 'Resource group', (r: ResourceSpendRow) => r.resourceGroup),
-                text('region', 'Region', (r: ResourceSpendRow) => r.region),
+                text('region', 'Region', (r: ResourceSpendRow) => regionLabel(r.region)),
                 num('cost', 'Spend', (r: ResourceSpendRow) => r.cost, { fmt: m.fmt, bar: COLOR.agent }),
                 num('share', 'Share', (r: ResourceSpendRow) => div(r.cost, m.total), { fmt: pct }),
                 text('meter', 'Main meter', (r: ResourceSpendRow) => r.topMeter, '22%'),
