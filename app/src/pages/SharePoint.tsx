@@ -95,7 +95,6 @@ export function SharePointAgents() {
             <Kpi label="Sites" value={int(distinct(m.current, (a) => a.siteUrl))} />
             <Kpi label="Used agents" value={int(m.usedAgents)} tone="licensed" help="SharePoint agents with at least one audited interaction." />
             <Kpi label="Interactions" value={int(m.usage.length)} />
-            <Kpi label="Inventory age (days)" value={int(m.age)} help="Days since the SharePoint agent table was last collected." />
           </KpiRow>
           <Grid cols={3}>
             <Panel title="Current agents by site">

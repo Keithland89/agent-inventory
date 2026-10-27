@@ -1,5 +1,5 @@
 ---
-name: Copilot Inventory app
+name: Agent Monitor app
 description: Calm admin workspace for the agent estate, Copilot activity and AI risk, computed in the browser from live connectors or the anonymised sample.
 colors:
   canvas: "#f5f6f8"
@@ -84,6 +84,7 @@ Segoe UI Variable throughout. KPI values use tabular numerals so columns of figu
 - Below 1000px (the player's canvas width) the side navigation becomes a drawer opened from a Menu button in the band, which names the current section. It closes on navigation, Escape or a click on the scrim.
 - Tabs with several report pages show sub-view pills in the toolbar.
 - Slicers sit in one row above the content and apply to every view on the tab. Under them, one line says "Showing N of M agents · Audit data through <date>", and each slicer that's set shows as a removable pill, with "Clear all" when two or more are set. Below 1000px the slicers fold behind a Filters button, with a count of those set, so the figures start higher; the pills still show what's applied.- Content flows as KPI cards, then charts, then tables, matching the order of the report page.
+- Overview is a briefing, not a summary of every page: a headline sentence, five KPIs (estate, active, people using Copilot, Copilot Credits, high risk), the growth chart and the attention list. Any other view shows three or four KPIs; a figure that doesn't change a decision belongs in the drawer or the table, not a card.
 - Keep scrolling short: two views of the same series share one panel with a segmented toggle (Overview's growth chart switches between Running total and Per month), and a panel that repeats a KPI card is dropped.
 - Filters that a number links to live in the URL query (`#/usage/lifecycle?verdict=Retire`, `#/governance?band=High`), so a filtered list can be bookmarked or shared.
 
@@ -100,6 +101,8 @@ Flat panels with a 1px line border and a barely-there shadow. No gradients on th
 - **KPI card:** label, then the figure (value plus an optional change pill), an optional 4px meter for a part of a whole, and one line of context. The change pill compares the last 7 days with the 7 before: green for a good change, red for a bad one, grey for flat, with an arrow so colour isn't the only cue. A value that opens its list is a link: the whole card is the hit area, and hover underlines the value. A value whose lane didn't arrive shows a dash and the reason instead of a zero. A card may end with a sparkline of real data (the last 12 weeks, or 12 months for a running total), bottom-aligned across the row and labelled for screen readers with its first and last values.
 - **Agent estate card:** the first card on Overview, twice the width of the others. It shows every agent with the new-in-7-days count, then a bar, name, count and share for each platform in the platform colours. On narrow screens it takes the full row.
 - **Greeting:** a time-of-day greeting and the as-of date above Overview. It never uses a name.
+- **Briefing headline:** one computed sentence under the greeting that states the estate, the share used in the last 30 days and the two headline risks. It's built from the same measures as the cards, so it never disagrees with them.
+- **Attention list:** Overview's `What needs attention` panel. One row per check, in severity order: the count in tabular numerals, a plain label, and an arrow to the filtered list (Inventory › All agents `?focus=<check>`, Lifecycle `?verdict=Retire` or Cost › Credits). Checks with a zero count are hidden, and a check whose lane didn't arrive is never shown as zero. Rows are divided by `--line` rules, with no tints or badges.
 - **Stat list:** a label on the left and a right-aligned tabular figure on the right, one row per line. When the rows are parts of one total, a thin accent bar under each row shows the share.
 - **Lane notice:** above a page's figures when a lane it depends on failed, isn't in the sample or returned no rows. It names the lane, says why and links to Live lane status. Failed is a soft red tint; the others are neutral. Overview shows the same as one coverage line for the whole app.
 - **Charts:** hand-written SVG with no chart library. Hover shows the exact value. Single-series columns have rounded tops; month axes label every second or third month ("Jan 26") so the labels never overlap. Pick the type by the question, and draw only from data already loaded:

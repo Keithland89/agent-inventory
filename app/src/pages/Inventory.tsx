@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react'
 import { useData } from '../data/store'
 import type { Agent } from '../data/types'
-import { A, ACTIVITY_ORDER, I, bars, div, groupBy, perAgentUsage } from '../metrics/measures'
+import { A, ACTIVITY_ORDER, bars, groupBy, perAgentUsage } from '../metrics/measures'
 import { BarList, ColumnChart, Treemap } from '../ui/charts'
 import { DataTable } from '../ui/DataTable'
 import { dec1, int, regionLabel } from '../ui/format'
 import { Grid, Kpi, KpiRow, Panel, Select } from '../ui/primitives'
 import { ACTIVITY_COLOR, COLOR, PALETTE } from '../ui/theme'
+import { ATTENTION, attentionCheck } from '../metrics/attention'
+import { useParam } from '../routes'
 import { NamesNote } from './common'
 import { agentCol, bool, date, num, rowsOf, text } from './helpers'
 
@@ -23,12 +25,17 @@ function activityMix(agents: Agent[]) {
 export function AllAgents() {
   const { scope, openAgent } = useData()
   const [status, setStatus] = useState('')
-  const agents = useMemo(() => (status ? scope.agents.filter((a) => a.activityStatus === status) : scope.agents), [scope.agents, status])
+  const [focus, setFocus] = useParam('focus')
+  const check = attentionCheck(focus)
+  const agents = useMemo(
+    () => scope.agents.filter((a) => (!status || a.activityStatus === status) && (!check || check.test(a))),
+    [scope.agents, status, check],
+  )
   const interactions = useMemo(() => {
-    if (!status) return scope.interactions
+    if (!status && !check) return scope.interactions
     const keys = new Set(agents.map((a) => a.key))
     return scope.interactions.filter((i) => keys.has(i.agentKey))
-  }, [scope.interactions, agents, status])
+  }, [scope.interactions, agents, status, check])
   const usage = useMemo(() => perAgentUsage(interactions), [interactions])
   const mix = useMemo(() => activityMix(agents), [agents])
   const rows = useMemo(() => rowsOf(agents, (a) => a.key), [agents])
@@ -37,14 +44,14 @@ export function AllAgents() {
     <>
       <div className="filters page-filters" role="group" aria-label="Page filters">
         <Select label="Activity status" value={status} onChange={setStatus} options={ACTIVITY_ORDER.map((s) => ({ value: s, label: s }))} allLabel="All" />
+        <Select label="Needs attention" value={check ? focus : ''} onChange={setFocus} options={ATTENTION.map((c) => ({ value: c.id, label: c.label }))} allLabel="Any" />
       </div>
+      {check && <p className="page-intro">{check.help}</p>}
       <KpiRow>
         <Kpi label="Total agents" value={int(agents.length)} tone="agent" />
         <Kpi label="Agents at risk" value={int(A.atRisk(agents))} tone="unlicensed" help="Agents in the Medium or High risk band." />
         <Kpi label="Agents without owners" value={int(A.withoutOwners(agents))} />
-        <Kpi label="Graph connector agents" value={int(A.graphConnector(agents))} help="Agents grounded on at least one Microsoft Graph connector." />
-        <Kpi label="Active users" value={int(I.activeUsers(interactions))} />
-        <Kpi label="Connected platforms" value={int(A.connectedPlatforms(agents))} />
+        <Kpi label="Shared tenant-wide" value={int(A.tenantWide(agents))} />
       </KpiRow>
       <Grid cols={3}>
         <Panel title="Agent registry" note="Every agent, the way the registry lists them. Select an agent to see its details." span={3}>
@@ -143,9 +150,6 @@ export function AgentInventory() {
         <Kpi label="Agents in view" value={int(agents.length)} tone="agent" />
         <Kpi label="Distinct creators" value={int(A.distinctCreators(agents))} />
         <Kpi label="Human-built" value={int(A.humanBuilt(agents))} />
-        <Kpi label="Environments" value={int(A.envsWithAgents(agents))} help="Environments that contain at least one agent." />
-        <Kpi label="Total tools" value={int(A.tools(agents))} />
-        <Kpi label="Distinct models" value={int(A.distinctModels(agents))} />
       </KpiRow>
       <NamesNote />
       <Grid cols={3}>
@@ -234,10 +238,8 @@ export function Creators() {
     <>
       <KpiRow>
         <Kpi label="Distinct creators" value={int(A.distinctCreators(agents))} />
-        <Kpi label="Distinct owners" value={int(A.distinctOwners(agents))} />
         <Kpi label="Human-built agents" value={int(m.human.length)} tone="licensed" />
         <Kpi label="Platform-built" value={int(A.platformBuilt(agents))} help="Agents the platform created on a user's behalf, such as system and default agents." />
-        <Kpi label="Agents per creator" value={dec1(div(m.human.length, A.distinctCreators(agents)))} />
         <Kpi label="Owner not resolved" value={int(A.ownersNotResolved(agents))} tone="unlicensed" help="Owners that could not be matched to a user record, often because the account was deleted." />
       </KpiRow>
       <NamesNote />
@@ -245,7 +247,7 @@ export function Creators() {
         <Panel title="Top creators">
           <BarList label="Human-built agents by creator" items={m.topCreators} color={COLOR.licensed} fmt={int} limit={10} />
         </Panel>
-        <Panel title="Top owners" note={m.noOwner ? ` agents have no recorded owner.` : undefined}>
+        <Panel title="Top owners" note={m.noOwner ? `${int(m.noOwner)} agents have no recorded owner.` : undefined}>
           <BarList label="Agents by owner" items={m.owners} color={COLOR.licensed} fmt={int} limit={10} />
         </Panel>
         <Panel title="Owner identity resolution">
