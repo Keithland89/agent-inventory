@@ -1,4 +1,4 @@
-# Copilot Inventory
+# Agent Monitor
 
 Agent 365–style tenant agent monitoring, without Agent 365.
 

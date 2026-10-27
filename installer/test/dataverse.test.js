@@ -217,7 +217,7 @@ test('admin consent without the rights becomes a consent link for an admin', asy
     { method: 'GET', match: /appRoleAssignments/, reply: () => ({ value: [] }) },
     { method: 'POST', match: /appRoleAssignedTo/, reply: () => ({ status: 403, body: { error: { code: 'Authorization_RequestDenied', message: 'Insufficient privileges' } } }) },
   ]);
-  const app = { appId: 'app-1', objectId: 'obj-1', spId: 'sp-1', displayName: 'Copilot Inventory - audit collector' };
+  const app = { appId: 'app-1', objectId: 'obj-1', spId: 'sp-1', displayName: 'Agent Monitor - audit collector' };
   const r = await grantAuditConsent(client(f, 'https://graph.microsoft.com/v1.0'), { tenantId: 'tenant-1', app, graphSpId: 'graph-sp', roleId: 'role-1' });
   assert.equal(r.consented, false);
   if (!r.consented) {

@@ -1,6 +1,6 @@
-# Copilot Inventory installer
+# Agent Monitor installer
 
-The installer switches Copilot Inventory on in a tenant. It covers every lane: the audit collectors, the knowledge sweep with its app user grants, the run checks and the app. Everything goes into one Dataverse environment, the **landing environment**.
+The installer switches Agent Monitor on in a tenant. It covers every lane: the audit collectors, the knowledge sweep with its app user grants, the run checks and the app. Everything goes into one Dataverse environment, the **landing environment**.
 
 It signs you in, checks your roles and tenant settings, and then shows a plan. It changes nothing until you approve that plan. Then it works through the plan one step at a time. You can run it again at any time: it picks up where it stopped, repairs what drifted, and upgrades to a newer release.
 
@@ -84,8 +84,8 @@ The installer shows this plan after the prerequisite checks. Steps that are alre
 | 1 | Sign in | Nothing. One browser sign-in gets tokens for Microsoft Graph, Azure, Power Platform and Dataverse. | Any user |
 | 2 | Check prerequisites | Nothing. See [Prerequisites](#prerequisites). | Any user |
 | 3 | Confirm the landing environment | Nothing. The tables, the flows and the app all go into this one environment, because the app reads the tables through the current-environment Dataverse connector. | System Administrator there |
-| 4 | App registration: Copilot Inventory - audit collector | A single-tenant app registration with its service principal. It gets the Microsoft Graph application permission `AuditLogsQuery.Read.All`, admin consent, and a client secret. | Can register apps. The consent needs Global Administrator or Privileged Role Administrator. |
-| 5 | App registration: Copilot Inventory - knowledge sweep | A single-tenant app registration with no API permissions and a client secret. It's registered as a Power Platform admin management application. | Can register apps. The admin registration needs Power Platform Administrator. |
+| 4 | App registration: Agent Monitor - audit collector | A single-tenant app registration with its service principal. It gets the Microsoft Graph application permission `AuditLogsQuery.Read.All`, admin consent, and a client secret. | Can register apps. The consent needs Global Administrator or Privileged Role Administrator. |
+| 5 | App registration: Agent Monitor - knowledge sweep | A single-tenant app registration with no API permissions and a client secret. It's registered as a Power Platform admin management application. | Can register apps. The admin registration needs Power Platform Administrator. |
 | 6 | Reader at the tenant root management group *(asks again)* | Azure Reader for the knowledge sweep app at the tenant root, so Agents scope mode can find the environments with agents. Only used in Agents mode. | Owner or User Access Administrator at the root |
 | 7 | Dataverse connection for the flows | Reuses your working Dataverse connection in the landing environment, or creates one in your name. The flows' connection references are bound to it. | Environment Maker |
 | 8 | Lane C: import CopilotInteractionLogging | The managed solution, and its environment variables: tenant, app ID and secret. | System Administrator |
@@ -128,7 +128,7 @@ A missing role doesn't stop the install. The step that needs it becomes a hand-o
 
 ## Secrets and the install record
 
-The install record is `Documents\Copilot Inventory\agent-inventory-install.json`, or the file you pass with `--config`. It holds what the installer made: the tenant, the landing environment, the app registrations' IDs and secret expiry dates, the solution versions, the flows, the app, and the open hand-offs. It never holds a secret or a token. The installer refuses to save one.
+The install record is `Documents\Agent Monitor\agent-inventory-install.json`, or the file you pass with `--config`. It holds what the installer made: the tenant, the landing environment, the app registrations' IDs and secret expiry dates, the solution versions, the flows, the app, and the open hand-offs. It never holds a secret or a token. The installer refuses to save one.
 
 The client secrets go into the flows' environment variables (the default). With `--key-vault <name>`, they go into that Key Vault instead, and the variables hold Key Vault references (`UsingAKV`). Only a secret made in the current run is ever written. A re-run doesn't need it again, and `rotate-secret` makes a new one.
 
