@@ -6,7 +6,7 @@
  * solution\knowledge-sweep\Publish-KnowledgeSources.js --provision. Every step checks first, so it's
  * safe to run again.
  */
-import { defaultSleep } from './http.js';
+import { defaultSleep, HttpError } from './http.js';
 import { isNotFound } from './dataverse.js';
 
 const PREFIX = 'poc_';
@@ -196,6 +196,15 @@ export function tableBody(t) {
  */
 export const uniqueKeyFor = (row) => `${String(row.poc_agentkey || '').split('|')[0]}_${row.poc_sourceid}`.slice(0, 200);
 
+/** How many 10-second checks to make for a table whose create lost its connection: five minutes. */
+const TABLE_WAIT_POLLS = 30;
+
+/**
+ * Whether a request failed in transit rather than with an HTTP status, so the server may have acted on it.
+ * @param {unknown} err
+ */
+export const isConnectionDrop = (err) => !(err instanceof HttpError) && /failed: /.test(String(/** @type {Error} */ (err)?.message ?? ''));
+
 /**
  * @typedef {object} ProvisionLog
  * @property {(s: string) => void} ok
@@ -226,7 +235,8 @@ export async function provisionLaneD(client, { log, sleep = defaultSleep, dryRun
   /** @param {TableDef} t */
   async function createTable(t) {
     const logical = logicalName(t);
-    if (await exists(`/EntityDefinitions(LogicalName='${logical}')?$select=LogicalName`)) {
+    const definition = `/EntityDefinitions(LogicalName='${logical}')?$select=LogicalName`;
+    if (await exists(definition)) {
       log.info(`${logical} is already there`);
       return;
     }
@@ -234,7 +244,20 @@ export async function provisionLaneD(client, { log, sleep = defaultSleep, dryRun
       changed.push(`would create ${logical}`);
       return;
     }
-    await client.post('/EntityDefinitions', tableBody(t), { once: true });
+    try {
+      await client.post('/EntityDefinitions', tableBody(t), { once: true });
+    } catch (err) {
+      // Creating a table can outlast the connection, and Dataverse carries on regardless,
+      // so wait to see whether it made the table before posting it a second time.
+      if (!isConnectionDrop(err)) throw err;
+      log.info(`The connection dropped while creating ${logical}. Checking whether Dataverse made it anyway.`);
+      let made = false;
+      for (let i = 0; i < TABLE_WAIT_POLLS && !made; i++) {
+        await sleep(10_000);
+        made = await exists(definition);
+      }
+      if (!made) await client.post('/EntityDefinitions', tableBody(t), { once: true });
+    }
     changed.push(`created ${logical}`);
     log.ok(`Created ${logical}`);
     // A new table isn't queryable until the metadata cache catches up.
