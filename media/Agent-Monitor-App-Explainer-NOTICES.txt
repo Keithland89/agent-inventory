@@ -1,0 +1,53 @@
+Agent-Monitor app explainer: provenance and notices
+
+This is original explanatory narration and a recording of the Agent-Monitor
+app's interface. It does not redistribute the application source or demo bundle.
+
+App source: https://github.com/ai-datalab/Agent-Monitor
+Source revision: e4eef015c7ef1852253d7a18f6e6ad2e0aa6ce18
+The only application change visible in the recording is the new Explainer link.
+Synthetic fixture basis: the public demo source at revision
+a3ef3f07a851cfc21f46b4440356d2cfa78b6e91, adapted for the current inventory-only
+schema and loaded into an isolated local copy of the app.
+Public demo: https://ai-datalab.github.io/demo/agent-monitor/
+
+All depicted agents, people, sites, accounts, resources and observations are
+fictional synthetic examples. Inventory metrics use synthetic fixtures.
+Capability reference tables remain descriptive source documentation, not live
+API probes. No tenant extract or live telemetry was used. The narration is
+AI-generated with en-GB-Ollie:DragonHDLatestNeural.
+No live AI answer was generated and no agent configuration was changed.
+Risk, lifecycle and policy classifications are review aids, not verified
+security outcomes. Missing evidence is unknown, not zero.
+
+Permissions: the authorized source copyright holder granted specific public
+demo distribution permission on 2026-11-03. For this explainer, the holder
+separately confirmed authorization to use the app screens and synthetic demo
+in the video on 2026-11-09. This is not a general license of the repository.
+Publication and deployment remain subject to the requested review hold.
+
+The public demo's THIRD-PARTY-NOTICES.md identifies React, react-dom and
+scheduler as MIT-licensed. The applicable notice is retained below.
+
+React / react-dom / scheduler
+MIT License
+
+Copyright (c) Meta Platforms, Inc. and affiliates.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

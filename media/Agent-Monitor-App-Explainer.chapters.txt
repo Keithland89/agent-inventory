@@ -1,0 +1,19 @@
+00:00:00  A simple guide to Agent-Monitor
+00:00:42  Read the scope before the number
+00:01:29  Start with the estate and attention list
+00:02:18  All agents
+00:03:06  One agent, with its reasons
+00:03:49  Agent inventory
+00:04:34  Creators and ownership
+00:05:20  SharePoint agents
+00:06:07  Risk and review
+00:07:14  Lifecycle review
+00:08:25  Tools
+00:09:13  Knowledge and grounding
+00:10:00  Knowledge sources
+00:10:48  Azure AI Foundry
+00:11:38  Shadow AI
+00:12:29  Data sources and gaps
+00:13:14  Live lane status
+00:13:59  Ask about the loaded inventory
+00:14:43  From a signal to a considered review

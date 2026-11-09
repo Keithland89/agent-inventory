@@ -1,0 +1,1014 @@
+WEBVTT
+
+1
+00:00:00.200 --> 00:00:05.271
+Agent-Monitor helps you find the agents in an
+estate, understand who owns them, see
+
+2
+00:00:05.271 --> 00:00:09.256
+their tools and knowledge, and decide what needs
+a closer look.
+
+3
+00:00:09.256 --> 00:00:12.516
+This is a page-by-page guide to the current app.
+
+4
+00:00:12.516 --> 00:00:17.950
+It is not an installation walkthrough, a
+security assessment, or a demonstration of live
+telemetry.
+
+5
+00:00:18.700 --> 00:00:24.203
+The screens come from the current app running
+locally with wholly synthetic fixtures adapted
+
+6
+00:00:24.203 --> 00:00:25.776
+from its public demo.
+
+7
+00:00:25.776 --> 00:00:29.314
+Every agent, person, site and detection shown is
+fictional.
+
+8
+00:00:29.314 --> 00:00:31.279
+The voice is AI generated.
+
+9
+00:00:31.279 --> 00:00:35.210
+The public demo is an older version with extra
+pages.
+
+10
+00:00:35.210 --> 00:00:41.500
+Here we cover the current inventory and
+governance app, not those retired usage and cost
+views.
+
+11
+00:00:42.283 --> 00:00:45.581
+Look at the data chip in the top right.
+
+12
+00:00:45.581 --> 00:00:48.878
+It says Sample data and gives the snapshot date.
+
+13
+00:00:48.878 --> 00:00:53.274
+These examples use a fixed third of November
+snapshot, not today's activity.
+
+14
+00:00:53.274 --> 00:00:56.938
+In a connected installation the same area
+identifies live mode.
+
+15
+00:00:56.938 --> 00:01:02.433
+A recent-looking number is not enough: check its
+source and date before you use it.
+
+16
+00:01:03.200 --> 00:01:08.102
+Environment, platform, risk band and agent
+origin narrow the agent views.
+
+17
+00:01:08.102 --> 00:01:13.449
+Here the environment filter reduces the list
+from twenty-four agents to six.
+
+18
+00:01:13.449 --> 00:01:17.014
+That is a smaller scope, not an improvement.
+
+19
+00:01:17.014 --> 00:01:19.242
+Filters carry between agent pages.
+
+20
+00:01:19.242 --> 00:01:21.470
+Clear them before comparing totals.
+
+21
+00:01:21.470 --> 00:01:28.600
+SharePoint, Foundry, Shadow AI and coverage have
+their own scope rather than inheriting these
+agent filters.
+
+22
+00:01:29.367 --> 00:01:31.679
+Overview is the starting brief.
+
+23
+00:01:31.679 --> 00:01:36.767
+The estate card splits agents into human-built,
+platform-provisioned and creator unknown.
+
+24
+00:01:36.767 --> 00:01:43.704
+In this fictional fixture all twenty-four are
+human-built; that is not a typical tenant
+benchmark.
+
+25
+00:01:43.704 --> 00:01:50.179
+The neighbouring cards highlight sharing, owner
+gaps, knowledge reach, inactivity and high
+heuristic risk.
+
+26
+00:01:50.179 --> 00:01:55.267
+They describe the loaded inventory, not business
+value or successful conversations.
+
+27
+00:01:56.033 --> 00:01:59.026
+What needs attention separates exposure checks
+from housekeeping.
+
+28
+00:01:59.026 --> 00:02:05.013
+Select a line to see the agents behind it,
+rather than acting on the headline alone.
+
+29
+00:02:05.013 --> 00:02:09.876
+The growth chart can show a running total or new
+agents per month.
+
+30
+00:02:09.876 --> 00:02:15.114
+A rising line means more inventoried agents by
+creation month; it does not prove
+
+31
+00:02:15.114 --> 00:02:17.733
+adoption or an increase in historical risk.
+
+32
+00:02:18.533 --> 00:02:21.073
+All agents is the searchable registry.
+
+33
+00:02:21.073 --> 00:02:24.458
+Activity and needs-attention controls narrow the
+list further.
+
+34
+00:02:24.458 --> 00:02:30.383
+The first table puts activity, platform, risk,
+sharing and last-use dates beside each agent.
+
+35
+00:02:30.383 --> 00:02:33.769
+Select an agent row to open its details.
+
+36
+00:02:33.769 --> 00:02:39.694
+A blank date on a platform without a usage
+signal must not be interpreted
+
+37
+00:02:39.694 --> 00:02:42.233
+as proof that nobody used it.
+
+38
+00:02:43.033 --> 00:02:48.880
+Further down, Data and tools compares each
+agent's knowledge types, connectors and
+component counts.
+
+39
+00:02:48.880 --> 00:02:53.891
+Environment, ownership and sharing brings
+together its location, owner, creator and reach.
+
+40
+00:02:53.891 --> 00:02:58.902
+Use these tables to find the right reviewer and
+understand the configuration.
+
+41
+00:02:58.902 --> 00:03:05.583
+An owner name that did not resolve is different
+from an agent with no owner recorded.
+
+42
+00:03:06.367 --> 00:03:10.089
+The agent drawer joins the facts for one
+selected row.
+
+43
+00:03:10.089 --> 00:03:14.183
+At the top are risk, activity, lifecycle and the
+suggested verdict.
+
+44
+00:03:14.183 --> 00:03:18.278
+Under Details are the environment, dates, owner,
+authentication, model and sharing.
+
+45
+00:03:18.278 --> 00:03:23.489
+This is where you check whether the selected
+agent is actually the one you
+
+46
+00:03:23.489 --> 00:03:26.467
+meant to review, especially when names are
+similar.
+
+47
+00:03:27.283 --> 00:03:31.399
+Why it is risky lists the individual factors and
+their points.
+
+48
+00:03:31.399 --> 00:03:35.889
+Knowledge and Connectors show the related
+sources and bindings that were loaded.
+
+49
+00:03:35.889 --> 00:03:39.630
+Use that detail to prepare a question for the
+owner.
+
+50
+00:03:39.630 --> 00:03:44.494
+This drawer does not disable an agent, change
+its sharing, or reassign ownership.
+
+51
+00:03:44.494 --> 00:03:48.983
+Any approved change happens in the appropriate
+administration tool, outside this app.
+
+52
+00:03:49.783 --> 00:03:54.606
+Agent inventory emphasises creators, models and
+regions, followed by a detailed register.
+
+53
+00:03:54.606 --> 00:04:00.231
+Use it when the question is what was built,
+where it lives and how
+
+54
+00:04:00.231 --> 00:04:01.437
+it is configured.
+
+55
+00:04:01.437 --> 00:04:05.054
+The human-built total is distinct from the total
+estate.
+
+56
+00:04:05.054 --> 00:04:11.483
+Platform-created scaffolding can otherwise
+overwhelm a ranking that you intended to use to
+understand people's work.
+
+57
+00:04:12.283 --> 00:04:17.646
+The register adds orchestration, authentication,
+risk score, component counts and dates to each
+row.
+
+58
+00:04:17.646 --> 00:04:23.008
+Sort or search it to find a manageable review
+sample, then open a row
+
+59
+00:04:23.008 --> 00:04:24.157
+for its reasons.
+
+60
+00:04:24.157 --> 00:04:29.137
+A large tool count is a configuration footprint,
+not proof of frequent execution.
+
+61
+00:04:29.137 --> 00:04:33.733
+A named model does not tell you how good the
+answers are.
+
+62
+00:04:34.533 --> 00:04:40.242
+Creators and ownership shows who builds agents
+and who is responsible for them.
+
+63
+00:04:40.242 --> 00:04:43.754
+Creator rankings help locate experience and
+support needs.
+
+64
+00:04:43.754 --> 00:04:45.950
+Owner rankings help route follow-up.
+
+65
+00:04:45.950 --> 00:04:52.097
+Those are different questions: the person who
+first created an agent may not be
+
+66
+00:04:52.097 --> 00:04:53.414
+its current owner.
+
+67
+00:04:53.414 --> 00:04:58.683
+Check the origin filter before treating
+platform-generated inventory as someone's
+personal portfolio.
+
+68
+00:04:59.450 --> 00:05:04.852
+Owner-resolution information and the ownership
+tables help distinguish missing ownership from a
+name that
+
+69
+00:05:04.852 --> 00:05:06.395
+could not be resolved.
+
+70
+00:05:06.395 --> 00:05:11.411
+In a live app, names come from users known to
+the landing environment.
+
+71
+00:05:11.411 --> 00:05:13.341
+That directory can be incomplete.
+
+72
+00:05:13.341 --> 00:05:18.742
+Confirm responsibility with the relevant team
+before describing an agent as abandoned or
+deciding
+
+73
+00:05:18.742 --> 00:05:19.900
+to remove it.
+
+74
+00:05:20.700 --> 00:05:25.154
+SharePoint agents is a separate inventory of
+observed dot-agent files.
+
+75
+00:05:25.154 --> 00:05:29.162
+It distinguishes current files from files
+observed as deleted.
+
+76
+00:05:29.162 --> 00:05:34.506
+Site, deletion state, source application and
+last operation are this page's controls.
+
+77
+00:05:34.506 --> 00:05:39.851
+The view is reconstructed from audit file
+operations within the available lookback.
+
+78
+00:05:39.851 --> 00:05:44.750
+An agent with no operation in that window may be
+invisible.
+
+79
+00:05:45.533 --> 00:05:49.100
+Current agents by site helps choose where to
+look.
+
+80
+00:05:49.100 --> 00:05:54.648
+The lower tables show each observed file and its
+latest audit provenance, including the
+
+81
+00:05:54.648 --> 00:05:56.233
+last operation and actor.
+
+82
+00:05:56.233 --> 00:05:59.007
+These are file observations, not conversation
+counts.
+
+83
+00:05:59.007 --> 00:06:04.556
+Check the collection freshness and available
+audit history before asking a site owner to
+
+84
+00:06:04.556 --> 00:06:06.933
+reconcile a missing or deleted entry.
+
+85
+00:06:07.700 --> 00:06:11.778
+Risk and review groups agents by a simple point
+model.
+
+86
+00:06:11.778 --> 00:06:15.040
+No authentication and quarantine each add three
+points.
+
+87
+00:06:15.040 --> 00:06:16.671
+Tenant-wide sharing adds two.
+
+88
+00:06:16.671 --> 00:06:19.117
+Other configuration factors add smaller amounts.
+
+89
+00:06:19.117 --> 00:06:23.603
+High means five or more points, medium means
+three or four.
+
+90
+00:06:23.603 --> 00:06:29.311
+These are review priorities defined by this
+project, not Microsoft's risk rating and not
+
+91
+00:06:29.311 --> 00:06:31.350
+a prediction of a breach.
+
+92
+00:06:32.117 --> 00:06:36.882
+Here is an illustrative calculation, not a
+result read from this dashboard.
+
+93
+00:06:36.882 --> 00:06:41.647
+An agent with no authentication adds three
+points; tenant-wide sharing adds two.
+
+94
+00:06:41.647 --> 00:06:46.413
+That makes five before any other factors, so the
+band is High.
+
+95
+00:06:46.413 --> 00:06:52.767
+A connector or web-search flag is a reason to
+investigate context, not evidence that data
+escaped.
+
+96
+00:06:53.533 --> 00:06:59.175
+The factor breakdown shows how many agents each
+factor affects and how many points it
+contributes.
+
+97
+00:06:59.175 --> 00:07:04.111
+One agent can appear under several factors, so
+do not add those rows as
+
+98
+00:07:04.111 --> 00:07:05.874
+if they were distinct agents.
+
+99
+00:07:05.874 --> 00:07:08.695
+The review table starts with High and Medium.
+
+100
+00:07:08.695 --> 00:07:13.983
+Open a row, check its reasons and agree a
+proportionate next step with its owner.
+
+101
+00:07:14.783 --> 00:07:18.908
+Lifecycle review separates a usage stage from a
+suggested decision.
+
+102
+00:07:18.908 --> 00:07:21.796
+New agents are under thirty days old.
+
+103
+00:07:21.796 --> 00:07:27.571
+Active means used within thirty days; idle is
+thirty-one to ninety days, and dormant
+
+104
+00:07:27.571 --> 00:07:29.221
+is longer than ninety.
+
+105
+00:07:29.221 --> 00:07:34.171
+Never used applies only where the platform
+supplies a usable last-use signal.
+
+106
+00:07:34.171 --> 00:07:37.883
+These thresholds are project heuristics, not
+universal retention policy.
+
+107
+00:07:38.700 --> 00:07:42.726
+Agent Builder and Foundry have no supported
+last-use signal here.
+
+108
+00:07:42.726 --> 00:07:47.959
+They are not marked idle, dormant or due to
+retire on that basis.
+
+109
+00:07:47.959 --> 00:07:53.596
+A dormant agent, or an eligible never-used agent
+at least sixty days old, receives
+
+110
+00:07:53.596 --> 00:07:54.803
+a Retire suggestion.
+
+111
+00:07:54.803 --> 00:07:58.427
+High risk or no owner can instead trigger
+Review.
+
+112
+00:07:58.427 --> 00:08:02.050
+These are prompts to confirm facts, never
+automatic deletion.
+
+113
+00:08:02.867 --> 00:08:08.379
+The action table hides Keep by default and puts
+the more urgent verdicts first.
+
+114
+00:08:08.379 --> 00:08:12.317
+Read Why and Stage alongside the owner and
+last-used date.
+
+115
+00:08:12.317 --> 00:08:16.254
+The cadence panel suggests when to return to
+each verdict.
+
+116
+00:08:16.254 --> 00:08:20.979
+Before retiring anything, ask about seasonal
+use, business dependency and data completeness.
+
+117
+00:08:20.979 --> 00:08:24.917
+The app records no approval and performs no
+retirement itself.
+
+118
+00:08:25.700 --> 00:08:32.102
+Tools brings together connector links, distinct
+connectors, Model Context Protocol servers,
+channels and component footprints.
+
+119
+00:08:32.102 --> 00:08:37.650
+A connector link is a binding in the
+configuration, not an API call.
+
+120
+00:08:37.650 --> 00:08:44.052
+One agent may have several links, and a
+connector may be used by several agents.
+
+121
+00:08:44.052 --> 00:08:49.600
+The chart labelled Most used connectors ranks
+configured links, not observed runtime traffic.
+
+122
+00:08:50.367 --> 00:08:54.548
+The largest-tool-surface table compares tools,
+connectors, knowledge and connected agents.
+
+123
+00:08:54.548 --> 00:09:00.403
+Start with a broad footprint when you want to
+understand reach, then inspect the
+
+124
+00:09:00.403 --> 00:09:05.003
+selected agent and the actual connector
+permissions in its administration tools.
+
+125
+00:09:05.003 --> 00:09:10.858
+Presence here does not establish effective
+access to every record, nor show what the
+
+126
+00:09:10.858 --> 00:09:13.367
+agent has actually read or changed.
+
+127
+00:09:14.117 --> 00:09:20.451
+Knowledge and grounding groups bindings by
+source type, such as SharePoint sites or public
+websites.
+
+128
+00:09:20.451 --> 00:09:25.942
+It contrasts grounded and ungrounded agents and
+separates tenant-data bindings from external
+types.
+
+129
+00:09:25.942 --> 00:09:28.898
+Grounded means a source binding was returned.
+
+130
+00:09:28.898 --> 00:09:34.810
+It does not certify the source's quality, the
+answer's accuracy, or whether the agent
+
+131
+00:09:34.810 --> 00:09:37.767
+can access every item behind that source.
+
+132
+00:09:38.533 --> 00:09:43.910
+Use the platform matrix and heavily grounded
+agents to find where more investigation is
+worthwhile.
+
+133
+00:09:43.910 --> 00:09:49.646
+The counts here can be richer than the list of
+named sources on the next page.
+
+134
+00:09:49.646 --> 00:09:54.665
+In particular, Agent Builder exposes grounding
+types but not the named-source collection used
+here.
+
+135
+00:09:54.665 --> 00:09:59.683
+Do not treat a gap between those two views as
+proof of a fault.
+
+136
+00:10:00.450 --> 00:10:06.499
+Knowledge sources adds actual source names and
+locators where the collection lane supports
+them.
+
+137
+00:10:06.499 --> 00:10:12.548
+It shows named-source totals, hosts, external
+references, freshness and coverage against the
+inventory's counts.
+
+138
+00:10:12.548 --> 00:10:17.733
+All locators in this film use the reserved
+example dot invalid domain.
+
+139
+00:10:17.733 --> 00:10:23.350
+They are fictional references, not real sites
+and not links to private content.
+
+140
+00:10:24.117 --> 00:10:30.727
+Our fictional example has twelve named rows
+against sixty counted sources, so coverage is
+twenty percent.
+
+141
+00:10:30.727 --> 00:10:34.446
+That is illustrative collection coverage, not an
+accuracy score.
+
+142
+00:10:34.446 --> 00:10:39.404
+Use widely shared sources to find references
+worth reviewing with their owners.
+
+143
+00:10:39.404 --> 00:10:45.188
+If rows are absent or stale, check the knowledge
+collector and environment coverage before
+
+144
+00:10:45.188 --> 00:10:47.667
+concluding that agents have no knowledge.
+
+145
+00:10:48.450 --> 00:10:55.636
+Azure AI Foundry lists the returned Azure AI
+resources and projects, alongside Power Platform
+agent flows.
+
+146
+00:10:55.636 --> 00:10:59.678
+Resource categories, regions and stock-keeping
+units describe the estate.
+
+147
+00:10:59.678 --> 00:11:06.863
+A Foundry project can host multiple agents; the
+control-plane project count is not an
+individual-agent count.
+
+148
+00:11:06.863 --> 00:11:13.600
+The agent filters from earlier pages do not
+apply to these resource and flow totals.
+
+149
+00:11:14.367 --> 00:11:18.950
+The estate table helps locate the resource and
+region to review.
+
+150
+00:11:18.950 --> 00:11:23.950
+Public network open counts only resources whose
+returned property explicitly says Enabled.
+
+151
+00:11:23.950 --> 00:11:30.617
+A live listing may omit that property, so a
+blank is not confirmation of private access.
+
+152
+00:11:30.617 --> 00:11:36.450
+Use the source administration tools to check the
+actual network and authentication configuration
+before
+
+153
+00:11:36.450 --> 00:11:38.117
+making a security decision.
+
+154
+00:11:38.867 --> 00:11:43.182
+Shadow AI presents watched-tool observations
+associated with devices and users.
+
+155
+00:11:43.182 --> 00:11:46.204
+Layer and posture filters narrow the results.
+
+156
+00:11:46.204 --> 00:11:53.109
+The tools and observations shown here are
+fictional fixtures, not findings about any
+vendor or organisation.
+
+157
+00:11:53.109 --> 00:11:59.582
+In a connected installation the signal depends
+on Defender coverage and the project's matching
+rules.
+
+158
+00:11:59.582 --> 00:12:03.467
+It is not a complete record of AI use.
+
+159
+00:12:04.283 --> 00:12:10.697
+The device table lets a reviewer inspect the
+reported tool, layer, user and last-seen date.
+
+160
+00:12:10.697 --> 00:12:16.683
+The watchlist shows what the app looks for, with
+sanctioning defined by local policy.
+
+161
+00:12:16.683 --> 00:12:20.104
+Installed, executed and network observations
+mean different things.
+
+162
+00:12:20.104 --> 00:12:25.235
+Do not add them as unique devices or infer a
+data leak.
+
+163
+00:12:25.235 --> 00:12:29.083
+Unmanaged devices and uncollected activity
+remain outside the evidence.
+
+164
+00:12:29.867 --> 00:12:34.180
+Data sources and gaps explains the boundaries of
+the product.
+
+165
+00:12:34.180 --> 00:12:38.925
+Telemetry per platform tells you where inventory
+and last-use signals exist.
+
+166
+00:12:38.925 --> 00:12:44.965
+The API investigation table and optional Agent
+Three Sixty-Five comparison document known
+capability gaps.
+
+167
+00:12:44.965 --> 00:12:51.867
+These are reference information, not a fresh
+permissions test performed each time you open
+this page.
+
+168
+00:12:52.617 --> 00:12:58.178
+Use this page when a stakeholder asks for a
+metric the app cannot support.
+
+169
+00:12:58.178 --> 00:13:03.739
+Conversation-level usage, people, value and cost
+are outside the current app's remit; use the
+
+170
+00:13:03.739 --> 00:13:06.917
+appropriate analytics product rather than
+guessing from inventory.
+
+171
+00:13:06.917 --> 00:13:12.478
+Before presenting any total, be clear about
+which platforms and sources it covers and
+
+172
+00:13:12.478 --> 00:13:14.067
+which questions remain unanswered.
+
+173
+00:13:14.867 --> 00:13:20.135
+Live lane status shows each independent data
+lane, its connector, state and row count,
+
+174
+00:13:20.135 --> 00:13:21.640
+plus collector run information.
+
+175
+00:13:21.640 --> 00:13:26.532
+In this film every lane is marked Sample because
+the data is synthetic.
+
+176
+00:13:26.532 --> 00:13:29.919
+We have not connected live services or run
+collectors.
+
+177
+00:13:29.919 --> 00:13:35.188
+This page's title describes its role in the
+product, not a claim that the
+
+178
+00:13:35.188 --> 00:13:36.317
+recording is live.
+
+179
+00:13:37.117 --> 00:13:42.781
+In a connected app, distinguish returned data,
+no rows, not set up, access denied
+
+180
+00:13:42.781 --> 00:13:43.995
+and an error.
+
+181
+00:13:43.995 --> 00:13:47.232
+Read the detail and collector timestamps as
+well.
+
+182
+00:13:47.232 --> 00:13:52.493
+A missing lane should remain an explicit gap,
+not become a comforting zero.
+
+183
+00:13:52.493 --> 00:13:58.967
+Reload after resolving the underlying issue,
+then check whether the expected environments and
+sources are represented.
+
+184
+00:13:59.783 --> 00:14:03.997
+Ask opens a side panel for questions about the
+current inventory.
+
+185
+00:14:03.997 --> 00:14:09.359
+It builds a summary of counts, ownership gaps,
+risk, lifecycle, integrations and source
+coverage,
+
+186
+00:14:09.359 --> 00:14:11.274
+including the page and filters.
+
+187
+00:14:11.274 --> 00:14:13.573
+It adds no new inventory query.
+
+188
+00:14:13.573 --> 00:14:18.935
+In a supported player with Cowork enabled, that
+question and summary can be sent
+
+189
+00:14:18.935 --> 00:14:21.233
+to Copilot under the user's account.
+
+190
+00:14:22.033 --> 00:14:27.076
+Outside that player, the panel offers a
+question-and-summary handoff to copy into
+Copilot Chat.
+
+191
+00:14:27.076 --> 00:14:29.597
+That is the actual state shown here.
+
+192
+00:14:29.597 --> 00:14:32.838
+What gets sent lets you inspect the text first.
+
+193
+00:14:32.838 --> 00:14:37.881
+We do not submit it to a live AI service in this
+film, and
+
+194
+00:14:37.881 --> 00:14:39.682
+we show no invented answer.
+
+195
+00:14:39.682 --> 00:14:43.283
+Review the content and your organisation's
+policies before sharing it.
+
+196
+00:14:44.033 --> 00:14:46.987
+Start with the date, mode and coverage.
+
+197
+00:14:46.987 --> 00:14:52.894
+Use Overview to choose a concern, the registry
+to find the agent, and its
+
+198
+00:14:52.894 --> 00:14:55.004
+drawer to read the reasons.
+
+199
+00:14:55.004 --> 00:15:00.911
+Governance helps prioritise a human review;
+integrations and resource pages explain the
+surrounding footprint.
+
+200
+00:15:00.911 --> 00:15:04.708
+Confirm missing information with the owner and
+source administrator.
+
+201
+00:15:04.708 --> 00:15:08.083
+A colour or score never replaces that
+conversation.
+
+202
+00:15:08.867 --> 00:15:13.991
+All inventory examples in this film use
+fictional synthetic data, with AI-generated
+narration.
+
+203
+00:15:13.991 --> 00:15:20.298
+The screens show the current app; this is not
+live monitoring and no agent was changed.
+
+204
+00:15:20.298 --> 00:15:25.028
+Risk, lifecycle and posture labels are review
+aids rather than verified outcomes.
+
+205
+00:15:25.028 --> 00:15:30.546
+Use the chapters to return to a page, then apply
+the same careful reading
+
+206
+00:15:30.546 --> 00:15:32.517
+to your own authorised data.

@@ -311,6 +311,10 @@ export default function App() {
             {ds.mode === 'sample'
               ? 'Showing the anonymised sample that ships with the app. Names, sites and users are fictional.'
               : 'Live data read through your own connections. Everything is calculated in your browser.'}
+            {' · '}
+            <a href="https://ai-datalab.github.io/#/watch/agent-monitor-explainer" target="_blank" rel="noreferrer">
+              Explainer
+            </a>
           </footer>
         </div>
       </div>

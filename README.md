@@ -39,6 +39,8 @@ Agent 365–style agent inventory and risk, without Agent 365.
 
 ## What you get
 
+**[Watch the page-by-page app explainer](https://ai-datalab.github.io/#/watch/agent-monitor-explainer)** — what each page shows, how to read it and what to do next, with synthetic data and AI-generated narration.
+
 - **The app:** a Copilot Managed App with the same inventory and risk views as the report, plus a
   lifecycle review and an **Ask** panel. It opens on an anonymised sample until it's connected.
 - **A Power BI report** with the same model, if you prefer Power BI.
