@@ -1,0 +1,173 @@
+[
+  {
+    "seconds": 0.0,
+    "label": "A simple guide to Agent-Monitor",
+    "key": "orientation",
+    "section": "Orientation",
+    "start_seconds": 0.0,
+    "end_seconds": 42.083333,
+    "duration_seconds": 42.083333
+  },
+  {
+    "seconds": 42.083333,
+    "label": "Read the scope before the number",
+    "key": "filters",
+    "section": "Getting oriented",
+    "start_seconds": 42.083333,
+    "end_seconds": 89.166666,
+    "duration_seconds": 47.083333
+  },
+  {
+    "seconds": 89.166666,
+    "label": "Start with the estate and attention list",
+    "key": "overview",
+    "section": "Overview",
+    "start_seconds": 89.166666,
+    "end_seconds": 138.333333,
+    "duration_seconds": 49.166667
+  },
+  {
+    "seconds": 138.333333,
+    "label": "All agents",
+    "key": "inventory--all",
+    "section": "Inventory",
+    "start_seconds": 138.333333,
+    "end_seconds": 186.16666600000002,
+    "duration_seconds": 47.833333
+  },
+  {
+    "seconds": 186.16666600000002,
+    "label": "One agent, with its reasons",
+    "key": "drawer",
+    "section": "Inventory",
+    "start_seconds": 186.16666600000002,
+    "end_seconds": 229.583333,
+    "duration_seconds": 43.416667
+  },
+  {
+    "seconds": 229.583333,
+    "label": "Agent inventory",
+    "key": "inventory--inventory",
+    "section": "Inventory",
+    "start_seconds": 229.583333,
+    "end_seconds": 274.33333300000004,
+    "duration_seconds": 44.75
+  },
+  {
+    "seconds": 274.33333300000004,
+    "label": "Creators and ownership",
+    "key": "inventory--creators",
+    "section": "Inventory",
+    "start_seconds": 274.33333300000004,
+    "end_seconds": 320.50000000000006,
+    "duration_seconds": 46.166667
+  },
+  {
+    "seconds": 320.50000000000006,
+    "label": "SharePoint agents",
+    "key": "inventory--sharepoint",
+    "section": "Inventory",
+    "start_seconds": 320.50000000000006,
+    "end_seconds": 367.50000000000006,
+    "duration_seconds": 47.0
+  },
+  {
+    "seconds": 367.50000000000006,
+    "label": "Risk and review",
+    "key": "governance--risk",
+    "section": "Governance",
+    "start_seconds": 367.50000000000006,
+    "end_seconds": 434.58333300000004,
+    "duration_seconds": 67.083333
+  },
+  {
+    "seconds": 434.58333300000004,
+    "label": "Lifecycle review",
+    "key": "governance--lifecycle",
+    "section": "Governance",
+    "start_seconds": 434.58333300000004,
+    "end_seconds": 505.50000000000006,
+    "duration_seconds": 70.916667
+  },
+  {
+    "seconds": 505.50000000000006,
+    "label": "Tools",
+    "key": "integrations--tools",
+    "section": "Integrations",
+    "start_seconds": 505.50000000000006,
+    "end_seconds": 553.9166670000001,
+    "duration_seconds": 48.416667
+  },
+  {
+    "seconds": 553.9166670000001,
+    "label": "Knowledge and grounding",
+    "key": "integrations--knowledge",
+    "section": "Integrations",
+    "start_seconds": 553.9166670000001,
+    "end_seconds": 600.2500000000001,
+    "duration_seconds": 46.333333
+  },
+  {
+    "seconds": 600.2500000000001,
+    "label": "Knowledge sources",
+    "key": "integrations--sources",
+    "section": "Integrations",
+    "start_seconds": 600.2500000000001,
+    "end_seconds": 648.2500000000001,
+    "duration_seconds": 48.0
+  },
+  {
+    "seconds": 648.2500000000001,
+    "label": "Azure AI Foundry",
+    "key": "foundry",
+    "section": "Platforms",
+    "start_seconds": 648.2500000000001,
+    "end_seconds": 698.6666670000001,
+    "duration_seconds": 50.416667
+  },
+  {
+    "seconds": 698.6666670000001,
+    "label": "Shadow AI",
+    "key": "shadow",
+    "section": "Security",
+    "start_seconds": 698.6666670000001,
+    "end_seconds": 749.6666670000001,
+    "duration_seconds": 51.0
+  },
+  {
+    "seconds": 749.6666670000001,
+    "label": "Data sources and gaps",
+    "key": "setup--sources",
+    "section": "Coverage",
+    "start_seconds": 749.6666670000001,
+    "end_seconds": 794.6666670000001,
+    "duration_seconds": 45.0
+  },
+  {
+    "seconds": 794.6666670000001,
+    "label": "Live lane status",
+    "key": "setup--lanes",
+    "section": "Coverage",
+    "start_seconds": 794.6666670000001,
+    "end_seconds": 839.583334,
+    "duration_seconds": 44.916667
+  },
+  {
+    "seconds": 839.583334,
+    "label": "Ask about the loaded inventory",
+    "key": "ask",
+    "section": "Ask",
+    "start_seconds": 839.583334,
+    "end_seconds": 883.833334,
+    "duration_seconds": 44.25
+  },
+  {
+    "seconds": 883.833334,
+    "label": "From a signal to a considered review",
+    "key": "closing",
+    "section": "Putting it together",
+    "start_seconds": 883.833334,
+    "end_seconds": 933.083334,
+    "duration_seconds": 49.25
+  }
+]
